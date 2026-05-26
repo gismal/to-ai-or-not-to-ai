@@ -2,8 +2,10 @@ import numpy as np
 import onnxruntime as ort
 from PIL import Image
 from pathlib import Path
+import concurrent.futures
 from dataclasses import dataclass
 from src.config import settings
+from src.logger import logger
 
 @dataclass
 class InferenceResult:
@@ -47,6 +49,15 @@ class ONNXPredictor:
         if not self.model_path.exists():
             raise FileNotFoundError(f"No model found at: {self.model_path}")
         
+        # Dynamic Hardware 
+        available_providers = ort.get_available_providers()
+        if 'CUDAExecutionProvider' in available_providers:
+            providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+            logger.info("GPU detected. Using CUDAExecutionProvider")
+        else:
+            providers = ['CPUExecutionProvider']
+            logger.info("GPU not found. Falling back to CPUExecutionProvider")
+                
         self.session = ort.InferenceSession(str(self.model_path), providers = ['CPUExecutionProvider'])
         self.threshold = settings.MODEL_THRESHOLD
         self.input_name = self.session.get_inputs()[0].name
@@ -116,3 +127,60 @@ class ONNXPredictor:
                 status = "FAILED",
                 error = str(e)
             )
+        
+    def predict_batch(self, image_paths: list[str | Path], max_workers: int = 4, max_batch: int = 32) -> list[InferenceResult]:
+        """ 
+        Batch Inference  using thread pools for max I/O performance
+        Process multiple images simultaneously for higher throughput
+        
+        Args:
+            - image_path (str | Path): The path to the image file to be analyzed
+            
+        Returns:
+            - InferenceResult: A structured data containing the prediction outcomes, confidence scores and status flags
+        """
+        
+        # ----- OOM GUARD -----
+        if len(image_paths) > max_batch:
+            logger.warning(f"Batch limit has been exceeded. Coming: {len(image_paths)}, Max limit: {max_batch}. Extras are declining")
+            image_paths = image_paths[:max_batch]
+        # ----------------------    
+        results = []
+        valid_tensors = []
+        
+        def _process_single(path):
+            path_obj = Path(path)
+            try:
+                return path_obj, self._preprocess(path_obj)[0], None
+            except Exception as e:
+                return path_obj, None, str(e)
+            
+        with concurrent.futures.ThreadPoolExecutor(max_workers = max_workers) as executor:
+            for path_obj, tensor, error in executor.map(_process_single, image_paths):
+                if error:
+                    results.append(InferenceResult(image = str(path_obj), status= "FAILED", error = error))
+                else:
+                    valid_batch.append((path_obj, tensor))
+        
+        if not valid_batch:
+            return results
+        
+        valid_paths, valid_tensors = zip(*valid_batch)
+        
+        try:
+            batch_data = np.stack(valid_tensors, axis = 0)
+            outputs = self.session.run(None, {self.input_name: batch_data})
+            
+            for path_obj, out in zip(valid_paths, outputs[0]):
+                conf = float(out[0]) if np.ndim(out) > 0 else float(out)
+                results.append(InferenceResult(
+                    image = str(path_obj),
+                    confidence = round(conf, 4),
+                    detected = conf >= self.threshold
+                ))
+        except Exception as e:
+            logger.error(f"Batch prediction failed: {e}")
+            results.extend([InferenceResult(image=str(p), status= "FAILED", error = str(e)) for p in valid_paths])
+            
+        return results
+                
