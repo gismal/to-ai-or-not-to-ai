@@ -1,0 +1,11 @@
+2026-05-26 23:34:00,115 - mlops_detector - INFO - GPU not found. Falling back to CPUExecutionProvider
+2026-05-27 00:26:55,972 - mlops_detector - INFO - Starting up API, loading ONNX model...
+2026-05-27 00:26:55,973 - mlops_detector - INFO - GPU not found. Falling back to CPUExecutionProvider
+2026-05-27 00:27:23,202 - mlops_detector - WARNING - Unauthorized API access attempt.
+2026-05-27 00:27:38,080 - mlops_detector - WARNING - Unauthorized API access attempt.
+2026-05-27 00:30:41,318 - mlops_detector - INFO - Starting up API, loading ONNX model...
+2026-05-27 00:30:41,318 - mlops_detector - INFO - GPU not found. Falling back to CPUExecutionProvider
+2026-05-27 00:31:04,027 - mlops_detector - WARNING - Unauthorized API access attempt.
+2026-05-27 00:31:34,484 - mlops_detector - WARNING - Unauthorized API access attempt.
+2026-05-27 00:32:07,650 - mlops_detector - INFO - Processing image: c37387cc-4612-45a8-be04-10923f455faf_test_resmi.jpg
+2026-05-27 00:32:07,679 - mlops_detector - WARNING - UNCERTAIN detected: test_resmi.jpg (Score: 0.4629)

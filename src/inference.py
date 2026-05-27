@@ -6,6 +6,7 @@ import concurrent.futures
 from dataclasses import dataclass
 from src.config import settings
 from src.logger import logger
+from src.schemas.predict import InferenceStatus
 
 @dataclass
 class InferenceResult:
@@ -16,13 +17,13 @@ class InferenceResult:
         - image (str): The absolute or relative path to the processed image
         - confidence (float): The model's confidence score, ranging from 0.0 to 1.0
         - detected (bool): True if the confidence score meets or exceeds the threshold
-        - status (str): Operational status, defaults to 'SUCCESS'. If fails set to FAIL
+        - status (InferenceStatus): Operational status 'SUCCESS' or FAIL
         - error (str | None): Exception message if an error occurred, otherwise None
     """
     image: str
     confidence: float = 0.0
     detected: bool = False
-    status: str = "SUCCESS"
+    status: InferenceStatus = InferenceStatus.SUCCESS
     error: str | None = None
     
 class ONNXPredictor:
@@ -58,7 +59,10 @@ class ONNXPredictor:
             providers = ['CPUExecutionProvider']
             logger.info("GPU not found. Falling back to CPUExecutionProvider")
                 
-        self.session = ort.InferenceSession(str(self.model_path), providers = ['CPUExecutionProvider'])
+        self.session = ort.InferenceSession(
+            str(self.model_path),
+            providers = providers)
+        self.threshold = settings.MODEL_THRESHOLD
         self.threshold = settings.MODEL_THRESHOLD
         self.input_name = self.session.get_inputs()[0].name
         
@@ -92,20 +96,17 @@ class ONNXPredictor:
                 
                 return np.expand_dims(img_data, axis = 0)
         except Exception as e:
-            raise ValueError(f"Image cannot be preprocessed")
+            raise ValueError(f"Image cannot be preprocessed") from e
 
     def predict(self, image_path: str | Path) -> InferenceResult:
         """ 
         Executes the full inference pipeline on a given image
         
-        This method safely orchestrates the preprocessing and forward pass through the ONNX model. It handles any internal exceptions gracefully
-        ensuring a consistent InferenceResult object is always returned
-        
         Args:
             - image_path (str | Path): The path to the image file to be analyzed
             
         Returns:
-            - InferenceResult: A structured data containing the prediction outcomes, confidence scores and status flags
+            - InferenceResult: A structured data containing prediction outcomes, confidence scores and status flags
         """
         path_obj = Path(image_path)
         
@@ -124,7 +125,7 @@ class ONNXPredictor:
         except Exception as e:
             return InferenceResult(
                 image = str(path_obj),
-                status = "FAILED",
+                status = InferenceStatus.FAILED,
                 error = str(e)
             )
         
@@ -134,19 +135,19 @@ class ONNXPredictor:
         Process multiple images simultaneously for higher throughput
         
         Args:
-            - image_path (str | Path): The path to the image file to be analyzed
-            
+            - image_path list(str | Path): The path to the image file to be analyzed
+            - max_workers (int): Maximum concurrent threads for I/O operations.
+            - max_batch (int): Maximum allowable images per batch to prevent OOM.
         Returns:
-            - InferenceResult: A structured data containing the prediction outcomes, confidence scores and status flags
+            - list[InferenceResult]: A list containing the prediction outcomes, confidence scores and status flags
         """
         
-        # ----- OOM GUARD -----
+        # OOM GUARD 
         if len(image_paths) > max_batch:
-            logger.warning(f"Batch limit has been exceeded. Coming: {len(image_paths)}, Max limit: {max_batch}. Extras are declining")
-            image_paths = image_paths[:max_batch]
-        # ----------------------    
+            logger.warning(f"Batch limit has been exceeded. Truncating from {len(image_paths)} to {max_batch}")
+         
         results = []
-        valid_tensors = []
+        valid_batch = []
         
         def _process_single(path):
             path_obj = Path(path)
@@ -180,7 +181,7 @@ class ONNXPredictor:
                 ))
         except Exception as e:
             logger.error(f"Batch prediction failed: {e}")
-            results.extend([InferenceResult(image=str(p), status= "FAILED", error = str(e)) for p in valid_paths])
+            results.extend([InferenceResult(image=str(p), status= InferenceStatus.FAILED, error = str(e)) for p in valid_paths])
             
         return results
                 
