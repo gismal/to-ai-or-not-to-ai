@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     API_KEY: str
     MODEL_THRESHOLD: float = 0.75
+    GRAY_ARE_MARGIN = 0.35
     
     model_config = SettingsConfigDict(
         env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"),
