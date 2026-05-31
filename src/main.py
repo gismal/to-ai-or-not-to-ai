@@ -2,11 +2,13 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.response import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from src.config import settings
 from src.logger import logger
 from src.inference import ONNXPredictor
-from src.api.routes import router
+from src.api.routes import router, limiter
 from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
 from src.services.inference_service import InferenceService
 
@@ -21,17 +23,17 @@ async def lifespan(app: FastAPI):
     
     app.state.inference_service = InferenceService(
         predictor = predictor,
-        threshold = settings.MODEL_THRESHOLD
+        threshold = settings.MODEL_THRESHOLD,
+        gray_area_margin = settings.GRAY_AREA_MARGIN
     )
     yield
-    
     logger.info("Shutting down API, cleaning up resources")
-    temp_dir = Path("temp_uploads")
-    if temp_dir.exists():
-        for f in temp_dir.glob("*"):
-            f.unlink()
+    
     
 app = FastAPI(title= "To AI or Not to AI", version= "1.0.0", lifespan= lifespan)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.exception_handler(InvalidImageFormatError)
 async def invalid_image_handler(request: Request, exc: InvalidImageFormatError):

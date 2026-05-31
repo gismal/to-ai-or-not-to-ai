@@ -1,7 +1,6 @@
-import uuid
-import shutil
 import tempfile
 import asyncio
+import time
 from pathlib import Path
 from fastapi import UploadFile
 from src.inference import ONNXPredictor
@@ -26,12 +25,10 @@ class InferenceService:
         """
         self.predictor = predictor
         self.threshold = threshold
-        self.gray_area_margin = gray_area_margin
         self.lower_bound = threshold - gray_area_margin
-        
         self.one_third = gray_area_margin / 3
             
-    def _decide_class(self, confidence: float) -> str:
+    def _decide_class(self, confidence: float) -> PredictionLabel:
         """
         Determines the final label with detailed granularity for uncertain cases
         
@@ -70,18 +67,19 @@ class InferenceService:
             InvalidImageFormatError: If the file extension is not JPG/PNG.
             ModelInferenceError: If the ONNX engine encounters a runtime error.
         """
+        start_time = time.time()
         if not file.filename.lower().endswith((".jpg", ".jpeg", ".png")):
             raise InvalidImageFormatError("Only JPG or PNG formats are supported")
         
         # tempfile for file and memo/ RAM cleanup
-        with tempfile.NamedTemporaryFile(delete= True, suffix=".jpg") as temp_file:
-            shutil.copyfileobj(file.file, temp_file)
-            temp_file.flush()
-        
+        with tempfile.SpooledTemporaryFile(max_size = 2 * 1024 * 1024 , suffix=".jpg") as spooled_file:
+            content = await file.read()
+            spooled_file.write(content)
+            spooled_file.seek(0)
             logger.info(f"Processing image: {file.filename}")
         
             # offlaod heavy CPU bound ONNX model execution to a separate thread
-            result = await asyncio.to_thread(self.predictor.predict, temp_file.name)
+            result = await asyncio.to_thread(self.predictor.predict, spooled_file, file.filename)
             
         if result.status == InferenceStatus.FAILED:     
             raise ModelInferenceError(str(result.error))
@@ -94,6 +92,7 @@ class InferenceService:
             "filename": file.filename,
             "confidence": result.confidence,
             "prediction": final_prediction,
-            "status": "SUCCESS"
+            "status": "SUCCESS",
+            "processing_time_ms": round((time.time() - start_time) * 1000, 2)
             }       
         

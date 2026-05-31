@@ -1,3 +1,4 @@
+import io
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
@@ -25,14 +26,44 @@ class InferenceResult:
     detected: bool = False
     status: InferenceStatus = InferenceStatus.SUCCESS
     error: str | None = None
+
+def _preprocess(image_source: str | Path |  io.BytesIO) -> tuple[str, np.ndarray | None, str | None]:
+        """ 
+        Reads and preprocesses the image for the neural network
+        
+        The processing pipeline consists of:
+        1. Load the image and converting it to the RGB color space
+        2. Resizing the image to the model's target dimensions (224x224)
+        3. Normalizing the pixel values from [0, 255] to [0.0, 1.0.]
+        4. Transposing the matrix from HWC (Height, Width, Channels) to CHW form
+        5. Expanding dimensions to include a batch axis, resulting in (1, 3, 224, 224)
+        
+        Args:
+            - image_source (Path): Path object pointing to the target image file
+        
+        Returns: 
+            - np.ndarray: A NumPy array formatted as a float32 tensor ready for inference
+        
+        Raises:
+            - ValueError: If the image cannot be opened, ready or processed
+        """
+        try:
+            with Image.open(image_source) as img:
+                img = img.convert('RGB').resize((224, 224)) 
+                
+                # Normalization and format conversion (HWC -> CHW)
+                img_data = np.array(img, dtype = np.float32) / 255.0
+                img_data = np.transpose(img_data, (2, 0, 1))
+                
+                return str(image_source), np.expand_dims(img_data, axis = 0), None
+        except Exception as e:
+            return str(image_source), None, str(e)
     
 class ONNXPredictor:
     """
     This class handles the initialization of the ONNX runtime session, preprocessing of input images (resizing, normalization, tensor formatting) and the execution of the model
     to generate predictions    
-    """
-    TARGET_SIZE = (224, 224)
-    
+    """    
     def __init__(self, model_path: str | Path= "models/model_v1.onnx"):
         """
         Initializes the ONNX inference session and loads model configuration
@@ -43,12 +74,15 @@ class ONNXPredictor:
         Raises: 
             - FileNotFoundError: If the specified ONNX model file does not exist
         
-        """
-        
+        """   
         self.model_path = Path(model_path)
         
         if not self.model_path.exists():
             raise FileNotFoundError(f"No model found at: {self.model_path}")
+        
+        # graph optimization
+        session_options = ort.SessionOptions()
+        session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         
         # Dynamic Hardware 
         available_providers = ort.get_available_providers()
@@ -61,44 +95,17 @@ class ONNXPredictor:
                 
         self.session = ort.InferenceSession(
             str(self.model_path),
+            session_options = session_options,
             providers = providers)
-        self.threshold = settings.MODEL_THRESHOLD
         self.threshold = settings.MODEL_THRESHOLD
         self.input_name = self.session.get_inputs()[0].name
         
-    def _preprocess(self, image_path: Path) -> np.ndarray:
-        """ 
-        Reads and preprocesses the image for the neural network
+        # warming up session for model
+        logger.info("Warming up the ONNX Model")
+        dummy_input = np.zeros((1,3,224,224), dtype= np.float32)
+        self.session.run(None, {self.input_name: dummy_input})
         
-        The processing pipeline consists of:
-        1. Load the image and converting it to the RGB color space
-        2. Resizing the image to the model's target dimensions (224x224)
-        3. Normalizing the pixel values from [0, 255] to [0.0, 1.0.]
-        4. Transposing the matrix from HWC (Height, Width, Channels) to CHW form
-        5. Expanding dimensions to include a batch axis, resulting in (1, 3, 224, 224)
-        
-        Args:
-            - image_path (Path): Path object pointing to the target image file
-        
-        Returns: 
-            - np.ndarray: A NumPy array formatted as a float32 tensor ready for inference
-        
-        Raises:
-            - ValueError: If the image cannot be opened, ready or processed
-        """
-        try:
-            with Image.open(image_path) as img:
-                img = img.convert('RGB').resize(self.TARGET_SIZE) 
-                
-                # Normalization and format conversion (HWC -> CHW)
-                img_data = np.array(img, dtype = np.float32) / 255.0
-                img_data = np.transpose(img_data, (2, 0, 1))
-                
-                return np.expand_dims(img_data, axis = 0)
-        except Exception as e:
-            raise ValueError(f"Image cannot be preprocessed") from e
-
-    def predict(self, image_path: str | Path) -> InferenceResult:
+    def predict(self, image_source: str | Path | io.BytesIO, filename: str = "image") -> InferenceResult:
         """ 
         Executes the full inference pipeline on a given image
         
@@ -108,30 +115,29 @@ class ONNXPredictor:
         Returns:
             - InferenceResult: A structured data containing prediction outcomes, confidence scores and status flags
         """
-        path_obj = Path(image_path)
+        _, input_data, error = _preprocess(image_source)
+        
+        if error:
+            return InferenceResult(image=filename, status=InferenceStatus.FAILED, error=error)
         
         try:
-            input_data = self._preprocess(path_obj)
             outputs = self.session.run(None, {self.input_name: input_data})
-            
             confidence_score = float(outputs[0][0][0])
-            is_detected = confidence_score >= self.threshold
-            
             return InferenceResult(
-                image = str(path_obj),
+                image = filename,
                 confidence = round(confidence_score, 4),
-                detected = is_detected
+                detected = confidence >= self.threshold
             )
         except Exception as e:
             return InferenceResult(
-                image = str(path_obj),
+                image = filename,
                 status = InferenceStatus.FAILED,
                 error = str(e)
             )
         
     def predict_batch(self, image_paths: list[str | Path], max_workers: int = 4, max_batch: int = 32) -> list[InferenceResult]:
         """ 
-        Batch Inference  using thread pools for max I/O performance
+        Batch Inference  using Process for max I/O performance
         Process multiple images simultaneously for higher throughput
         
         Args:
@@ -144,44 +150,31 @@ class ONNXPredictor:
         
         # OOM GUARD 
         if len(image_paths) > max_batch:
+            image_paths  =image_paths[:max_batch]
             logger.warning(f"Batch limit has been exceeded. Truncating from {len(image_paths)} to {max_batch}")
          
-        results = []
-        valid_batch = []
+        results, valid_batch  = [],[]
         
-        def _process_single(path):
-            path_obj = Path(path)
-            try:
-                return path_obj, self._preprocess(path_obj)[0], None
-            except Exception as e:
-                return path_obj, None, str(e)
-            
-        with concurrent.futures.ThreadPoolExecutor(max_workers = max_workers) as executor:
-            for path_obj, tensor, error in executor.map(_process_single, image_paths):
+        # ProcessPoolExecutor against CPU bottleneck
+        with concurrent.futures.ProcessPoolExecutor(max_workers = max_workers) as executor:
+            for path_str, tensor, error in executor.map(preprocess_image, image_paths):
                 if error:
-                    results.append(InferenceResult(image = str(path_obj), status= "FAILED", error = error))
+                    results.append(InferenceResult(image = path_str, status = InferenceStatus.FAILED, error = error))
                 else:
-                    valid_batch.append((path_obj, tensor))
+                    valid_batch.append((path_str, tensor))
         
         if not valid_batch:
             return results
         
-        valid_paths, valid_tensors = zip(*valid_batch)
-        
+        valid_paths, valid_tensor = zip(*valid_batch)
         try:
-            batch_data = np.stack(valid_tensors, axis = 0)
+            batch_data = np.stack(valid_tensor, axis = 0)
             outputs = self.session.run(None, {self.input_name: batch_data})
             
-            for path_obj, out in zip(valid_paths, outputs[0]):
+            for path_str, out in zip(valid_paths, outputs[0]):
                 conf = float(out[0]) if np.ndim(out) > 0 else float(out)
-                results.append(InferenceResult(
-                    image = str(path_obj),
-                    confidence = round(conf, 4),
-                    detected = conf >= self.threshold
-                ))
+                results.append(InferenceResult(image = path_str, confidence = round(conf, 4), detected = conf >= self.threshold))
         except Exception as e:
-            logger.error(f"Batch prediction failed: {e}")
-            results.extend([InferenceResult(image=str(p), status= InferenceStatus.FAILED, error = str(e)) for p in valid_paths])
+            results.extend([InferenceResult(image = p, status = InferenceStatus.FAILED, error = str(e)) for p in valid_paths])
             
-        return results
-                
+        return results               
