@@ -1,4 +1,5 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Annotated
+
 from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +17,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Creates and yields a new asynchronous database session for each API request. The session is automatically closed after the request is completed or if an error occurs
     """
+    SessionDep == Annotated[AsyncSession, Depends(get_db_session)]
     session = AsyncSessionLocal()
     try:
         yield session

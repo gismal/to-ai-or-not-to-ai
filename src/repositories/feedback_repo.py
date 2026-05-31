@@ -15,7 +15,7 @@ class AbstractFeedbackRepository(ABC):
     """
     
     @abstractmethod 
-    async def create_feedback(self, filename: str, model_prediction: str, confidence: float, user_correction: FeedbackLabel, client_source: str = "API_v1") -> FeedbackItem | None:
+    async def create_feedback(self, filename: str, model_prediction: str, confidence: float, user_correction: FeedbackLabel, client_source: str = "API_v1") -> FeedbackItem:
         pass
     
     @abstractmethod
@@ -41,7 +41,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
         return ErrorType.UNCERTAIN_FAIL
         
     async def create_feedback(
-        self, filename: str, model_prediction: str, confidence: float, user_correction: FeedbackLabel, client_source: str = "API_v1") -> FeedbackItem | None:
+        self, filename: str, model_prediction: str, confidence: float, user_correction: FeedbackLabel, client_source: str = "API_v1") -> FeedbackItem:
             
         calculated_error = self._determine_error_type(model_prediction, user_correction)
         db_item = FeedbackItem(
@@ -65,7 +65,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
             logger.error(f"Error during saving the feedback: {str(e)}")
             raise DatabaseError("Feedback could not be saved to the database.")
             
-    async def get_recent_errors(self, limit: int = 100, offset = 0) -> Sequence[FeedbackItem]:
+    async def get_recent_errors(self, limit: int = 100, offset: int = 0) -> Sequence[FeedbackItem]:
         """
         Pagination and Reading method
         """
