@@ -13,7 +13,7 @@ class ModelInferenceError(Exception):
     pass
 
 
-class DatabaseError(Exceeption):
+class DatabaseError(Exception):
     """
     Exception raised when a database operation fails.
     API handles this by returning a 500 Internal Server Error response.

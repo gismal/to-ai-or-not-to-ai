@@ -37,6 +37,7 @@ class PredictionResponse(BaseModel):
                 "status": "SUCCESS",
                 "processing_time_ms": 145.2
         }
+        }
     )
     
 class InferenceStatus(str, Enum):

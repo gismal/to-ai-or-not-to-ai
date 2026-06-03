@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.models.feedback import FeedbackItem, FeedbackLabel, ErrorType
+from src.core.feedbacks import FeedbackItem, FeedbackLabel, ErrorType
 from src.logger import logger
 from src.core.exceptions import DatabaseError
 

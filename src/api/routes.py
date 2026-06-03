@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Request, status, HTTPE
 from src.api.security import verify_api_key
 from src.services.inference_service import InferenceService
 from src.schemas.predict import PredictionResponse
-from src.api.deps import get_inference_service, get_feedback_service
+from src.api.deps import get_inference_service, get_feedback_service, verify_api_key
 from src.schemas.feedback import FeedbackCreateRequest, FeedbackResponse
 from src.services.feedback_service import FeedbackService
 from slowapi import Limiter
@@ -65,7 +65,7 @@ class InferenceRouter:
 feedback_router = APIRouter(
     prefix = "/feedback",
     tags = ["Feedback"],
-    dependencies = [Depends(verity_api_key)]
+    dependencies = [Depends(verify_api_key)]
     )
     
 class FeedbackRouter:

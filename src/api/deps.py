@@ -1,12 +1,24 @@
 from typing import AsyncGenerator, Annotated
 
-from fastapi import Request, Depends
+from fastapi import Request, Depends, HTTPException, Security, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security import APIKeyHeader
 
-from src.core.database import AsyncSessionLocal
+from src.core.database import AsyncSessionLocal, get_db_session
 from src.services.inference_service import InferenceService
 from src.repositories.feedback_repo import FeedbackRepository 
 from src.services.feedback_service import FeedbackService
+from src.config import settings
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=True)
+
+def verify_api_key(api_key: str = Security(api_key_header)):
+    if api_key != settings.API_KEY.get_secret_value():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API Key"
+        )
+    return api_key
 
 def get_inference_service(request: Request) -> InferenceService:
     """

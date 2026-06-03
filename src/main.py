@@ -1,7 +1,9 @@
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
-from fastapi.response import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -38,7 +40,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS Middleware for future possinle frontend connections
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = [*],
+    allow_origins = ["*"],
     allow_credentials = False,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -62,7 +64,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """
     logger.warning(f"Unvalid data entry: {exc.errors()} - Endpoint: {request.url.path}")
     return JSONResponse(
-        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code = status.HTTP_422_UNPROCESSABLE_CONTENT,
         content = {"details": "You had sent unvalid data", "errors":exc.errors()}
     )
 
@@ -76,4 +78,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
         content = {"detail": "Unexpected error occured"}
     )
+    
 app.include_router(router)
+app.include_router(feedback_router)
