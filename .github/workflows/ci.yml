@@ -2,12 +2,18 @@ name: Test Automation (CI)
 on: 
   push:
     branches: ["**"]
+    paths:
+      - '**.py'
+      - 'requirements.txt'
   pull_request:
     branches: ["**"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12', '3.14']
 
     steps:
     - name: Code
@@ -16,7 +22,8 @@ jobs:
     - name: Python Kurulumu
       uses: actions/setup-python@v5
       with:
-        python-version: '3.14.4'
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
 
     - name: Load Dependencies
       run: |
@@ -27,5 +34,3 @@ jobs:
     - name: Run Tests
       run: |
         pytest -v
-
-  
