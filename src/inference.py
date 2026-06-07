@@ -126,7 +126,7 @@ class ONNXPredictor:
             return InferenceResult(
                 image = filename,
                 confidence = round(confidence_score, 4),
-                detected = confidence >= self.threshold
+                detected = confidence_score >= self.threshold
             )
         except Exception as e:
             return InferenceResult(

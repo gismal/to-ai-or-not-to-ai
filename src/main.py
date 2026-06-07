@@ -1,14 +1,16 @@
 from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from fastapi.response import JSONResponse
+from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from src.config import settings
 from src.logger import logger
 from src.inference import ONNXPredictor
-from src.api.routes import router, limiter
+from src.api.routes import router, feedback_router, limiter
 from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
 from src.services.inference_service import InferenceService
 
@@ -35,6 +37,15 @@ app = FastAPI(title= "To AI or Not to AI", version= "1.0.0", lifespan= lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# CORS Middleware for future possinle frontend connections
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ["*"],
+    allow_credentials = False,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
 @app.exception_handler(InvalidImageFormatError)
 async def invalid_image_handler(request: Request, exc: InvalidImageFormatError):
     """ Handles unsupported file format errors globally """
@@ -46,4 +57,27 @@ async def model_error_handler(request: Request, exc: ModelInferenceError):
     logger.error(f"Model Inference Error: {exc}")
     return JSONResponse(status_code= 500, content= {"detail": f"Model Error: {str(exc)}"})
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Handles errors related to Pydantic and logs them user-friendly
+    """
+    logger.warning(f"Unvalid data entry: {exc.errors()} - Endpoint: {request.url.path}")
+    return JSONResponse(
+        status_code = status.HTTP_422_UNPROCESSABLE_CONTENT,
+        content = {"details": "You had sent unvalid data", "errors":exc.errors()}
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Handles all errors can occur unexpected and logs all of them
+    """
+    logger.error(f"Unexpected system error: {str(exc)} - Endpoint: {request.url.path}")
+    return JSONResponse(
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content = {"detail": "Unexpected error occured"}
+    )
+    
 app.include_router(router)
+app.include_router(feedback_router)
