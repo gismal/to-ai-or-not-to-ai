@@ -19,7 +19,7 @@ jobs:
     - name: Code
       uses: actions/checkout@v4
 
-    - name: Python Kurulumu
+    - name: Python Setup
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
