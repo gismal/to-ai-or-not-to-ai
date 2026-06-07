@@ -9,3 +9,180 @@
 2026-05-27 00:31:34,484 - mlops_detector - WARNING - Unauthorized API access attempt.
 2026-05-27 00:32:07,650 - mlops_detector - INFO - Processing image: c37387cc-4612-45a8-be04-10923f455faf_test_resmi.jpg
 2026-05-27 00:32:07,679 - mlops_detector - WARNING - UNCERTAIN detected: test_resmi.jpg (Score: 0.4629)
+2026-06-07 18:04:42,501 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:05:33,880 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:10:10,365 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:12:53,126 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:22:09,597 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:22:09,605 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,610 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:22:09,616 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:22:09,700 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 413 Request Entity Too Large"
+2026-06-07 18:22:09,706 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:22:09,716 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'string_too_short', 'loc': ('body', 'filename'), 'msg': 'String should have at least 1 character', 'input': '', 'ctx': {'min_length': 1}}] - Endpoint: /feedback/
+2026-06-07 18:22:09,717 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:22:09,723 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:22:09,727 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'literal_error', 'loc': ('body', 'model_prediction'), 'msg': "Input should be 'REAL', 'AI_GENERATED' or 'UNCERTAIN'", 'input': 'INVALID', 'ctx': {'expected': "'REAL', 'AI_GENERATED' or 'UNCERTAIN'"}}] - Endpoint: /feedback/
+2026-06-07 18:22:09,728 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:22:09,734 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:22:09,738 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'less_than_equal', 'loc': ('body', 'confidence'), 'msg': 'Input should be less than or equal to 1', 'input': 1.5, 'ctx': {'le': 1.0}}] - Endpoint: /feedback/
+2026-06-07 18:22:09,740 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:22:09,802 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,807 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,812 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,818 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,824 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,829 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,835 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,839 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,844 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,849 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,854 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,858 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,864 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,870 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,875 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:22:09,902 - mlops_detector - ERROR - Unexpected system error: 'MagicMock' object can't be awaited - Endpoint: /inference/predict
+2026-06-07 18:22:10,279 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:22:10,286 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:22:10,297 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:22:10,306 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:22:10,312 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:22:10,339 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:35:31,880 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:35:31,889 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:35:31,896 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:35:31,904 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:35:31,989 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 413 Request Entity Too Large"
+2026-06-07 18:35:31,995 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:35:32,000 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'string_too_short', 'loc': ('body', 'filename'), 'msg': 'String should have at least 1 character', 'input': '', 'ctx': {'min_length': 1}}] - Endpoint: /feedback/
+2026-06-07 18:35:32,002 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,008 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:35:32,013 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'literal_error', 'loc': ('body', 'model_prediction'), 'msg': "Input should be 'REAL', 'AI_GENERATED' or 'UNCERTAIN'", 'input': 'INVALID', 'ctx': {'expected': "'REAL', 'AI_GENERATED' or 'UNCERTAIN'"}}] - Endpoint: /feedback/
+2026-06-07 18:35:32,014 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,020 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:35:32,026 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'less_than_equal', 'loc': ('body', 'confidence'), 'msg': 'Input should be less than or equal to 1', 'input': 1.5, 'ctx': {'le': 1.0}}] - Endpoint: /feedback/
+2026-06-07 18:35:32,027 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,059 - mlops_detector - ERROR - Unexpected system error: 2 validation errors:
+  {'type': 'missing', 'loc': ('response', 'prediction'), 'msg': 'Field required', 'input': {'filename': 'test.png', 'model_prediction': 'REAL', 'confidence': 0.99}}
+  {'type': 'missing', 'loc': ('response', 'status'), 'msg': 'Field required', 'input': {'filename': 'test.png', 'model_prediction': 'REAL', 'confidence': 0.99}}
+
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/slowapi/extension.py", line 38, in predict_image
+    POST /inference/predict - Endpoint: /inference/predict
+2026-06-07 18:35:32,359 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'missing', 'loc': ('body', 'file'), 'msg': 'Field required', 'input': None}] - Endpoint: /inference/predict
+2026-06-07 18:35:32,361 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,365 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'missing', 'loc': ('body', 'file'), 'msg': 'Field required', 'input': None}] - Endpoint: /inference/predict
+2026-06-07 18:35:32,368 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,373 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'missing', 'loc': ('body', 'file'), 'msg': 'Field required', 'input': None}] - Endpoint: /inference/predict
+2026-06-07 18:35:32,374 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,377 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'missing', 'loc': ('body', 'file'), 'msg': 'Field required', 'input': None}] - Endpoint: /inference/predict
+2026-06-07 18:35:32,378 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,381 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'missing', 'loc': ('body', 'file'), 'msg': 'Field required', 'input': None}] - Endpoint: /inference/predict
+2026-06-07 18:35:32,383 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,387 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'missing', 'loc': ('body', 'file'), 'msg': 'Field required', 'input': None}] - Endpoint: /inference/predict
+2026-06-07 18:35:32,388 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:35:32,397 - mlops_detector - ERROR - Unexpected system error: 2 validation errors:
+  {'type': 'missing', 'loc': ('response', 'prediction'), 'msg': 'Field required', 'input': {'filename': 'test.png', 'model_prediction': 'REAL', 'confidence': 0.99}}
+  {'type': 'missing', 'loc': ('response', 'status'), 'msg': 'Field required', 'input': {'filename': 'test.png', 'model_prediction': 'REAL', 'confidence': 0.99}}
+
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/slowapi/extension.py", line 38, in predict_image
+    POST /inference/predict - Endpoint: /inference/predict
+2026-06-07 18:35:32,650 - mlops_detector - ERROR - Unexpected system error: 2 validation errors:
+  {'type': 'missing', 'loc': ('response', 'prediction'), 'msg': 'Field required', 'input': {'filename': 'test.png', 'model_prediction': 'REAL', 'confidence': 0.99}}
+  {'type': 'missing', 'loc': ('response', 'status'), 'msg': 'Field required', 'input': {'filename': 'test.png', 'model_prediction': 'REAL', 'confidence': 0.99}}
+
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/slowapi/extension.py", line 38, in predict_image
+    POST /inference/predict - Endpoint: /inference/predict
+2026-06-07 18:35:32,938 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:35:32,944 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:35:32,955 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:35:32,964 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:35:32,972 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:35:33,007 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:48:25,391 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:48:25,404 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:48:25,409 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:48:25,416 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:48:25,512 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 413 Request Entity Too Large"
+2026-06-07 18:48:25,519 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:48:25,524 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'string_too_short', 'loc': ('body', 'filename'), 'msg': 'String should have at least 1 character', 'input': '', 'ctx': {'min_length': 1}}] - Endpoint: /feedback/
+2026-06-07 18:48:25,526 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:48:25,532 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:48:25,538 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'literal_error', 'loc': ('body', 'model_prediction'), 'msg': "Input should be 'REAL', 'AI_GENERATED' or 'UNCERTAIN'", 'input': 'INVALID', 'ctx': {'expected': "'REAL', 'AI_GENERATED' or 'UNCERTAIN'"}}] - Endpoint: /feedback/
+2026-06-07 18:48:25,539 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:48:25,546 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:48:25,552 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'less_than_equal', 'loc': ('body', 'confidence'), 'msg': 'Input should be less than or equal to 1', 'input': 1.5, 'ctx': {'le': 1.0}}] - Endpoint: /feedback/
+2026-06-07 18:48:25,554 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:48:25,588 - mlops_detector - ERROR - Unexpected system error: 1 validation error:
+  {'type': 'enum', 'loc': ('response', 'status'), 'msg': "Input should be 'SUCCESS' or 'FAILED'", 'input': 'success', 'ctx': {'expected': "'SUCCESS' or 'FAILED'"}}
+
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/slowapi/extension.py", line 38, in predict_image
+    POST /inference/predict - Endpoint: /inference/predict
+2026-06-07 18:48:25,940 - mlops_detector - ERROR - Unexpected system error: 1 validation error:
+  {'type': 'enum', 'loc': ('response', 'status'), 'msg': "Input should be 'SUCCESS' or 'FAILED'", 'input': 'success', 'ctx': {'expected': "'SUCCESS' or 'FAILED'"}}
+
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/slowapi/extension.py", line 38, in predict_image
+    POST /inference/predict - Endpoint: /inference/predict
+2026-06-07 18:48:26,227 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 400 Bad Request"
+2026-06-07 18:48:26,235 - mlops_detector - ERROR - Unexpected system error: Mocked inference crash - Endpoint: /inference/predict
+2026-06-07 18:48:26,603 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:48:26,610 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:48:26,622 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:48:26,630 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:48:26,640 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:48:26,672 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:52:06,676 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:52:06,687 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:52:06,693 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:52:06,701 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:52:06,787 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 413 Request Entity Too Large"
+2026-06-07 18:52:06,793 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:52:06,798 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'string_too_short', 'loc': ('body', 'filename'), 'msg': 'String should have at least 1 character', 'input': '', 'ctx': {'min_length': 1}}] - Endpoint: /feedback/
+2026-06-07 18:52:06,800 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:52:06,805 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:52:06,811 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'literal_error', 'loc': ('body', 'model_prediction'), 'msg': "Input should be 'REAL', 'AI_GENERATED' or 'UNCERTAIN'", 'input': 'INVALID', 'ctx': {'expected': "'REAL', 'AI_GENERATED' or 'UNCERTAIN'"}}] - Endpoint: /feedback/
+2026-06-07 18:52:06,813 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:52:06,819 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:52:06,824 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'less_than_equal', 'loc': ('body', 'confidence'), 'msg': 'Input should be less than or equal to 1', 'input': 1.5, 'ctx': {'le': 1.0}}] - Endpoint: /feedback/
+2026-06-07 18:52:06,826 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:52:06,863 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:52:06,870 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:52:06,876 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:52:06,883 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:52:06,888 - slowapi - WARNING - ratelimit 5 per 1 second (testclient) exceeded at endpoint: /inference/predict
+2026-06-07 18:52:06,889 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 429 Too Many Requests"
+2026-06-07 18:52:06,896 - slowapi - WARNING - ratelimit 5 per 1 second (testclient) exceeded at endpoint: /inference/predict
+2026-06-07 18:52:06,899 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 429 Too Many Requests"
+2026-06-07 18:52:06,950 - slowapi - WARNING - ratelimit 5 per 1 second (testclient) exceeded at endpoint: /inference/predict
+2026-06-07 18:52:06,953 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 429 Too Many Requests"
+2026-06-07 18:52:06,966 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:52:06,973 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:52:06,983 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:52:07,015 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-07 18:53:41,271 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:53:41,283 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 200 OK"
+2026-06-07 18:53:41,290 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:53:41,297 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 202 Accepted"
+2026-06-07 18:53:41,393 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 413 Request Entity Too Large"
+2026-06-07 18:53:41,399 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:53:41,404 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'string_too_short', 'loc': ('body', 'filename'), 'msg': 'String should have at least 1 character', 'input': '', 'ctx': {'min_length': 1}}] - Endpoint: /feedback/
+2026-06-07 18:53:41,406 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:53:41,414 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:53:41,418 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'literal_error', 'loc': ('body', 'model_prediction'), 'msg': "Input should be 'REAL', 'AI_GENERATED' or 'UNCERTAIN'", 'input': 'INVALID', 'ctx': {'expected': "'REAL', 'AI_GENERATED' or 'UNCERTAIN'"}}] - Endpoint: /feedback/
+2026-06-07 18:53:41,420 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:53:41,428 - httpx - INFO - HTTP Request: POST http://testserver/feedback "HTTP/1.1 307 Temporary Redirect"
+2026-06-07 18:53:41,434 - mlops_detector - WARNING - Unvalid data entry: [{'type': 'less_than_equal', 'loc': ('body', 'confidence'), 'msg': 'Input should be less than or equal to 1', 'input': 1.5, 'ctx': {'le': 1.0}}] - Endpoint: /feedback/
+2026-06-07 18:53:41,436 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ "HTTP/1.1 422 Unprocessable Entity"
+2026-06-07 18:53:41,471 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:53:41,478 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:53:41,484 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:53:41,491 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 200 OK"
+2026-06-07 18:53:41,496 - slowapi - WARNING - ratelimit 5 per 1 second (testclient) exceeded at endpoint: /inference/predict
+2026-06-07 18:53:41,497 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 429 Too Many Requests"
+2026-06-07 18:53:42,524 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 400 Bad Request"
+2026-06-07 18:53:42,541 - mlops_detector - ERROR - Model Inference Error: Mocked inference crash
+2026-06-07 18:53:42,544 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict "HTTP/1.1 500 Internal Server Error"
+2026-06-07 18:53:42,555 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:53:42,563 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:53:42,572 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
+2026-06-07 18:53:42,607 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)

@@ -98,4 +98,13 @@ class FeedbackRepository(AbstractFeedbackRepository):
             await self.session.rollback()
             logger.error(f"Soft delete error. ID: {record_id}: {str(e)}")
             raise DatabaseError("Soft delete fails")
+        
+    async def get_feedback_by_filename(self, filename: str) -> FeedbackItem | None:
+        """
+        Gets the feedback by the filename
+        """
+        result = await self.session.execute(
+            select(FeedbackItem).where(FeedbackItem.filename == filename)
+        )
+        return result.scalar_one_or_none()
     
