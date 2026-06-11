@@ -24,7 +24,6 @@ def client():
         "filename": "test.png", "prediction": "REAL", "confidence": 0.99, "status": "SUCCESS"
     }
     app.state.inference_service = mock_inference
-    
     mock_feedback_service = MagicMock()
     mock_feedback_service.register_feedback = AsyncMock()
     

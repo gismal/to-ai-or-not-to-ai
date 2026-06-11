@@ -2,9 +2,6 @@ name: Test Automation (CI)
 on: 
   push:
     branches: ["**"]
-    paths:
-      - '**.py'
-      - 'requirements.txt'
   pull_request:
     branches: ["**"]
 
