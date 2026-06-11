@@ -11,6 +11,7 @@ from src.main import app
 from src.config import settings
 from src.api.deps import get_feedback_service
 from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
+from src.schemas.predict import InferenceStatus
 
 VALID_API_KEY = settings.API_KEY.get_secret_value()
 
