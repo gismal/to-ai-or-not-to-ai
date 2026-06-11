@@ -1,8 +1,13 @@
 fastapi
 uvicorn
+slowapi
+pydantic-settings
 sqlalchemy
 aiosqlite
 pytest
+pytest-asyncio
 pytest-html
 httpx
-pytest-asyncio
+numpy
+Pillow
+onnxruntime
