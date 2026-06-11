@@ -1,4 +1,10 @@
 import pytest
+import os
+
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+os.environ["API_KEY"] = "test_gizli_anahtar_123"
+os.environ["MODEL_THRESHOLD"] = "0.75"
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.core.database import Base
 from src.repositories.feedback_repo import FeedbackRepository

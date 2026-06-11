@@ -35,9 +35,6 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run Tests
-        env:
-          API_KEY: ${{ secrets.TEST_API_KEY }}
-          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
         run: |
           echo "API_KEY=$API_KEY" > .env
           echo "DATABASE_URL=$DATABASE_URL" >> .env
