@@ -1,37 +1,44 @@
 name: Test Automation (CI)
-on: 
+
+on:
   push:
-    branches: ["**"]
+    branches: ["main", "dev"]  
     paths:
-      - '**.py'
-      - 'requirements-test.txt'
-      - '.github/workflows/**'
+      - 'src/**'              
+      - 'tests/**'             
+      - 'requirements-test.txt' 
+      - '.github/workflows/ci.yml'
   pull_request:
-    branches: ["**"]
+    branches: ["main", "dev"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: true  
       matrix:
         python-version: ['3.11', '3.12', '3.14']
 
     steps:
-    - name: Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Python Setup
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+      - name: Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-    - name: Load Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-test.txt
-        echo "${{ secrets.ENV_FILE }}" > .env 
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-test.txt
 
-    - name: Run Tests
-      run: |
-        PYTHONPATH=. python -m pytest -v
+      - name: Run Tests
+        env:
+          API_KEY: ${{ secrets.TEST_API_KEY }}
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+        run: |
+          echo "API_KEY=$API_KEY" > .env
+          echo "DATABASE_URL=$DATABASE_URL" >> .env
+          PYTHONPATH=. python -m pytest -v

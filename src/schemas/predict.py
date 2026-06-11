@@ -1,6 +1,11 @@
 from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 
+class InferenceStatus(str, Enum):
+    """Enumeration of the inference execution status."""
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
 class PredictionLabel(str, Enum):
     """ 
     Enumaration of all possible prediction outcomes
@@ -40,7 +45,3 @@ class PredictionResponse(BaseModel):
         }
     )
     
-class InferenceStatus(str, Enum):
-    """Enumeration of the inference execution status."""
-    SUCCESS = "SUCCESS"
-    FAILED = "FAILED"
