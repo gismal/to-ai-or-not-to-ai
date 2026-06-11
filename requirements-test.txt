@@ -13,3 +13,4 @@ numpy
 Pillow
 onnxruntime
 ImageHash
+python-multipart
