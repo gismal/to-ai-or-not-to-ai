@@ -15,7 +15,7 @@ import torch.optim as optim
 import torchvision.models as models
 import torchvision.transforms as transforms
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-from torch.utils.ata import DataLoader
+from torch.utils.data import DataLoader
 from torchvision import datasets
 
 from scripts.train_config import TrainConfig
@@ -68,7 +68,7 @@ def get_dataloaders(config: TrainConfig) -> Tuple[DataLoader, DataLoader, List[s
         pin_memory = True,
     )
     train_loader = DataLoader(train_dataset, shuffle = True, **loader_kwargs)
-    val_loader = DataLoader(val_dataset, shuffle = True **loader_kwargs)
+    val_loader = DataLoader(val_dataset, shuffle = True, **loader_kwargs)
         
     logger.info(
         f"Dataset ready — train: {len(train_dataset)}, "
@@ -113,12 +113,12 @@ class EarlyStopping:
 # -- Trainer  ----
 class Trainer:
     """ Owns the full training loog, checkpointing and early stopping """
-    def __init__(self, model: nn.Model config: TrainConfig, device: torch.device) -> None:
+    def __init__(self, model: nn.Model, config: TrainConfig, device: torch.device) -> None:
         self.model = model
         self.config = config
         self.device = device
         
-        self.criterion = nn.CrossEntropyLoss
+        self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(
             filter(lambda p: p.requires_grad, model.parameters()),
             lr = config.learning_rate,
@@ -130,60 +130,60 @@ class Trainer:
         self._best_weigths: dict = {}
         self._best_metrics: Dict[str, float] = {}
    
-#-- Private Helpers ----
-def _train_epoch(self, loader: DataLoader) -> float
-    self.model.train()
-    total_loss = 0.0
-    
-    for inputs, labels in loader:
-        inputs, labels = inputs.to(self.device), labels.to(self.device)
-        self.optimizer.zero_grad()
-        loss = self.criterion(self.model(inputs), labels)
-        loss.backward()
-        self.optimizer.step()
-        total_loss += loss.item()
+    #-- Private Helpers ----
+    def _train_epoch(self, loader: DataLoader) -> float:
+        self.model.train()
+        total_loss = 0.0
         
-    return total_loss / len(loader)
+        for inputs, labels in loader:
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
+            self.optimizer.zero_grad()
+            loss = self.criterion(self.model(inputs), labels)
+            loss.backward()
+            self.optimizer.step()
+            total_loss += loss.item()
+            
+        return total_loss / len(loader)
 
-@torch.no_grad()     
-def _validate_epoch(self, loader: DataLoader) -> Tuple[float, Dict[str, float]]:
-    self.model.eval()
-    total_loss = 0.0
-    all_preds, all_labels = [], []
-    
-    for inputs, labels in loader:
-        inputs, labels = inputs.to(self.device), labels.to(self.device)
-        outputs = self.model(inputs)
+    @torch.no_grad()     
+    def _validate_epoch(self, loader: DataLoader) -> Tuple[float, Dict[str, float]]:
+        self.model.eval()
+        total_loss = 0.0
+        all_preds, all_labels = [], []
         
-        total_loss += self.criterion(outputs, labels).item()
-        all_preds.extend(outputs.argmax(dim= 1).cpu().numoy())
-        all_labels.extend(labels.cpu().numpy())
-        
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        all_labels,
-        all_preds,
-        average= "weighted",
-        zero_division = 0
-    )   
-    metrics = {
-        "accuracy": float(accuracy_score(all_labels, all_preds)),
-        "precision": float(precision),
-        "recall": float(recall),
-        "f1_score": float(f1),
-    }
-    return total_loss / len(loader) , metrics
+        for inputs, labels in loader:
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
+            outputs = self.model(inputs)
+            
+            total_loss += self.criterion(outputs, labels).item()
+            all_preds.extend(outputs.argmax(dim= 1).cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+            
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            all_labels,
+            all_preds,
+            average= "weighted",
+            zero_division = 0
+        )   
+        metrics = {
+            "accuracy": float(accuracy_score(all_labels, all_preds)),
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1_score": float(f1),
+        }
+        return total_loss / len(loader) , metrics
 
-def _save_checkpoint(self, metrics: Dict[str, float]) -> None:
-    self.config.output_dir.mkdir(parents = True, exist_ok = True) 
-    torch.save(
-        {
-            "model_state_dict": self.model.state_dict(),
-            "optimizer_state_dict": self.optimier.state_dict(),
-            "metrics": metrics,
-        },
-        self.config.checkpoint_path,
-    )
-    
+    def _save_checkpoint(self, metrics: Dict[str, float]) -> None:
+        self.config.output_dir.mkdir(parents = True, exist_ok = True) 
+        torch.save(
+            {
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "metrics": metrics,
+            },
+            self.config.checkpoint_path,
+        )
+        
     #-- Public API ------
     
     def run(self, train_loader: DataLoader, val_loader: DataLoader) -> Dict[str, float]:
@@ -232,11 +232,11 @@ def export_model(
         export_copy,
         dummy_input,
         config.onnx_path,
-        export_params = True
-        opset_version = 14
-        do_constant_folding = True
+        export_params = True,
+        opset_version = 14,
+        do_constant_folding = True,
         input_names = ["input"],
-        output_names = ["output"]
+        output_names = ["output"],
         dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
     )
     logger.info(f"ONNX model exported {config.onnx_path}")
@@ -257,13 +257,13 @@ def export_model(
 #-- Entry Point -------
 def main() -> None:
     logger.info("MLOps Training Pipeline")
-    config = trainConfig()
+    config = TrainConfig()
     
     torch.manual_seed(config.seed)
-    if torch.cude.is_available():
+    if torch.cuda.is_available():
         torch.cuda.manual_seed_all(config.seed)
         
-    device = torch.device("cuda" if torch.cuda.isavailable() else "cpu" )
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu" )
     logger.info(f"Device: {device}")
     
     try:

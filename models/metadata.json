@@ -1,0 +1,18 @@
+{
+    "model_version": "v2.0.0",
+    "trained_at": "2026-06-12T21:56:16.447807+00:00",
+    "base_model": "MobileNetV3_Small",
+    "classes": [
+        "AI_GENERATED",
+        "REAL"
+    ],
+    "epochs_trained": 20,
+    "batch_size": 16,
+    "threshold": 0.75,
+    "metrics": {
+        "accuracy": 0.5,
+        "precision": 0.25,
+        "recall": 0.5,
+        "f1_score": 0.3333
+    }
+}

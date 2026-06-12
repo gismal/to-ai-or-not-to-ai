@@ -186,3 +186,151 @@
 2026-06-07 18:53:42,563 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
 2026-06-07 18:53:42,572 - httpx - INFO - HTTP Request: GET http://testserver/inference/health "HTTP/1.1 401 Unauthorized"
 2026-06-07 18:53:42,607 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)
+2026-06-12 23:04:56,762 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:05:37,460 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:06:05,656 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:06:27,196 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:06:27,199 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:06:27,199 - mlops_detector - WARNING - Aborted — Missing dataste directory: data/train. Prepare the dataset and retry.
+2026-06-12 23:34:29,974 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:34:29,980 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:34:29,981 - mlops_detector - WARNING - Aborted — Found no valid file for the classes AI_GENERATED, REAL. Supported extensions are: .jpg, .jpeg, .png, .ppm, .bmp, .pgm, .tif, .tiff, .webp. Prepare the dataset and retry.
+2026-06-12 23:39:25,613 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:39:25,619 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:39:25,620 - mlops_detector - CRITICAL - Unexpected error: unsupported operand type(s) for ** or pow(): 'bool' and 'dict'
+Traceback (most recent call last):
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 270, in main
+    train_loader, val_loader, classes = get_dataloaders(config)
+                                        ~~~~~~~~~~~~~~~^^^^^^^^
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 71, in get_dataloaders
+    val_loader = DataLoader(val_dataset, shuffle = True **loader_kwargs)
+                                                   ~~~~~^^~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for ** or pow(): 'bool' and 'dict'
+2026-06-12 23:39:56,218 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:39:56,220 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:39:56,221 - mlops_detector - INFO - Dataset ready — train: 2, val: 2, classes: ['AI_GENERATED', 'REAL']
+2026-06-12 23:39:57,916 - mlops_detector - INFO - Model ready. Trainable params: 592,898 / 1,519,906
+2026-06-12 23:39:57,918 - mlops_detector - CRITICAL - Unexpected error: 'Trainer' object has no attribute 'run'
+Traceback (most recent call last):
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 274, in main
+    best_metrics = trainer.run(train_loader, val_loader)
+                   ^^^^^^^^^^^
+AttributeError: 'Trainer' object has no attribute 'run'
+2026-06-12 23:44:39,914 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:44:39,917 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:44:39,918 - mlops_detector - INFO - Dataset ready — train: 2, val: 2, classes: ['AI_GENERATED', 'REAL']
+2026-06-12 23:44:40,022 - mlops_detector - INFO - Model ready. Trainable params: 592,898 / 1,519,906
+2026-06-12 23:44:40,025 - mlops_detector - INFO - Training on cpu for up to 20
+2026-06-12 23:44:44,746 - mlops_detector - CRITICAL - Unexpected error: Boolean value of Tensor with more than one value is ambiguous
+Traceback (most recent call last):
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 274, in main
+    best_metrics = trainer.run(train_loader, val_loader)
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 194, in run
+    train_loss = self._train_epoch(train_loader)
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 141, in _train_epoch
+    loss = self.criterion(self.model(inputs), labels)
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/torch/nn/modules/loss.py", line 1388, in __init__
+    super().__init__(weight, size_average, reduce, reduction)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/torch/nn/modules/loss.py", line 57, in __init__
+    super().__init__(size_average, reduce, reduction)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/torch/nn/modules/loss.py", line 44, in __init__
+    self.reduction: str = _Reduction.legacy_get_string(size_average, reduce)
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/torch/nn/_reduction.py", line 44, in legacy_get_string
+    if size_average and reduce:
+       ^^^^^^^^^^^^
+RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+2026-06-12 23:53:44,087 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:53:44,095 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:53:44,096 - mlops_detector - INFO - Dataset ready — train: 2, val: 2, classes: ['AI_GENERATED', 'REAL']
+2026-06-12 23:53:44,240 - mlops_detector - INFO - Model ready. Trainable params: 592,898 / 1,519,906
+2026-06-12 23:53:44,242 - mlops_detector - INFO - Training on cpu for up to 20
+2026-06-12 23:53:49,298 - mlops_detector - CRITICAL - Unexpected error: 'Tensor' object has no attribute 'numoy'
+Traceback (most recent call last):
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 274, in main
+    best_metrics = trainer.run(train_loader, val_loader)
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 195, in run
+    val_loss, metrics = self._validate_epoch(val_loader)
+                        ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 159, in _validate_epoch
+    all_preds.extend(outputs.argmax(dim= 1).cpu().numoy())
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Tensor' object has no attribute 'numoy'. Did you mean: 'numpy'?
+2026-06-12 23:54:23,896 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:54:23,900 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:54:23,901 - mlops_detector - INFO - Dataset ready — train: 2, val: 2, classes: ['AI_GENERATED', 'REAL']
+2026-06-12 23:54:24,002 - mlops_detector - INFO - Model ready. Trainable params: 592,898 / 1,519,906
+2026-06-12 23:54:24,005 - mlops_detector - INFO - Training on cpu for up to 20
+2026-06-12 23:54:28,636 - mlops_detector - INFO - Epoch   1/20 | Train Loss: 0.6817 | Val Loss: 0.7097 | F1: 0.3333 | Acc: 0.5000
+2026-06-12 23:54:28,657 - mlops_detector - CRITICAL - Unexpected error: 'Trainer' object has no attribute 'optimier'
+Traceback (most recent call last):
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 274, in main
+    best_metrics = trainer.run(train_loader, val_loader)
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 208, in run
+    self._save_checkpoint(metrics)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/goksu/ai-image-detector-mlops/scripts/train.py", line 181, in _save_checkpoint
+    "optimizer_state_dict": self.optimier.state_dict(),
+                            ^^^^^^^^^^^^^
+AttributeError: 'Trainer' object has no attribute 'optimier'. Did you mean: 'optimizer'?
+2026-06-12 23:55:59,998 - mlops_detector - INFO - MLOps Training Pipeline
+2026-06-12 23:56:00,001 - mlops_detector - INFO - Device: cpu
+2026-06-12 23:56:00,002 - mlops_detector - INFO - Dataset ready — train: 2, val: 2, classes: ['AI_GENERATED', 'REAL']
+2026-06-12 23:56:00,115 - mlops_detector - INFO - Model ready. Trainable params: 592,898 / 1,519,906
+2026-06-12 23:56:00,119 - mlops_detector - INFO - Training on cpu for up to 20
+2026-06-12 23:56:04,903 - mlops_detector - INFO - Epoch   1/20 | Train Loss: 0.6817 | Val Loss: 0.7097 | F1: 0.3333 | Acc: 0.5000
+2026-06-12 23:56:04,953 - mlops_detector - INFO -   ✓ New best model saved to disk 
+2026-06-12 23:56:05,236 - mlops_detector - INFO - Epoch   2/20 | Train Loss: 0.3027 | Val Loss: 0.7388 | F1: 0.3333 | Acc: 0.5000
+2026-06-12 23:56:05,558 - mlops_detector - INFO - Epoch   3/20 | Train Loss: 0.1074 | Val Loss: 0.7683 | F1: 0.3333 | Acc: 0.5000
+2026-06-12 23:56:05,868 - mlops_detector - INFO - Epoch   4/20 | Train Loss: 0.0637 | Val Loss: 0.8087 | F1: 0.3333 | Acc: 0.5000
+2026-06-12 23:56:06,221 - mlops_detector - INFO - Epoch   5/20 | Train Loss: 0.0196 | Val Loss: 0.8490 | F1: 0.3333 | Acc: 0.5000
+2026-06-12 23:56:06,510 - mlops_detector - INFO - Epoch   6/20 | Train Loss: 0.0082 | Val Loss: 0.8862 | F1: 0.3333 | Acc: 0.5000
+2026-06-12 23:56:06,511 - mlops_detector - INFO - Early stopping triggered at epoch 6
+2026-06-12 23:56:15,944 - onnx_ir.passes.common.unused_removal - INFO - No unused functions to remove
+2026-06-12 23:56:15,945 - onnxscript.version_converter - WARNING - The model version conversion is not supported by the onnxscript version converter and fallback is enabled. The model will be converted using the onnx C API (target version: 14).
+2026-06-12 23:56:16,045 - onnxscript.version_converter - WARNING - Failed to convert the model to the target version 14 using the ONNX C API. The model was not modified
+Traceback (most recent call last):
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/onnxscript/version_converter/__init__.py", line 137, in call
+    converted_proto = _c_api_utils.call_onnx_api(
+        func=_partial_convert_version, model=model
+    )
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/onnxscript/version_converter/_c_api_utils.py", line 65, in call_onnx_api
+    result = func(proto)
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/onnxscript/version_converter/__init__.py", line 132, in _partial_convert_version
+    return onnx.version_converter.convert_version(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        proto, target_version=self.target_version
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages/onnx/version_converter.py", line 39, in convert_version
+    converted_model_str = C.convert_version(model_str, target_version)
+RuntimeError: /github/workspace/onnx/version_converter/adapters/axes_input_to_attribute.h:68: adapt: Assertion `node->hasAttribute(kaxes)` failed: No initializer or constant input to node found
+2026-06-12 23:56:16,062 - onnx_ir.passes.common.unused_removal - INFO - Removed 308 unused nodes
+2026-06-12 23:56:16,064 - onnx_ir.passes.common.unused_removal - INFO - No unused functions to remove
+2026-06-12 23:56:16,069 - onnxscript.optimizer._constant_folding - INFO - Skipping constant folding for node 'node_Shape_0' because it is graph input to preserve graph signature
+2026-06-12 23:56:16,081 - onnxscript.optimizer._constant_folding - INFO - Skipping constant folding for node 'node_conv2d' because it is graph input to preserve graph signature
+2026-06-12 23:56:16,332 - onnx_ir.passes.common.unused_removal - INFO - Removed 253 unused nodes
+2026-06-12 23:56:16,332 - onnxscript.rewriter - INFO - Applied 69 of general pattern rewrite rules.
+2026-06-12 23:56:16,334 - onnx_ir.passes.common.unused_removal - INFO - No unused functions to remove
+2026-06-12 23:56:16,334 - onnxscript.optimizer._constant_folding - INFO - Skipping constant folding for node 'node_Shape_0' because it is graph input to preserve graph signature
+2026-06-12 23:56:16,335 - onnxscript.optimizer._constant_folding - INFO - Skipping constant folding for node 'node_Conv_506' because it is graph input to preserve graph signature
+2026-06-12 23:56:16,396 - onnx_ir.passes.common.unused_removal - INFO - Removed 1 unused nodes
+2026-06-12 23:56:16,398 - onnx_ir.passes.common.unused_removal - INFO - No unused functions to remove
+2026-06-12 23:56:16,402 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_129' with existing initializer 'val_28'
+2026-06-12 23:56:16,402 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_164' with existing initializer 'val_28'
+2026-06-12 23:56:16,402 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_199' with existing initializer 'val_28'
+2026-06-12 23:56:16,402 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_234' with existing initializer 'val_28'
+2026-06-12 23:56:16,403 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_269' with existing initializer 'val_28'
+2026-06-12 23:56:16,403 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_304' with existing initializer 'val_28'
+2026-06-12 23:56:16,403 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_339' with existing initializer 'val_28'
+2026-06-12 23:56:16,403 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_374' with existing initializer 'val_28'
+2026-06-12 23:56:16,404 - onnx_ir.passes.common.initializer_deduplication - INFO - Replaced initializer 'val_398' with existing initializer 'val_28'
+2026-06-12 23:56:16,447 - mlops_detector - INFO - ONNX model exported models/model_v1.onnx
+2026-06-12 23:56:16,448 - mlops_detector - INFO - Metadata saved: [config.metadata_path]
+2026-06-12 23:56:16,448 - mlops_detector - INFO - Pipeline complete.
+2026-06-12 23:56:16,448 - mlops_detector - INFO - Best metrics: {'accuracy': 0.5, 'precision': 0.25, 'recall': 0.5, 'f1_score': 0.3333}

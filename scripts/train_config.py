@@ -34,7 +34,7 @@ class TrainConfig(BaseModel):
     
     @property
     def metadata_path(self) -> Path:
-        reutrn self.output_dir / "metadata.json"
+        return self.output_dir / "metadata.json"
         
     @classmethod
     def from_yaml(cls, path:Path) -> "TrainConfig":
