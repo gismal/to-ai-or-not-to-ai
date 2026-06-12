@@ -21,16 +21,21 @@ async def lifespan(app: FastAPI):
     shutdown to prevent memo leaks and disk clutter
     """
     logger.info("Starting up API, loading ONNX model")
-    predictor = ONNXPredictor()
     
-    app.state.inference_service = InferenceService(
-        predictor = predictor,
-        threshold = settings.MODEL_THRESHOLD,
-        gray_area_margin = settings.GRAY_AREA_MARGIN
-    )
+    try:
+        predictor = ONNXPredictor()
+        app.state.inference_service = InferenceService(
+            predictor = predictor,
+            threshold = settings.MODEL_THRESHOLD,
+            gray_area_margin = settings.GRAY_AREA_MARGIN
+        )
+        logger.info("Shutting down API, cleaning up resources")
+    except Exception as e:
+        logger.critical(f"Startup failed, can't load model: {e}", exc_info = True)
+        raise
+    
     yield
-    logger.info("Shutting down API, cleaning up resources")
-    
+    logger.info("Shutting down, realing model session")
     
 app = FastAPI(title= "To AI or Not to AI", version= "1.0.0", lifespan= lifespan)
 
@@ -64,8 +69,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """
     logger.warning(f"Unvalid data entry: {exc.errors()} - Endpoint: {request.url.path}")
     return JSONResponse(
-        status_code = status.HTTP_422_UNPROCESSABLE_CONTENT,
-        content = {"details": "You had sent unvalid data", "errors":exc.errors()}
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content = {"details": "You had sent unvalid data", "errors":exc.errors(include_url = False)}
     )
 
 @app.exception_handler(Exception)
