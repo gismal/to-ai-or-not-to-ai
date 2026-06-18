@@ -1,3 +1,5 @@
 venv/
 .env
 .pytest_cache/
+logs/
+*.logs

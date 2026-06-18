@@ -3,9 +3,11 @@ import asyncio
 import time
 from pathlib import Path
 from fastapi import UploadFile
+from arq import ArqRedis
+
 from src.inference import ONNXPredictor
 from src.logger import logger
-from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
+from src.infra.exceptions import InvalidImageFormatError, ModelInferenceError
 from src.schemas.predict import PredictionLabel, InferenceStatus
 
 
@@ -24,9 +26,14 @@ class InferenceService:
         
         """
         self.predictor = predictor
+        self.redis_pool = redis_pool
         self.threshold = threshold
         self.lower_bound = threshold - gray_area_margin
         self.one_third = gray_area_margin / 3
+    
+    async def trigger_retraining_process(self, dataset_path: str):
+        await self.redis_pool.enqueue_job("train_model_task", dataset_path = dataset_path)
+        logger.info(f"Retraining job enqueued for {dataset_path}")
             
     def _decide_class(self, confidence: float) -> PredictionLabel:
         """

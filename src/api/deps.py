@@ -4,7 +4,7 @@ from fastapi import Request, Depends, HTTPException, Security, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import APIKeyHeader
 
-from src.core.database import AsyncSessionLocal, get_db_session
+from src.infra.database import AsyncSessionLocal, get_db_session
 from src.services.inference_service import InferenceService
 from src.repositories.feedback_repo import FeedbackRepository 
 from src.services.feedback_service import FeedbackService

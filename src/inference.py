@@ -1,4 +1,5 @@
 import io
+import threading 
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
@@ -51,8 +52,11 @@ def _preprocess(image_source: str | Path |  io.BytesIO) -> tuple[str, np.ndarray
             with Image.open(image_source) as img:
                 img = img.convert('RGB').resize((224, 224)) 
                 
-                # Normalization and format conversion (HWC -> CHW)
+                MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+                STD  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+                
                 img_data = np.array(img, dtype = np.float32) / 255.0
+                img_data = (img_data - MEAN) / STD
                 img_data = np.transpose(img_data, (2, 0, 1))
                 
                 return str(image_source), np.expand_dims(img_data, axis = 0), None

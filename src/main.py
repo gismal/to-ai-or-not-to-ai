@@ -10,8 +10,9 @@ from slowapi.errors import RateLimitExceeded
 from src.config import settings
 from src.logger import logger
 from src.inference import ONNXPredictor
-from src.api.routes import router, feedback_router, limiter
-from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
+from src.api.routes import router, feedback_router
+from src.infra.limiter import limiter
+from src.infra.exceptions import InvalidImageFormatError, ModelInferenceError
 from src.services.inference_service import InferenceService
 
 @asynccontextmanager
@@ -29,13 +30,14 @@ async def lifespan(app: FastAPI):
             threshold = settings.MODEL_THRESHOLD,
             gray_area_margin = settings.GRAY_AREA_MARGIN
         )
-        logger.info("Shutting down API, cleaning up resources")
+        logger.info("Model loaded successfully")
     except Exception as e:
         logger.critical(f"Startup failed, can't load model: {e}", exc_info = True)
         raise
     
     yield
     logger.info("Shutting down, realing model session")
+    app.state.inference_service.predictor.close()
     
 app = FastAPI(title= "To AI or Not to AI", version= "1.0.0", lifespan= lifespan)
 
@@ -43,11 +45,13 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware for future possinle frontend connections
+ALLOWED_ORIGINS: list[str] = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ["*"],
+    allow_origins = settings.ALLOWED_ORIGINS,
     allow_credentials = False,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"]
 )
 
@@ -70,7 +74,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     logger.warning(f"Unvalid data entry: {exc.errors()} - Endpoint: {request.url.path}")
     return JSONResponse(
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content = {"details": "You had sent unvalid data", "errors":exc.errors(include_url = False)}
+        content = {"details": "Invalid request data submitted", "errors":exc.errors(include_url = False)}
     )
 
 @app.exception_handler(Exception)
@@ -86,3 +90,4 @@ async def global_exception_handler(request: Request, exc: Exception):
     
 app.include_router(router)
 app.include_router(feedback_router)
+

@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Request, status, HTTPException, BackgroundTasks
+
+from src.infra.limiter import Limiter
 from src.api.security import verify_api_key
 from src.services.inference_service import InferenceService
 from src.schemas.predict import PredictionResponse
@@ -8,7 +10,6 @@ from src.services.feedback_service import FeedbackService
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-limiter = Limiter(key_func = get_remote_address)
 
 """
 Inference Router
@@ -29,11 +30,16 @@ class InferenceRouter:
         "/health",
         status_code= status.HTTP_200_OK,
         summary= "Check model and system status")
-    def health_check():
+    async def health_check():
         """
-        Verifies that the API and the inference engine are running
+        Verifies that the model is loaded and responsive, is the database reachable
         """
-        return {"status": "System is running optimally", "model_loaded": True}
+        checks = {
+            "model": _check_model(request.app.state.inference_service),
+            "database": await _check_databse()
+        }
+        status = "healthy" if all(checks.values()) else "degraded"        
+        return {"status": "System is running optimally", "checks": checks, "model_loaded": True}
 
     @staticmethod
     @router.post(
@@ -58,6 +64,19 @@ class InferenceRouter:
                 raise HTTPException(status_code = 413, detail = "File too large. Max 10 MB allowed")
         
         return await service.process_upload(file)
+    
+    @router.post(
+        "/admin/check-drift",
+        status_code = status.HTTP_200_OK,
+        summary = "Check model drift and trigger retraining if needed",
+        tags = ["Admin"]
+    )
+    async def check_drift(
+        session: AsyncSession = Depends(get_db_session),
+        _: str = Depends(verify_api_key)
+    ):
+        return await RetrainService.check_drift_and_trigger(session)
+    
     
     """
     Feedback Router
@@ -91,3 +110,5 @@ class FeedbackRouter:
             filename = payload.filename,
             message = "Feedback received and queued for processing"
             )
+        
+    

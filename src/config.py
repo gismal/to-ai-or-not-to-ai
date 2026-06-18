@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     GRAY_AREA_MARGIN: float = 0.35
     DEBUG: bool = False
     DATABASE_URL: str 
+    REDIS_URL: str = "redis://localhost:6379/0"
+    DRIFT_THRESHOLD: float = 0.15
 
     model_config = SettingsConfigDict(
         env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"),
