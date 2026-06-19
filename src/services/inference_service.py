@@ -1,12 +1,11 @@
 import io
 import json
 import magic
-import tempfile
 import asyncio
 import time
-from pathlib import Path
 from fastapi import UploadFile
 from arq import ArqRedis
+from pathlib import PurePosixPath
 
 from src.inference import ONNXPredictor
 from src.logger import logger
@@ -18,7 +17,7 @@ class InferenceService:
     """
     Encapsulates the core business logic, includng asynchronous file streaming, model execution and granular uncertainty classification
     """
-    def __init__(self, predictor: ONNXPredictor, redis_pool: redis_pool, threshold: float, gray_area_margin: float = 0.35):
+    def __init__(self, predictor: ONNXPredictor, redis_pool: ArqRedis, threshold: float, gray_area_margin: float = 0.35):
         """
         Initializes the inference service with its dependencies
         
@@ -35,7 +34,7 @@ class InferenceService:
         self.one_third = gray_area_margin / 3
     
     async def trigger_retraining_process(self, dataset_path: str):
-        await self.redis_pool.enqueue_job("train_model_task", dataset_path = dataset_path)
+        await self.redis_pool.enqueue_job("train_model_task")
         logger.info(f"Retraining job enqueued for {dataset_path}")
             
     def _decide_class(self, confidence: float) -> PredictionLabel:
@@ -81,13 +80,13 @@ class InferenceService:
         
         safe_filename = PurePosixPath(file.filename).name
         
-        content = await file.read()
+        content_bytes = await file.read()
         mime = magic.from_buffer(content_bytes[:2048], mime = True)
         if mime not in ("image/jpeg", "image/png"):
-            raise InvalidImageFormatError
+            raise InvalidImageFormatError(f"Unsupported file type: {mime}. Only JPEG and PNG accepted.")
         
         img_hash = generate_phash(content_bytes)
-        cache_key= f"phash: {img_hash}" if img_hash else None
+        cache_key= f"phash:{img_hash}" if img_hash else None
         
         if cache_key:
             cached_result = await self.redis_pool.get(cache_key)
@@ -123,7 +122,6 @@ class InferenceService:
             cache_payload["prediction"] = final_prediction.value 
             await self.redis_pool.setex(cache_key, 86400, json.dumps(cache_payload))
             
-        response_data["processing_time_ms"] = round((time.time() - start_time) * 1000, 2)
         response_data["cached"] = False
         return response_data
         

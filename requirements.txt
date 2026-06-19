@@ -69,6 +69,8 @@ pytest-metadata==3.1.1
 python-dotenv==1.2.2
 python-magic==0.4.27
 python-multipart==0.0.29
+pytorch-grad-cam==1.5.0
+opencv-python-headless==4.9.0.80
 PyWavelets==1.9.0
 redis==5.3.1
 scikit-learn==1.9.0

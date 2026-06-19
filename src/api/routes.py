@@ -6,11 +6,14 @@ from arq import ArqRedis
 from src.infra.limiter import limiter
 from src.services.inference_service import InferenceService
 from src.schemas.predict import PredictionResponse
-from src.api.deps import get_inference_service, get_feedback_service, verify_api_key, get_db_session # get_db_session eklendi
+from src.api.deps import (
+    get_inference_service, get_feedback_service, 
+    verify_api_key, get_db_session, get_arq_pool
+    )
 from src.schemas.feedback import FeedbackCreateRequest, FeedbackResponse
 from src.services.feedback_service import FeedbackService
 from src.services.retrain_service import RetrainService 
-from src.api.deps import get_arq_pool
+
 
 """
 Inference Router
@@ -22,7 +25,7 @@ router = APIRouter(
 )
 
 @router.get(
-    "/health",
+    "/health",  #dependecies = []
     status_code=status.HTTP_200_OK,
     summary="System Health Check"
 )
@@ -45,7 +48,8 @@ async def health_check(request: Request, session: AsyncSession = Depends(get_db_
     
     checks = {
         "model": is_model_loaded,
-        "database": True # Gerçek bir DB kontrolü (örn: session.execute(text("SELECT 1"))) buraya gelmeli
+        "database": db_ok,
+        "redis": redis_ok,
     }
     
     if not all(checks.values()):
@@ -109,11 +113,10 @@ feedback_router = APIRouter(
 @feedback_router.post(
     "/",
     response_model=FeedbackResponse,
-    status_code=status.HTTP_202_ACCEPTED,
-    summary="Get user feedback for prediction"
+    status_code=status.HTTP_200_OK,
+    summary="Submit correction for a prediction"
 )
 async def create_user_feedback(
-    request: Request,
     payload: FeedbackCreateRequest,
     service: FeedbackService = Depends(get_feedback_service)
 ):

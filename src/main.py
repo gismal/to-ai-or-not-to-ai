@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
         predictor = ONNXPredictor()
         app.state.inference_service = InferenceService(
             predictor = predictor,
+            redis_pool = app.state.arq_pool,
             threshold = settings.MODEL_THRESHOLD,
             gray_area_margin = settings.GRAY_AREA_MARGIN
         )
@@ -52,7 +53,7 @@ app = FastAPI(
     version= "1.0.0",
     lifespan= lifespan)
 
-Instrumentator().instrument(app).expose(app, include_in_schema = True)
+Instrumentator().instrument(app).expose(app, include_in_schema = False)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -65,9 +66,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
- @app.get("/health", tags = ["System"], status_code = status.HTTP_200_OK)
- async def health_check():
-     return {"status": "ok"}
+@app.get("/health", tags = ["System"], status_code = status.HTTP_200_OK)
+async def health_check():
+    return {"status": "ok"}
 
 
 @app.exception_handler(InvalidImageFormatError)

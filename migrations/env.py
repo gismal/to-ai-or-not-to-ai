@@ -22,8 +22,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# URL'i alembic.ini yerine dinamik olarak .env (settings) üzerinden alıyoruz
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))
 
 target_metadata = Base.metadata
 
@@ -40,13 +39,17 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 def do_run_migrations(connection: Connection) -> None:
-    """Senkron migration koşucu fonksiyonu"""
-    context.configure(connection=connection, target_metadata=target_metadata)
+    """Synchronous migration runner — called by run_sync inside the async engine."""
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        render_as_batch = True   #SQLite ALTER TABLE support
+        )
     with context.begin_transaction():
         context.run_migrations()
 
 async def run_async_migrations() -> None:
-    """Asenkron motor oluşturup migration'ları çalıştırır"""
+    """Creates an async engine and runs migrations via run_sync."""
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
@@ -60,5 +63,13 @@ async def run_async_migrations() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    # Asenkron fonksiyonu event loop içinde çalıştır
     asyncio.run(run_async_migrations())
+    
+def run_mitigations_offline() -> None:
+    context.configure(
+        url = url,
+        target_metadata = target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+        render_as_batch=True
+    )
