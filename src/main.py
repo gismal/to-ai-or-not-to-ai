@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 import uuid
@@ -12,7 +13,7 @@ import uuid
 from src.config import settings
 from src.logger import logger, request_id_ctx
 from src.inference import ONNXPredictor
-from src.api.routes import router, feedback_router
+from src.api.routes import router as inference_router, feedback_router
 from src.infra.limiter import limiter
 from src.core.exceptions import InvalidImageFormatError, ModelInferenceError, DatabaseError
 from src.services.inference_service import InferenceService
@@ -26,6 +27,8 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting up API, loading ONNX model")
     try:
+        app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
+
         predictor = ONNXPredictor()
         app.state.inference_service = InferenceService(
             predictor = predictor,
@@ -33,7 +36,6 @@ async def lifespan(app: FastAPI):
             gray_area_margin = settings.GRAY_AREA_MARGIN
         )
     
-        app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
         logger.info("Model loaded successfully")
     
     except Exception as e:
@@ -45,7 +47,12 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down, releasing model session")
     await app.state.arq_pool.aclose()
     
-app = FastAPI(title= "To AI or Not to AI", version= "1.0.0", lifespan= lifespan)
+app = FastAPI(
+    title= "To AI or Not to AI",
+    version= "1.0.0",
+    lifespan= lifespan)
+
+Instrumentator().instrument(app).expose(app, include_in_schema = True)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -110,6 +117,6 @@ async def request_id_middleware(request: Request, call_next):
     request_id_ctx.reset(token)
     return response    
 
-app.include_router(router)
+app.include_router(inference_router)
 app.include_router(feedback_router)
 

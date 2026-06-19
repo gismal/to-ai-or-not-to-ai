@@ -1,3 +1,6 @@
+import io
+import json
+import magic
 import tempfile
 import asyncio
 import time
@@ -9,7 +12,7 @@ from src.inference import ONNXPredictor
 from src.logger import logger
 from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
 from src.core.enums import PredictionLabel, InferenceStatus
-
+from src.utils import generate_phash
 
 class InferenceService:
     """
@@ -75,17 +78,30 @@ class InferenceService:
             ModelInferenceError: If the ONNX engine encounters a runtime error.
         """
         start_time = time.time()
-        if not file.filename.lower().endswith((".jpg", ".jpeg", ".png")):
-            raise InvalidImageFormatError("Only JPG or PNG formats are supported")
         
-        import io
-        import imghdr
+        safe_filename = PurePosixPath(file.filename).name
         
-        content = io.BytesIO(await file.read())
-        if imghdr.what(None, h= content) not in ("jpeg", "png"):
-            raise InvalidImageFormatError("File content does not match a supported image format")        
-        result = await asyncio.to_thread(self.predictor.predict, content, file.filename)
-            
+        content = await file.read()
+        mime = magic.from_buffer(content_bytes[:2048], mime = True)
+        if mime not in ("image/jpeg", "image/png"):
+            raise InvalidImageFormatError
+        
+        img_hash = generate_phash(content_bytes)
+        cache_key= f"phash: {img_hash}" if img_hash else None
+        
+        if cache_key:
+            cached_result = await self.redis_pool.get(cache_key)
+            if cached_result:
+                logger.info(f"Cache hit: {safe_filename} (pHash: {img_hash})")
+                parsed_cache = json.loads(cached_result)
+                parsed_cache["processing_time_ms"] = round((time.time() - start_time) * 1000, 2)
+                parsed_cache["cached"] = True
+                parsed_cache["prediction"] = PredictionLabel(parsed_cache["prediction"])
+                return parsed_cache
+        
+        content = io.BytesIO(content_bytes)
+        result = await asyncio.to_thread(self.predictor.predict, content, safe_filename)
+             
         if result.status == InferenceStatus.FAILED:     
             raise ModelInferenceError(str(result.error))
         
@@ -93,11 +109,21 @@ class InferenceService:
         
         if "UNCERTAIN" in final_prediction.value:
             logger.warning(f"UNCERTAIN detected: {file.filename} (Score: {result.confidence})")
-        return {
+        
+        response_data = {
             "filename": file.filename,
             "confidence": result.confidence,
             "prediction": final_prediction,
             "status": "SUCCESS",
             "processing_time_ms": round((time.time() - start_time) * 1000, 2)
             }       
+        
+        if cache_key:
+            cache_payload = response_data.copy()
+            cache_payload["prediction"] = final_prediction.value 
+            await self.redis_pool.setex(cache_key, 86400, json.dumps(cache_payload))
+            
+        response_data["processing_time_ms"] = round((time.time() - start_time) * 1000, 2)
+        response_data["cached"] = False
+        return response_data
         

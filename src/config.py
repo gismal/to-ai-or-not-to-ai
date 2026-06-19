@@ -16,5 +16,10 @@ class Settings(BaseSettings):
         env_file_encoding= "utf-8"
     )
     
+    @model_validator(mode="after")
+    def validate_threshold(self) -> "Settings":
+        if self.GRAY_AREA_MARGIN >=  self.MODEL_THRESHOLD:
+            raise ValueError("GRAY_AREA_MARGIN should be smaller then MODEL_THRESHOLD")    
+
 # Singleton Pattern: We'll reach to settings from all over the project with one instance
 settings = Settings()

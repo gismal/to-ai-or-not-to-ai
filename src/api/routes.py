@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Request, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession # Eksik import eklendi
+from sqlalchemy import text
+from arq import ArqRedis
 
 from src.infra.limiter import limiter
 from src.services.inference_service import InferenceService
@@ -14,7 +16,7 @@ from src.api.deps import get_arq_pool
 Inference Router
 """
 router = APIRouter(
-    prefix="/inference",
+    prefix="/v1/inference",
     tags=["Inference"],
     dependencies=[Depends(verify_api_key)]    
 )
@@ -22,34 +24,49 @@ router = APIRouter(
 @router.get(
     "/health",
     status_code=status.HTTP_200_OK,
-    summary="Check model and system status"
+    summary="System Health Check"
 )
-async def health_check(request: Request): # request parametresi eklendi
+async def health_check(request: Request, session: AsyncSession = Depends(get_db_session)): 
     """
     Verifies that the model is loaded and responsive, is the database reachable
     """
-    # Not: _check_model ve _check_database fonksiyonları bu dosyada yok.
-    # Bunları ya infra/health.py gibi bir yerden import etmeli ya da burada tanımlamalısınız.
-    # Şimdilik kodun çökmemesi için geçici bir yapı kuruyorum.
     
     inference_service = request.app.state.inference_service
     is_model_loaded = inference_service is not None and inference_service.predictor is not None
+    
+    db_ok = False
+    try:
+        await session.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        pass
+    
+    redis_ok = hasattr(request.app.state, "arq_pool") and request.app.state.arq_pool is not None
     
     checks = {
         "model": is_model_loaded,
         "database": True # Gerçek bir DB kontrolü (örn: session.execute(text("SELECT 1"))) buraya gelmeli
     }
     
-    system_status = "healthy" if all(checks.values()) else "degraded"        
-    return {"status": f"System is {system_status}", "checks": checks, "model_loaded": is_model_loaded}
-
+    if not all(checks.values()):
+        raise HTTPException(status_code=503, detail={"status": "degraded", "checks": checks})
+        
+    return {"status": "healthy", "checks": checks}
 
 @router.post(
     "/predict",
-    response_model=PredictionResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Classify image origin",
-    description="Accepts an image file, validates the format and executes ONNX inference"
+    response_model= PredictionResponse,
+    status_code= status.HTTP_200_OK,
+    summary= "Classify image origin",
+    responses={
+        200: {"description": "Successful inference"},
+        400: {"description": "Unsupported image format or bad request"},
+        401: {"description": "Invalid or missing API key"},
+        413: {"description": "File exceeds 10MB limit"},
+        429: {"description": "Rate limit exceeded (5 requests/second)"},
+        500: {"description": "Model inference failure"},
+    },
+    description= "Accepts an image file, validates the format and executes ONNX inference"
 )
 @limiter.limit("5/second")
 async def predict_image(
@@ -84,7 +101,7 @@ async def check_drift(
 Feedback Router
 """
 feedback_router = APIRouter(
-    prefix="/feedback",
+    prefix="/v1/feedback",
     tags=["Feedback"],
     dependencies=[Depends(verify_api_key)]
 )
@@ -93,14 +110,14 @@ feedback_router = APIRouter(
     "/",
     response_model=FeedbackResponse,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Get user feedback"
+    summary="Get user feedback for prediction"
 )
 async def create_user_feedback(
+    request: Request,
     payload: FeedbackCreateRequest,
-    background_tasks: BackgroundTasks,
     service: FeedbackService = Depends(get_feedback_service)
 ):
-    service.register_feedback(payload, background_tasks)
+    await service.register_feedback(payload)
     
     return FeedbackResponse(
         filename=payload.filename,
