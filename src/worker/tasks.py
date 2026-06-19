@@ -1,33 +1,54 @@
-import subprocess  # isolates the training process entirely from the workers memo space
-from src.worker.celery_app import celery_app
+import asyncio
+from urllib.parse import urlparse
+from arq.connections import RedisSettings
+from arq import Retry
+
 from src.logger import logger
+from src.config import settings
 
-@celery_app.task(
-    bind = True,
-    max_retries = 2,
-    default_retry_delay = 60,   # wait 60s before retry
-    name= "worker.retrain_model"
-)
-
-def retrain_model(self):
+async def retrain_model(ctx):
     """
     Runs the full training pipeline in an isolated subprocess
     """
-    logger.info("Retraining task started")
+    job_id = ctx.get("job_id")
+    logger.info(f"{job_id} Retraining task started")
     
     try: 
-        result = subprocess.run(
-            ["python", "scripts/train.py"],
-            capture_output = True,
-            text = True,
-            timeout = 3600  # 1 hour max
+        process = await asyncio.create_subprocess_exec(
+            "python", "scripts/train.py",
+            stdout = asyncio.subprocess.PIPE,
+            stderr = asyncio.subprocess.PIPE
         )
-        if result.returncode != 0:
-            raise RuntimeError(result.stderr)
+        # wait 1h 
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout = 3600)
+        
+        if process.returncode != 0:
+            raise RuntimeError(stderr.decode().strip())
         
         logger.info("Retraining completed successfully")
         return {"status": "success"}
     
     except Exception as exc:
         logger.error(f"Retraining failed: {exc}", exc_info= True)
-        raise self.retry(exc = exc)
+        raise Retry(defer = 60) from exc
+    
+parsed_url = urlparse(settings.REDIS_URL)
+
+
+class WorkerSettings:
+    functions = [retrain_model]
+    redis_settings = RedisSettings(
+        host=parsed_url.hostname or 'localhost',
+        port=parsed_url.port or 6379,
+        database=int(parsed_url.path.lstrip('/')) if parsed_url.path and parsed_url.path != '/' else 0,
+    )
+    max_tries = 3      
+    job_timeout = 4200
+    
+    async def on_startup(ctx):
+        logger.info("ARQ worker started")
+        
+    async def on_shutdown(ctx):
+        logger.info("ARQ worker shutting down")
+        
+    

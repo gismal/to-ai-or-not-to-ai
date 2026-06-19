@@ -26,7 +26,7 @@ def client():
     }
     app.state.inference_service = mock_inference
     mock_feedback_service = MagicMock()
-    mock_feedback_service.register_feedback = AsyncMock()
+    mock_feedback_service.register_feedback = MagicMock()
     
     app.dependency_overrides[get_feedback_service] = lambda: mock_feedback_service
     
@@ -38,7 +38,7 @@ def client():
 def auth_headers():
     return {"X-API-Key": VALID_API_KEY}
 
-def test_health_check_withouy_api_key(client):
+def test_health_check_without_api_key(client):
     response = client.get("/inference/health")
     assert response.status_code == 401
     
@@ -60,12 +60,29 @@ def test_create_feedback_success(client, auth_headers):
     response = client.post("/feedback", json = payload, headers = auth_headers)
     assert response.status_code == 202
     assert "queued for processing" in response.json()["message"]
+
+@pytest.mark.parametrize("confidence,expected_label", [
+    (0.95, "AI_GENERATED"),
+    (0.30, "REAL"),
+    (0.65, "UNCERTAIN_LEANING_AI"),
+    (0.45, "UNCERTAIN_LEANING_REAL"),
+    (0.58, "UNCERTAIN_NEUTRAL"),    
+])    
+def test_decision_boundary(confidence, expected_label):
+    service = InferenceService(
+        predictor=MagicMock(),
+        threshold=0.75,
+        gray_area_margin=0.35
+    )
+    
+    assert service._decide_class(confidence).value == expected_label
+ 
     
 def test_predict_image_file_too_large(client, auth_headers):
     """
     mocks the case when upload over 10MB files
     """
-    large_data = b"0" * (11 * 1024 * 1024)
+    large_data = b"0" * (11 * 1024 * 1024)  # FIX: 11mb too much
     files = {"file": ("large.png", large_data, "image/png")}
     
     response = client.post("/inference/predict", files = files, headers = auth_headers)
@@ -94,18 +111,22 @@ def test_predict_success(client, auth_headers):
     
     response = client.post("/inference/predict", files=files, headers=auth_headers)
     assert response.status_code == 200
-    assert "prediction" in response.json()
+    data = response.json()
+    assert data["filename"] == "test.png"
+    assert data["prediction"] == "REAL"
+    assert data["confidence"] == 0.99
+    assert data["status"] == "SUCCESS"
+    assert "processing_time_ms" in data
 
 def test_rate_limiting(client, auth_headers):
-    # 6 because the limit rate is 5
-    for _ in range(6):
-        files = {"file": ("test.png", b"dummy", "image/png")}
-        response = client.post("/inference/predict", files = files, headers = auth_headers)
-        if response.status_code == 429:
-            break
-    assert response.status_code == 429
-    
-    time.sleep(1)
+    responses = [
+        client.post("/inference/predict",
+                    files = {"file": ("test.png", b"dummy", "image/png")},
+                    headers = auth_headers)
+        for _ in range(6)
+    ]
+    assert any(r.status_code == 429 for r in responses), \
+        f"Expected 429, got: {[r.status_code for r in responses]}"
     
 def test_predict_invalid_format(client, auth_headers):
     client.app.state.inference_service.process_upload.side_effect = InvalidImageFormatError("bad format")
@@ -127,3 +148,8 @@ def test_predict_model_error(client, auth_headers):
 def test_auth_invalid_keys(client, bad_key):
     response = client.get("/inference/health", headers={"X-API-Key": bad_key})
     assert response.status_code == 401
+    
+@pytest.fixture(autouse= True)
+def reset_rate_limiter():
+    yield
+    time.sleep(1)

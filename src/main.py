@@ -1,3 +1,4 @@
+from arq import create_pool
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
@@ -6,14 +7,16 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+import uuid
 
 from src.config import settings
-from src.logger import logger
+from src.logger import logger, request_id_ctx
 from src.inference import ONNXPredictor
 from src.api.routes import router, feedback_router
 from src.infra.limiter import limiter
-from src.infra.exceptions import InvalidImageFormatError, ModelInferenceError
+from src.core.exceptions import InvalidImageFormatError, ModelInferenceError, DatabaseError
 from src.services.inference_service import InferenceService
+from src.worker.tasks import WorkerSettings 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,7 +25,6 @@ async def lifespan(app: FastAPI):
     shutdown to prevent memo leaks and disk clutter
     """
     logger.info("Starting up API, loading ONNX model")
-    
     try:
         predictor = ONNXPredictor()
         app.state.inference_service = InferenceService(
@@ -30,22 +32,23 @@ async def lifespan(app: FastAPI):
             threshold = settings.MODEL_THRESHOLD,
             gray_area_margin = settings.GRAY_AREA_MARGIN
         )
+    
+        app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
         logger.info("Model loaded successfully")
+    
     except Exception as e:
         logger.critical(f"Startup failed, can't load model: {e}", exc_info = True)
         raise
     
     yield
-    logger.info("Shutting down, realing model session")
-    app.state.inference_service.predictor.close()
+    
+    logger.info("Shutting down, releasing model session")
+    await app.state.arq_pool.aclose()
     
 app = FastAPI(title= "To AI or Not to AI", version= "1.0.0", lifespan= lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# CORS Middleware for future possinle frontend connections
-ALLOWED_ORIGINS: list[str] = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,6 +57,11 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"]
 )
+
+ @app.get("/health", tags = ["System"], status_code = status.HTTP_200_OK)
+ async def health_check():
+     return {"status": "ok"}
+
 
 @app.exception_handler(InvalidImageFormatError)
 async def invalid_image_handler(request: Request, exc: InvalidImageFormatError):
@@ -76,6 +84,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
         content = {"details": "Invalid request data submitted", "errors":exc.errors(include_url = False)}
     )
+    
+@app.exception_handler(DatabaseError)
+async def database_error_handler(request: Request, exc: DatabaseError):
+    logger.error(f"Database error: {exc} — Endpoint: {request.url.path}")
+    return JSONResponse(status_code=500, content={"detail": "A database error occurred."})
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -87,7 +100,16 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
         content = {"detail": "Unexpected error occured"}
     )
-    
+
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    token = request_id_ctx.set(request_id)
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    request_id_ctx.reset(token)
+    return response    
+
 app.include_router(router)
 app.include_router(feedback_router)
 

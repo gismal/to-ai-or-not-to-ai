@@ -4,15 +4,19 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.core.feedbacks import FeedbackItem, FeedbackLabel, ErrorType
+from src.infra.feedbacks import FeedbackItem, FeedbackLabel, ErrorType
 from src.logger import logger
 from src.core.exceptions import DatabaseError
+from src.core.enums import FeedbackLabel, ErrorType
 
 # Dependency Inversion
 class AbstractFeedbackRepository(ABC):
     """
     Creates abstract interface to ensure loose coupling in case future changes
     """
+    @abstractmethod
+    async def get_feedback_by_filename(self, filename: str) -> FeedbackItem | None:
+        pass
     
     @abstractmethod 
     async def create_feedback(self, filename: str, model_prediction: str, confidence: float, user_correction: FeedbackLabel, client_source: str = "API_v1") -> FeedbackItem:
@@ -38,6 +42,10 @@ class FeedbackRepository(AbstractFeedbackRepository):
             return ErrorType.FALSE_POSITIVE
         elif model_pred == "REAL" and user_corr == FeedbackLabel.AI_GENERATED:
             return ErrorType.FALSE_NEGATIVE
+        elif model_pred == user_corr.value:
+            return ErrorType.CORRECT
+        
+        logger.warning(f"Unclassifiable error type: pred= {model_pred}, corr = {user_corr}")
         return ErrorType.UNCERTAIN_FAIL
         
     async def create_feedback(
@@ -56,7 +64,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
         # Transaction managment and error handling
         try:
             self.session.add(db_item)
-            await self.session.commit()
+            await self.session.flush()
             await self.session.refresh(db_item)
             logger.info(f"Feedback saved: {filename} (ID: {db_item.id})")
             return db_item
@@ -103,8 +111,11 @@ class FeedbackRepository(AbstractFeedbackRepository):
         """
         Gets the feedback by the filename
         """
-        result = await self.session.execute(
-            select(FeedbackItem).where(FeedbackItem.filename == filename)
-        )
-        return result.scalar_one_or_none()
-    
+        try:
+            result = await self.session.execute(
+                select(FeedbackItem).where(FeedbackItem.filename == filename)
+            )
+            return result.scalar_one_or_none()
+        except SQLAlchemyError as e:
+            logger.error(f"Error fetching feedback by filename: {e}")
+            raise DatabaseError("Failed to getch feedback record")

@@ -6,7 +6,7 @@ os.environ["API_KEY"] = "test_gizli_anahtar_123"
 os.environ["MODEL_THRESHOLD"] = "0.75"
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from src.core.database import Base
+from src.infra.database import Base
 from src.repositories.feedback_repo import FeedbackRepository
 from src.schemas.feedback import FeedbackCreateRequest
 
@@ -35,9 +35,9 @@ async def db_session(setup_db):
         await session.rollback()
         
 @pytest.fixture
-def feedback_repo(db_session):
+async def feedback_repo(db_session):
     """
-    REady-to-use repo that directly call the tests
+    Ready-to-use repo that directly call the tests
     """ 
     return FeedbackRepository(db_session)
 

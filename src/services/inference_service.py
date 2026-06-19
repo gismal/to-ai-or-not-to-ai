@@ -7,15 +7,15 @@ from arq import ArqRedis
 
 from src.inference import ONNXPredictor
 from src.logger import logger
-from src.infra.exceptions import InvalidImageFormatError, ModelInferenceError
-from src.schemas.predict import PredictionLabel, InferenceStatus
+from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
+from src.core.enums import PredictionLabel, InferenceStatus
 
 
 class InferenceService:
     """
     Encapsulates the core business logic, includng asynchronous file streaming, model execution and granular uncertainty classification
     """
-    def __init__(self, predictor: ONNXPredictor, threshold: float, gray_area_margin: float = 0.35):
+    def __init__(self, predictor: ONNXPredictor, redis_pool: redis_pool, threshold: float, gray_area_margin: float = 0.35):
         """
         Initializes the inference service with its dependencies
         
@@ -78,15 +78,13 @@ class InferenceService:
         if not file.filename.lower().endswith((".jpg", ".jpeg", ".png")):
             raise InvalidImageFormatError("Only JPG or PNG formats are supported")
         
-        # tempfile for file and memo/ RAM cleanup
-        with tempfile.SpooledTemporaryFile(max_size = 2 * 1024 * 1024 , suffix=".jpg") as spooled_file:
-            content = await file.read()
-            spooled_file.write(content)
-            spooled_file.seek(0)
-            logger.info(f"Processing image: {file.filename}")
+        import io
+        import imghdr
         
-            # offlaod heavy CPU bound ONNX model execution to a separate thread
-            result = await asyncio.to_thread(self.predictor.predict, spooled_file, file.filename)
+        content = io.BytesIO(await file.read())
+        if imghdr.what(None, h= content) not in ("jpeg", "png"):
+            raise InvalidImageFormatError("File content does not match a supported image format")        
+        result = await asyncio.to_thread(self.predictor.predict, content, file.filename)
             
         if result.status == InferenceStatus.FAILED:     
             raise ModelInferenceError(str(result.error))

@@ -1,15 +1,19 @@
 import io
-import threading 
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
 from pathlib import Path
 import concurrent.futures
 from dataclasses import dataclass
+
 from src.config import settings
 from src.logger import logger
-from src.schemas.predict import InferenceStatus
+from src.core.enums import InferenceStatus
 
+
+_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+_STD  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+                
 @dataclass
 class InferenceResult:
     """
@@ -35,7 +39,7 @@ def _preprocess(image_source: str | Path |  io.BytesIO) -> tuple[str, np.ndarray
         The processing pipeline consists of:
         1. Load the image and converting it to the RGB color space
         2. Resizing the image to the model's target dimensions (224x224)
-        3. Normalizing the pixel values from [0, 255] to [0.0, 1.0.]
+        3. Normalizing using ImageNet statistics (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         4. Transposing the matrix from HWC (Height, Width, Channels) to CHW form
         5. Expanding dimensions to include a batch axis, resulting in (1, 3, 224, 224)
         
@@ -52,11 +56,8 @@ def _preprocess(image_source: str | Path |  io.BytesIO) -> tuple[str, np.ndarray
             with Image.open(image_source) as img:
                 img = img.convert('RGB').resize((224, 224)) 
                 
-                MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-                STD  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-                
                 img_data = np.array(img, dtype = np.float32) / 255.0
-                img_data = (img_data - MEAN) / STD
+                img_data = (img_data - _MEAN) / _STD
                 img_data = np.transpose(img_data, (2, 0, 1))
                 
                 return str(image_source), np.expand_dims(img_data, axis = 0), None
@@ -153,15 +154,17 @@ class ONNXPredictor:
         """
         
         # OOM GUARD 
-        if len(image_paths) > max_batch:
-            image_paths  =image_paths[:max_batch]
-            logger.warning(f"Batch limit has been exceeded. Truncating from {len(image_paths)} to {max_batch}")
-         
+        original_count = len(image_paths)
+        if original_count > max_batch:
+            image_paths = image_paths[:max_batch]
+            logger.warning(f"Truncating from {original_count} to {max_batch}")
+        
+        
         results, valid_batch  = [],[]
         
-        # ProcessPoolExecutor against CPU bottleneck
-        with concurrent.futures.ProcessPoolExecutor(max_workers = max_workers) as executor:
-            for path_str, tensor, error in executor.map(preprocess_image, image_paths):
+        # ThreadPoolExecutor against CPU bottleneck
+        with concurrent.futures.ThreadPoolExecutor(max_workers = max_workers) as executor:
+            for path_str, tensor, error in executor.map(_preprocess, image_paths):
                 if error:
                     results.append(InferenceResult(image = path_str, status = InferenceStatus.FAILED, error = error))
                 else:
@@ -172,7 +175,7 @@ class ONNXPredictor:
         
         valid_paths, valid_tensor = zip(*valid_batch)
         try:
-            batch_data = np.stack(valid_tensor, axis = 0)
+            batch_data = np.stack([t.squeeze(0) for t in valid_tensor], axis = 0)
             outputs = self.session.run(None, {self.input_name: batch_data})
             
             for path_str, out in zip(valid_paths, outputs[0]):
