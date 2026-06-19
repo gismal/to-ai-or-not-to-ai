@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.infra.feedbacks import FeedbackItem, FeedbackLabel, ErrorType
+from src.infra.feedbacks import FeedbackItem
 from src.logger import logger
 from src.core.exceptions import DatabaseError
 from src.core.enums import FeedbackLabel, ErrorType
@@ -79,7 +79,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
         """
         try:
         # brings only the non-deleted items
-            stmt = select(FeedbackItem).where(FeedbackItem.is_deleted == False).order_by(FeedbackItem.created_at.desc()).limit(limit).offset(offset)
+            stmt = select(FeedbackItem).where(FeedbackItem.is_deleted.is_(False)).order_by(FeedbackItem.created_at.desc()).limit(limit).offset(offset)
             result = await self.session.execute(stmt)
             return result.scalars().all()
         except SQLAlchemyError as e:

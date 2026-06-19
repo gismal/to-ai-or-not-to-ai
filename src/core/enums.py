@@ -28,9 +28,3 @@ class ErrorType(str, Enum):
     FALSE_NEGATIVE = "FALSE_NEGATIVE"  # Model marks as REAL but image is AI
     UNCERTAIN_FAIL = "UNCERTAIN_FAIL"  # Model is indecisive
     CORRECT = "CORRECT" # User confirms the model was rigth
-
-class ErrorType(str, Enum):
-    FALSE_POSITIVE = "FALSE_POSITIVE"   # model said AI, image is REAL
-    FALSE_NEGATIVE = "FALSE_NEGATIVE"   # model said REAL, image is AI
-    UNCERTAIN_FAIL = "UNCERTAIN_FAIL"   # model was indecisive
-    CORRECT        = "CORRECT"          # model was right, user confirmed

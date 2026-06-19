@@ -5,13 +5,14 @@ from PIL import Image
 
 from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock
 
 from src.main import app
 from src.config import settings
 from src.api.deps import get_feedback_service
 from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
-from src.schemas.predict import InferenceStatus
+from src.services.inference_service import InferenceService
+
 
 VALID_API_KEY = settings.API_KEY.get_secret_value()
 

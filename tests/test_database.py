@@ -1,4 +1,5 @@
 import pytest
+from src.core.enums import FeedbackLabel, ErrorType
 
 @pytest.mark.asyncio
 async def test_create_feedback_in_db(feedback_repo, mock_feedback_data):
@@ -19,7 +20,7 @@ async def test_create_feedback_in_db(feedback_repo, mock_feedback_data):
     assert db_item.filename       == "db_test_image.png"
     assert db_item.user_correction  == FeedbackLabel.REAL
     assert db_item.error_type       == ErrorType.FALSE_POSITIVE  # AI_GENERATED + REAL correction
-    assert db_item.is_deleted       == False
+    assert not db_item.is_deleted  
     
 @pytest.mark.asyncio
 async def test_soft_delete(feedback_repo, mock_feedback_data):
@@ -38,11 +39,11 @@ async def test_get_recent_errors_pagination(feedback_repo, mock_feedback_data):
     for _ in range(3):
         await feedback_repo.create_feedback(...)
         
-   page_1 = await feedback_repo.get_recent_errors(limit=2, offset=0)
-   page_2 = await feedback_repo.get_recent_errors(limit=2, offset=2)
+    page_1 = await feedback_repo.get_recent_errors(limit=2, offset=0)
+    page_2 = await feedback_repo.get_recent_errors(limit=2, offset=2)
     
-   assert len(page_1) == 2
-   assert len(page_2) == 1
+    assert len(page_1) == 2
+    assert len(page_2) == 1
 
 @pytest.mark.asyncio
 async def test_get_feedback_by_filename_not_found(feedback_repo):

@@ -5,6 +5,7 @@ import pytest
 import io
 from PIL import Image
 from unittest.mock import MagicMock
+import numpy as np
 
 from src.utils import generate_phash
 from src.inference import _preprocess
@@ -36,7 +37,7 @@ def test_preprocess_tensor_format(dummy_image):
     assert error is None
     assert tensor is not None
     assert tensor.shape == (1, 3, 224, 224)
-    asert tensor.dtype == np.float32
+    assert tensor.dtype == np.float32
         
 def test_generate_phash_consistency(dummy_image):
     """
@@ -87,7 +88,7 @@ def test_process_applies_normalization(dummy_image):
     assert error is None
     assert tensor.min() < 0.0 or tensor.max() > 1.0
     
- def test_preprocess_invalid_image():
+def test_preprocess_invalid_image():
     path_str, tensor, error = _preprocess(io.BytesIO(b"this is not an image"))
     assert tensor is None
     assert error is not None

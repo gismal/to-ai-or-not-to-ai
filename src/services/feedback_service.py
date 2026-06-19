@@ -14,7 +14,7 @@ class FeedbackService:
         Independent background database
         """
         try:
-            await repo.create_feedback(
+            await self.repo.create_feedback(
                 filename = payload.filename,
                 model_prediction = payload.model_prediction,
                 confidence = payload.confidence,
@@ -24,9 +24,4 @@ class FeedbackService:
         except Exception as e:
             logger.error(f"Feedback background task failed: {str(e)}", exc_info = True)
             raise
-                
-    def register_feedback(self, payload: FeedbackCreateRequest, background_tasks: BackgroundTasks) -> None:
-        """
-        Adds the tasks to the queue
-       """
-        background_tasks.add_task(self._save_feedback_task, payload)
+     

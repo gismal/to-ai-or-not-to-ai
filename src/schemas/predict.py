@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
-from enum import Enum
 
-from src.core.enums import FeedbackLabel, PredictionLabel, InferenceStatus
+from src.core.enums import PredictionLabel, InferenceStatus
 
 class PredictionResponse(BaseModel):
     """
