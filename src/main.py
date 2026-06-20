@@ -12,11 +12,18 @@ import uuid
 from src.config import settings
 from src.logger import logger, request_id_ctx
 from src.inference import ONNXPredictor
-from src.api.routes import router as inference_router, feedback_router
 from src.infra.limiter import limiter
-from src.core.exceptions import InvalidImageFormatError, ModelInferenceError, DatabaseError
+from src.core.exceptions import (
+    InvalidImageFormatError,
+    ModelInferenceError,
+    DatabaseError,
+)
 from src.services.inference_service import InferenceService
-from src.worker.tasks import WorkerSettings 
+from src.worker.tasks import WorkerSettings
+from src.services.explainability_service import ExplainabilityService
+from src.api.routes import router as inference_router
+from src.api.routes import feedback_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,56 +37,62 @@ async def lifespan(app: FastAPI):
 
         predictor = ONNXPredictor()
         app.state.inference_service = InferenceService(
-            predictor = predictor,
-            redis_pool = app.state.arq_pool,
-            threshold = settings.MODEL_THRESHOLD,
-            gray_area_margin = settings.GRAY_AREA_MARGIN
+            predictor=predictor,
+            redis_pool=app.state.arq_pool,
+            threshold=settings.MODEL_THRESHOLD,
+            gray_area_margin=settings.GRAY_AREA_MARGIN,
         )
-    
+
+        app.state.explainability_service = ExplainabilityService(
+            checkpoint_path="models/best_checkpoint.pt", num_classes=2
+        )
         logger.info("Model loaded successfully")
-    
+
     except Exception as e:
-        logger.critical(f"Startup failed, can't load model: {e}", exc_info = True)
+        logger.critical(f"Startup failed, can't load model: {e}", exc_info=True)
         raise
-    
+
     yield
-    
+
     logger.info("Shutting down, releasing model session")
     await app.state.arq_pool.aclose()
-    
-app = FastAPI(
-    title= "To AI or Not to AI",
-    version= "1.0.0",
-    lifespan= lifespan)
 
-Instrumentator().instrument(app).expose(app, include_in_schema = False)
+
+app = FastAPI(title="To AI or Not to AI", version="1.0.0", lifespan=lifespan)
+app.include_router(inference_router)
+app.include_router(feedback_router)
+
+Instrumentator().instrument(app).expose(app, include_in_schema=False)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = settings.ALLOWED_ORIGINS,
-    allow_credentials = False,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=False,
     allow_methods=["GET", "POST"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
-@app.get("/health", tags = ["System"], status_code = status.HTTP_200_OK)
+
+@app.get("/health", tags=["System"], status_code=status.HTTP_200_OK)
 async def health_check():
     return {"status": "ok"}
 
 
 @app.exception_handler(InvalidImageFormatError)
 async def invalid_image_handler(request: Request, exc: InvalidImageFormatError):
-    """ Handles unsupported file format errors globally """
-    return JSONResponse(status_code= 400, content= {"detail": str(exc)})
+    """Handles unsupported file format errors globally"""
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
+
 
 @app.exception_handler(ModelInferenceError)
 async def model_error_handler(request: Request, exc: ModelInferenceError):
-    """ Handles model inference errors """
+    """Handles model inference errors"""
     logger.error(f"Model Inference Error: {exc}")
-    return JSONResponse(status_code= 500, content= {"detail": f"Model Error: {str(exc)}"})
+    return JSONResponse(status_code=500, content={"detail": f"Model Error: {str(exc)}"})
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -88,14 +101,21 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """
     logger.warning(f"Unvalid data entry: {exc.errors()} - Endpoint: {request.url.path}")
     return JSONResponse(
-        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content = {"details": "Invalid request data submitted", "errors":exc.errors(include_url = False)}
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "details": "Invalid request data submitted",
+            "errors": exc.errors(include_url=False),
+        },
     )
-    
+
+
 @app.exception_handler(DatabaseError)
 async def database_error_handler(request: Request, exc: DatabaseError):
     logger.error(f"Database error: {exc} — Endpoint: {request.url.path}")
-    return JSONResponse(status_code=500, content={"detail": "A database error occurred."})
+    return JSONResponse(
+        status_code=500, content={"detail": "A database error occurred."}
+    )
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -104,9 +124,10 @@ async def global_exception_handler(request: Request, exc: Exception):
     """
     logger.error(f"Unexpected system error: {str(exc)} - Endpoint: {request.url.path}")
     return JSONResponse(
-        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content = {"detail": "Unexpected error occured"}
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Unexpected error occured"},
     )
+
 
 @app.middleware("http")
 async def request_id_middleware(request: Request, call_next):
@@ -115,8 +136,4 @@ async def request_id_middleware(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     request_id_ctx.reset(token)
-    return response    
-
-app.include_router(inference_router)
-app.include_router(feedback_router)
-
+    return response

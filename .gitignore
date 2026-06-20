@@ -3,3 +3,9 @@ venv/
 .pytest_cache/
 logs/
 *.logs
+*.pyc
+models/*.pt
+!models/metadata.json
+heatmap.png
+.DS_Store
+__pycache__/
