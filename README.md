@@ -133,7 +133,7 @@ That last category is intentional. Most detectors give you a binary answer even 
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/yourusername/to-ai-or-not-to-ai.git
+git clone https://github.com/gismal/to-ai-or-not-to-ai.git
 cd to-ai-or-not-to-ai
 cp .env.example .env
 ```
