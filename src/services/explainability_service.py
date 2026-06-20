@@ -38,13 +38,13 @@ class ExplainabilityService:
     Loads the PyTorch checkpoint and runs GradCAM on demand.
 
     GradCAM works by:
-    1. Running a forward pass through the model
-    2. Tracking which neurons in the target layer activated most strongly
-    3. Computing gradients back from the predicted class to that layer
-    4. Weighting the activation maps by those gradients
-    5. Producing a spatial heatmap showing which regions influenced the decision
+        1. Running a forward pass through the model
+        2. Tracking which neurons in the target layer activated most strongly
+        3. Computing gradients back from the predicted class to that layer
+        4. Weighting the activation maps by those gradients
+        5. Producing a spatial heatmap showing which regions influenced the decision
 
-    For MobileNetV3, we target `model.features[-1]` — the last convolutional
+    Focused on the `model.features[-1]` which is the last convolutional
     block before the classifier head, where the most semantically rich spatial
     features live.
     """
@@ -52,11 +52,11 @@ class ExplainabilityService:
     def __init__(self, checkpoint_path: str | Path, num_classes: int = 1) -> None:
         """
         Args:
-            checkpoint_path: Path to best_checkpoint.pt saved by train.py
-            num_classes:     Must match what the model was trained with (1 for binary)
+            - checkpoint_path: Path to best_checkpoint.pt saved by train.py
+            - num_classes:     Must match what the model was trained with (1 for binary)
 
         Raises:
-            FileNotFoundError: If checkpoint doesn't exist — caught at startup so
+            - FileNotFoundError: If checkpoint doesn't exist — caught at startup so
                                we know immediately, not on the first explain request.
         """
         self.checkpoint_path = Path(checkpoint_path)
@@ -67,18 +67,16 @@ class ExplainabilityService:
                 f"Run training first or copy best_checkpoint.pt into models/"
             )
 
-        # Rebuild the exact same architecture used in train.py
+        #  same architecture used in train.py
         self.model = models.mobilenet_v3_small(weights=None)
         in_features = self.model.classifier[-1].in_features
         self.model.classifier[-1] = nn.Linear(in_features, num_classes)
 
-        # Load saved weights — map_location="cpu" keeps it device-agnostic
         checkpoint = torch.load(str(self.checkpoint_path), map_location="cpu")
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.model.eval()
 
-        # Target the last conv block — rich spatial features, correct granularity
-        # Using [-1] instead of a hardcoded index — robust to minor arch changes
+        # Target the last conv block  for rich spatial features, correct granularity
         self.target_layers = [self.model.features[-1]]
 
         logger.info(f"ExplainabilityService ready — checkpoint: {self.checkpoint_path}")
@@ -88,17 +86,15 @@ class ExplainabilityService:
     def _preprocess(self, image_bytes: bytes) -> tuple[torch.Tensor, np.ndarray]:
         """
         Returns two things from the same image:
-        - normalized tensor  → fed into the model
-        - float [0,1] array  → used as the base image for the heatmap overlay
+        - normalized tensor  to  feed  the model
+        - float [0,1] array  for the base image for the heatmap overlay
 
         They must come from the same resize operation so the overlay aligns.
         """
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize((224, 224))
 
-        # Keep the [0,1] version for the overlay — show_cam_on_image expects it
         img_array = np.array(img, dtype=np.float32) / 255.0
 
-        # Normalize for the model — must match training + inference exactly
         normalized = (img_array - _MEAN) / _STD
         tensor = (
             torch.from_numpy(
@@ -106,8 +102,7 @@ class ExplainabilityService:
             )
             .unsqueeze(0)
             .float()
-        )  # add batch dim → (1, 3, 224, 224)
-
+        )
         return tensor, img_array
 
     def _run_gradcam(self, image_bytes: bytes) -> tuple[float, str]:
@@ -115,8 +110,8 @@ class ExplainabilityService:
         Synchronous GradCAM execution — called via asyncio.to_thread.
 
         Returns:
-            confidence:   raw sigmoid score from the model
-            heatmap_b64:  base64-encoded PNG of the overlay
+            - confidence:   raw sigmoid score from the model
+            - heatmap_b64:  base64-encoded PNG of the overlay
         """
         input_tensor, original_image = self._preprocess(image_bytes)
 
@@ -125,15 +120,13 @@ class ExplainabilityService:
         with GradCAM(model=self.model, target_layers=self.target_layers) as cam:
             grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]
 
-        # Overlay: heatmap blended onto the original image (RGB)
         overlay = show_cam_on_image(original_image, grayscale_cam, use_rgb=True)
 
-        # Get confidence score — separate forward pass with no_grad for efficiency
         with torch.no_grad():
             output = self.model(input_tensor)
-            confidence = float(torch.sigmoid(output[0][0]))
+            probs = torch.softmax(output[0], dim=0)
+            confidence = float(probs)
 
-        # Encode overlay as base64 PNG — ready to embed directly in JSON
         buffer = io.BytesIO()
         Image.fromarray(overlay).save(buffer, format="PNG")
         heatmap_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
@@ -149,19 +142,18 @@ class ExplainabilityService:
         decide_class_fn: Callable[[float], PredictionLabel],
     ) -> dict:
         """
-        Async entry point — offloads CPU-bound GradCAM to a thread pool.
-
+        Async entry point
         Args:
-            image_bytes:     Raw bytes of the uploaded image
-            filename:        Safe filename (already sanitized by the route)
-            decide_class_fn: Passed in from InferenceService._decide_class so
+            - image_bytes:     Raw bytes of the uploaded image
+            - filename:        Safe filename (already sanitized by the route)
+            - decide_class_fn: Passed in from InferenceService._decide_class so
                              the uncertainty boundary logic isn't duplicated here
 
         Returns:
-            dict matching ExplainResponse schema
+            - dict matching ExplainResponse schema
 
         Raises:
-            ModelInferenceError: If GradCAM fails for any reason
+            - ModelInferenceError: If GradCAM fails for any reason
         """
         start = time.time()
 

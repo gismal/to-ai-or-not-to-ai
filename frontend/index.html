@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI or Not — Image Detector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0A0A0F;
+            --surface: #1A1A24;
+            --border: #2A2A3A;
+            --text: #F0F0F0;
+            --muted: #8888A0;
+            --ai: #6C63FF;
+            --real: #22D3A5;
+            --uncertain: #FF9F43;
+            --danger: #FF6B6B;
+            --ai-glow: rgba(108, 99, 255, 0.25);
+            --real-glow: rgba(34, 211, 165, 0.25);
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3,
+        .mono {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* ── Layout ── */
+        .page {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+
+        .header h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .header h1 span.ai {
+            color: var(--ai);
+        }
+
+        .header h1 span.or {
+            color: var(--muted);
+            margin: 0 8px;
+        }
+
+        .header h1 span.not {
+            color: var(--real);
+        }
+
+        .header p {
+            color: var(--muted);
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+
+        /* ── Upload zone ── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 56px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--ai);
+            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .upload-zone input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-zone .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .upload-zone p {
+            color: var(--muted);
+        }
+
+        .upload-zone p strong {
+            color: var(--text);
+        }
+
+        .upload-zone small {
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 6px;
+            display: block;
+        }
+
+        /* ── API key input ── */
+        .api-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .api-row input {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 16px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .api-row input:focus {
+            border-color: var(--ai);
+        }
+
+        .api-row input::placeholder {
+            color: var(--muted);
+        }
+
+        /* ── Mode toggle ── */
+        .mode-toggle {
+            display: flex;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            gap: 4px;
+            margin-bottom: 24px;
+        }
+
+        .mode-toggle button {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--muted);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .mode-toggle button.active {
+            background: var(--ai);
+            color: white;
+        }
+
+        /* ── Loading ── */
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--ai);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Result card ── */
+        .result {
+            margin-top: 40px;
+            animation: fadeUp .4s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .verdict {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verdict::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--glow-color, transparent);
+            pointer-events: none;
+        }
+
+        .verdict.ai {
+            --glow-color: var(--ai-glow);
+            border-color: var(--ai);
+        }
+
+        .verdict.real {
+            --glow-color: var(--real-glow);
+            border-color: var(--real);
+        }
+
+        .verdict.uncertain {
+            border-color: var(--uncertain);
+        }
+
+        .verdict-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .verdict-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .verdict.ai .verdict-label {
+            color: var(--ai);
+        }
+
+        .verdict.real .verdict-label {
+            color: var(--real);
+        }
+
+        .verdict.uncertain .verdict-label {
+            color: var(--uncertain);
+        }
+
+        .verdict-meta {
+            text-align: right;
+        }
+
+        .verdict-meta .filename {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .verdict-meta .timing {
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        /* ── Confidence bar ── */
+        .confidence-section {
+            margin-top: 20px;
+        }
+
+        .confidence-label-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .confidence-label-row .score {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .bar-track {
+            height: 8px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 1s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .verdict.ai .bar-fill {
+            background: var(--ai);
+        }
+
+        .verdict.real .bar-fill {
+            background: var(--real);
+        }
+
+        .verdict.uncertain .bar-fill {
+            background: var(--uncertain);
+        }
+
+        /* Uncertainty zones under bar */
+        .zone-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        /* ── Image comparison slider ── */
+        .compare-wrapper {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .compare-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .compare-slider-wrapper {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: col-resize;
+            user-select: none;
+            line-height: 0;
+        }
+
+        .compare-slider-wrapper img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .compare-overlay {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .compare-overlay img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .compare-divider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: white;
+            cursor: col-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .compare-handle {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+            color: #333;
+            font-size: 14px;
+            font-weight: 700;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .compare-tag {
+            position: absolute;
+            bottom: 10px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+        }
+
+        .compare-tag.left {
+            left: 10px;
+            background: rgba(0, 0, 0, .6);
+            color: var(--real);
+        }
+
+        .compare-tag.right {
+            right: 10px;
+            background: rgba(0, 0, 0, .6);
+            color: var(--ai);
+        }
+
+        .compare-hint {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        /* ── Error ── */
+        .error-box {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: var(--danger);
+            margin-top: 24px;
+            font-size: 0.9rem;
+        }
+
+        /* ── Tags ── */
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+        }
+
+        .tag.cached {
+            background: rgba(108, 99, 255, .15);
+            color: var(--ai);
+            border: 1px solid var(--ai);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+const { useState, useRef, useCallback, useEffect } = React;
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+
+function getVerdictClass(prediction) {
+  if (!prediction) return '';
+  if (prediction.includes('REAL'))          return 'real';
+  if (prediction.includes('AI_GENERATED'))  return 'ai';
+  return 'uncertain';
+}
+
+function formatLabel(prediction) {
+  const map = {
+    REAL:                  'Human Made',
+    AI_GENERATED:          'AI Generated',
+    UNCERTAIN_LEANING_AI:  'Uncertain — Leaning AI',
+    UNCERTAIN_LEANING_REAL:'Uncertain — Leaning Real',
+    UNCERTAIN_NEUTRAL:     'Uncertain — No Verdict',
+  };
+  return map[prediction] || prediction;
+}
+
+// ── Comparison Slider ──────────────────────────────────────────────────────
+
+function CompareSlider({ originalSrc, heatmapSrc }) {
+  const [pos, setPos]       = useState(50);
+  const [dragging, setDrag] = useState(false);
+  const ref                 = useRef(null);
+
+  const move = useCallback((clientX) => {
+    if (!ref.current) return;
+    const { left, width } = ref.current.getBoundingClientRect();
+    const pct = Math.min(100, Math.max(0, ((clientX - left) / width) * 100));
+    setPos(pct);
+  }, []);
+
+  useEffect(() => {
+    if (!dragging) return;
+    const up   = () => setDrag(false);
+    const move_ = (e) => move(e.clientX ?? e.touches?.[0]?.clientX);
+    window.addEventListener('mousemove', move_);
+    window.addEventListener('mouseup', up);
+    window.addEventListener('touchmove', move_);
+    window.addEventListener('touchend', up);
+    return () => {
+      window.removeEventListener('mousemove', move_);
+      window.removeEventListener('mouseup', up);
+      window.removeEventListener('touchmove', move_);
+      window.removeEventListener('touchend', up);
+    };
+  }, [dragging, move]);
+
+  return (
+    <div className="compare-wrapper">
+      <p className="compare-title">Drag to reveal GradCAM heatmap</p>
+      <div
+        ref={ref}
+        className="compare-slider-wrapper"
+        onMouseDown={(e) => { setDrag(true); move(e.clientX); }}
+        onTouchStart={(e) => { setDrag(true); move(e.touches[0].clientX); }}
+      >
+        {/* Base: original */}
+        <img src={originalSrc} alt="Original" draggable={false} />
+
+        {/* Overlay: heatmap, clipped to left of slider */}
+        <div className="compare-overlay" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+          <img src={`data:image/png;base64,${heatmapSrc}`} alt="GradCAM" draggable={false} />
+        </div>
+
+        {/* Divider line + handle */}
+        <div className="compare-divider" style={{ left: `${pos}%` }}>
+          <div className="compare-handle">⇔</div>
+        </div>
+
+        {/* Corner labels */}
+        <span className="compare-tag left">Original</span>
+        <span className="compare-tag right">Heatmap</span>
+      </div>
+      <p className="compare-hint">
+        Warm regions = what the model focused on to make its decision
+      </p>
+    </div>
+  );
+}
+
+// ── Confidence bar ─────────────────────────────────────────────────────────
+
+function ConfidenceBar({ confidence, verdictClass }) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setWidth(confidence * 100), 50);
+    return () => clearTimeout(t);
+  }, [confidence]);
+
+  return (
+    <div className="confidence-section">
+      <div className="confidence-label-row">
+        <span>Confidence</span>
+        <span className="score">{(confidence * 100).toFixed(1)}%</span>
+      </div>
+      <div className="bar-track">
+        <div className={`bar-fill ${verdictClass}`} style={{ width: `${width}%` }} />
+      </div>
+      <div className="zone-labels">
+        <span>← REAL</span>
+        <span style={{ color: 'var(--uncertain)' }}>UNCERTAIN ZONE (40–75%)</span>
+        <span>AI →</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Main App ───────────────────────────────────────────────────────────────
+
+function App() {
+  const [apiKey,    setApiKey]   = useState('');
+  const [mode,      setMode]     = useState('explain'); // 'predict' | 'explain'
+  const [drag,      setDrag]     = useState(false);
+  const [loading,   setLoading]  = useState(false);
+  const [result,    setResult]   = useState(null);
+  const [error,     setError]    = useState(null);
+  const [preview,   setPreview]  = useState(null);  // object URL for original
+  const fileRef = useRef(null);
+
+  const API_BASE = 'http://localhost:8000/v1/inference';
+
+  const reset = () => { setResult(null); setError(null); setPreview(null); };
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    if (!apiKey.trim()) { setError('Enter your API key first.'); return; }
+
+    reset();
+    setLoading(true);
+    setPreview(URL.createObjectURL(file));
+
+    const form = new FormData();
+    form.append('file', file);
+
+    const endpoint = mode === 'explain' ? '/explain' : '/predict';
+
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method:  'POST',
+        headers: { 'X-API-Key': apiKey.trim() },
+        body:    form,
+      });
+
+      if (res.status === 413) throw new Error('File too large (max 10 MB).');
+      if (res.status === 401) throw new Error('Invalid API key.');
+      if (res.status === 400) throw new Error('Unsupported file type. Use JPEG or PNG.');
+      if (!res.ok)            throw new Error(`Server error (${res.status}).`);
+
+      const data = await res.json();
+      setResult(data);
+    } catch (e) {
+      setError(e.message || 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault(); setDrag(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  const verdictClass = result ? getVerdictClass(result.prediction) : '';
+
+  return (
+    <div className="page">
+      {/* Header */}
+      <header className="header">
+        <h1>
+          <span className="ai">AI</span>
+          <span className="or">or</span>
+          <span className="not">Not</span>
+        </h1>
+        <p>Upload an image. Find out if a human or a machine made it.</p>
+      </header>
+
+      {/* API key */}
+      <div className="api-row">
+        <input
+          type="password"
+          placeholder="X-API-Key"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+        />
+      </div>
+
+      {/* Mode toggle */}
+      <div className="mode-toggle">
+        <button
+          className={mode === 'predict' ? 'active' : ''}
+          onClick={() => { setMode('predict'); reset(); }}
+        >
+          ⚡ Fast predict
+        </button>
+        <button
+          className={mode === 'explain' ? 'active' : ''}
+          onClick={() => { setMode('explain'); reset(); }}
+        >
+          🔍 Explain (GradCAM)
+        </button>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        className={`upload-zone ${drag ? 'drag-over' : ''}`}
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={onDrop}
+        onClick={() => fileRef.current?.click()}
+      >
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png"
+          onChange={(e) => handleFile(e.target.files[0])}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <div className="icon">🖼️</div>
+        <p><strong>Drop an image here</strong> or click to browse</p>
+        <small>JPEG or PNG · max 10 MB</small>
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="loading">
+          <div className="spinner" />
+          <p>{mode === 'explain' ? 'Running GradCAM — this takes a moment…' : 'Analysing…'}</p>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && <div className="error-box">⚠ {error}</div>}
+
+      {/* Result */}
+      {result && !loading && (
+        <div className="result">
+          <div className={`verdict ${verdictClass}`}>
+            <div className="verdict-header">
+              <div>
+                <div className="verdict-label">{formatLabel(result.prediction)}</div>
+                {result.cached && <span className="tag cached">⚡ cached</span>}
+              </div>
+              <div className="verdict-meta">
+                <div className="filename">{result.filename}</div>
+                <div className="timing">{result.processing_time_ms} ms</div>
+              </div>
+            </div>
+            <ConfidenceBar confidence={result.confidence} verdictClass={verdictClass} />
+          </div>
+
+          {/* Comparison slider — only in explain mode */}
+          {result.heatmap_base64 && preview && (
+            <CompareSlider originalSrc={preview} heatmapSrc={result.heatmap_base64} />
+          )}
+
+          {/* Plain image preview for fast predict mode */}
+          {!result.heatmap_base64 && preview && (
+            <div className="compare-wrapper">
+              <p className="compare-title">Analysed image</p>
+              <img src={preview} alt="Uploaded" style={{ width: '100%', borderRadius: 10 }} />
+            </div>
+          )}
+
+          {/* Try another */}
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <button
+              onClick={() => { reset(); fileRef.current?.click(); }}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border)',
+                color: 'var(--muted)',
+                borderRadius: 10,
+                padding: '10px 24px',
+                cursor: 'pointer',
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: '0.9rem',
+                transition: 'all .2s',
+              }}
+              onMouseOver={(e) => e.target.style.borderColor = 'var(--ai)'}
+              onMouseOut={(e)  => e.target.style.borderColor = 'var(--border)'}
+            >
+              Try another image
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+
+</html>

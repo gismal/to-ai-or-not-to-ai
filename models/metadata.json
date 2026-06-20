@@ -1,6 +1,6 @@
 {
     "model_version": "v2.0.0",
-    "trained_at": "2026-06-20T11:22:04.566858+00:00",
+    "trained_at": "2026-06-20T14:42:24.273596+00:00",
     "base_model": "MobileNetV3_Small",
     "classes": [
         "AI_GENERATED",

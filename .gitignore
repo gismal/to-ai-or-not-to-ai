@@ -9,3 +9,4 @@ models/*.pt
 heatmap.png
 .DS_Store
 __pycache__/
+test_raporu.html

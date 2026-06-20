@@ -3,11 +3,332 @@
   <head>
     <meta charset="utf-8"/>
     <title id="head-title">test_raporu.html</title>
-      <link href="assets/style.css" rel="stylesheet" type="text/css"/>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+    
   </head>
   <body>
     <h1 id="title">test_raporu.html</h1>
-    <p>Report generated on 07-Jun-2026 at 18:53:43 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+    <p>Report generated on 20-Jun-2026 at 17:18:21 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
         v4.2.0</p>
     <div id="environment-header">
       <h2>Environment</h2>
@@ -62,7 +383,7 @@
         <h2>Summary</h2>
         <div class="additional-summary prefix">
         </div>
-        <p class="run-count">19 tests took 00:00:03.</p>
+        <p class="run-count">36 tests took 00:00:25.</p>
         <p class="filter">(Un)check the boxes to filter the results.</p>
         <div class="summary__reload">
           <div class="summary__reload__button hidden" onclick="location.reload()">
@@ -75,7 +396,7 @@
             <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" disabled>
             <span class="failed">0 Failed,</span>
             <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" >
-            <span class="passed">19 Passed,</span>
+            <span class="passed">36 Passed,</span>
             <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
             <span class="skipped">0 Skipped,</span>
             <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled>
@@ -110,7 +431,7 @@
       </thead>
     </table>
   <footer>
-    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.14.4&#34;, &#34;Platform&#34;: &#34;Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.43&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;9.0.3&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;anyio&#34;: &#34;4.13.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;, &#34;html&#34;: &#34;4.2.0&#34;}}, &#34;tests&#34;: {&#34;tests/test_api.py::test_health_check_withouy_api_key&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_health_check_withouy_api_key&#34;, &#34;duration&#34;: &#34;11 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_health_check_withouy_api_key&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;11 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,271 - httpx - INFO - HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_health_check_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_health_check_success&#34;, &#34;duration&#34;: &#34;8 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_health_check_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;8 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,283 - httpx - INFO - HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_create_feedback_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_success&#34;, &#34;duration&#34;: &#34;14 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;14 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,290 - httpx - INFO - HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\n2026-06-07 18:53:41,297 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 202 Accepted&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 202 Accepted&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_predict_image_file_too_large&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_image_file_too_large&#34;, &#34;duration&#34;: &#34;94 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_image_file_too_large&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;94 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,393 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 413 Request Entity Too Large&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 413 Request Entity Too Large&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload0]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload0]&#34;, &#34;duration&#34;: &#34;12 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload0]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;12 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,399 - httpx - INFO - HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\n2026-06-07 18:53:41,404 - mlops_detector - WARNING - Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;string_too_short&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;filename&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;#x27;String should have at least 1 character&amp;#x27;, &amp;#x27;input&amp;#x27;: &amp;#x27;&amp;#x27;, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;min_length&amp;#x27;: 1}}] - Endpoint: /feedback/\n2026-06-07 18:53:41,406 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\nWARNING  mlops_detector:main.py:65 Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;string_too_short&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;filename&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;#x27;String should have at least 1 character&amp;#x27;, &amp;#x27;input&amp;#x27;: &amp;#x27;&amp;#x27;, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;min_length&amp;#x27;: 1}}] - Endpoint: /feedback/\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload1]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload1]&#34;, &#34;duration&#34;: &#34;14 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload1]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;14 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,414 - httpx - INFO - HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\n2026-06-07 18:53:41,418 - mlops_detector - WARNING - Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;literal_error&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;model_prediction&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;quot;Input should be &amp;#x27;REAL&amp;#x27;, &amp;#x27;AI_GENERATED&amp;#x27; or &amp;#x27;UNCERTAIN&amp;#x27;&amp;quot;, &amp;#x27;input&amp;#x27;: &amp;#x27;INVALID&amp;#x27;, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;expected&amp;#x27;: &amp;quot;&amp;#x27;REAL&amp;#x27;, &amp;#x27;AI_GENERATED&amp;#x27; or &amp;#x27;UNCERTAIN&amp;#x27;&amp;quot;}}] - Endpoint: /feedback/\n2026-06-07 18:53:41,420 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\nWARNING  mlops_detector:main.py:65 Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;literal_error&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;model_prediction&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;quot;Input should be &amp;#x27;REAL&amp;#x27;, &amp;#x27;AI_GENERATED&amp;#x27; or &amp;#x27;UNCERTAIN&amp;#x27;&amp;quot;, &amp;#x27;input&amp;#x27;: &amp;#x27;INVALID&amp;#x27;, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;expected&amp;#x27;: &amp;quot;&amp;#x27;REAL&amp;#x27;, &amp;#x27;AI_GENERATED&amp;#x27; or &amp;#x27;UNCERTAIN&amp;#x27;&amp;quot;}}] - Endpoint: /feedback/\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload2]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload2]&#34;, &#34;duration&#34;: &#34;14 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload2]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;14 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,428 - httpx - INFO - HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\n2026-06-07 18:53:41,434 - mlops_detector - WARNING - Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;less_than_equal&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;confidence&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;#x27;Input should be less than or equal to 1&amp;#x27;, &amp;#x27;input&amp;#x27;: 1.5, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;le&amp;#x27;: 1.0}}] - Endpoint: /feedback/\n2026-06-07 18:53:41,436 - httpx - INFO - HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback &amp;quot;HTTP/1.1 307 Temporary Redirect&amp;quot;\nWARNING  mlops_detector:main.py:65 Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;less_than_equal&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;confidence&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;#x27;Input should be less than or equal to 1&amp;#x27;, &amp;#x27;input&amp;#x27;: 1.5, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;le&amp;#x27;: 1.0}}] - Endpoint: /feedback/\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/feedback/ &amp;quot;HTTP/1.1 422 Unprocessable Entity&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_predict_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_success&#34;, &#34;duration&#34;: &#34;34 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;34 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,471 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_rate_limiting&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_rate_limiting&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_rate_limiting&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:41,478 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2026-06-07 18:53:41,484 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2026-06-07 18:53:41,491 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\n2026-06-07 18:53:41,496 - slowapi - WARNING - ratelimit 5 per 1 second (testclient) exceeded at endpoint: /inference/predict\n2026-06-07 18:53:41,497 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 200 OK&amp;quot;\nWARNING  slowapi:extension.py:510 ratelimit 5 per 1 second (testclient) exceeded at endpoint: /inference/predict\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 429 Too Many Requests&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_predict_invalid_format&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_invalid_format&#34;, &#34;duration&#34;: &#34;24 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_invalid_format&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;24 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:42,524 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 400 Bad Request&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_predict_model_error&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_model_error&#34;, &#34;duration&#34;: &#34;17 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_model_error&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;17 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:42,541 - mlops_detector - ERROR - Model Inference Error: Mocked inference crash\n2026-06-07 18:53:42,544 - httpx - INFO - HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 500 Internal Server Error&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nERROR    mlops_detector:main.py:57 Model Inference Error: Mocked inference crash\nINFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/inference/predict &amp;quot;HTTP/1.1 500 Internal Server Error&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_auth_invalid_keys[]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_auth_invalid_keys[]&#34;, &#34;duration&#34;: &#34;9 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_auth_invalid_keys[]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;9 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:42,555 - httpx - INFO - HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_auth_invalid_keys[wrong_key_123]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_auth_invalid_keys[wrong_key_123]&#34;, &#34;duration&#34;: &#34;8 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_auth_invalid_keys[wrong_key_123]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;8 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:42,563 - httpx - INFO - HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_api.py::test_auth_invalid_keys[   ]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_auth_invalid_keys[   ]&#34;, &#34;duration&#34;: &#34;8 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_auth_invalid_keys[   ]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;8 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:42,572 - httpx - INFO - HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n------------------------------ Captured log call -------------------------------\nINFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/inference/health &amp;quot;HTTP/1.1 401 Unauthorized&amp;quot;\n\n&#34;}], &#34;tests/test_database.py::test_create_feedback_in_db[asyncio]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_database.py::test_create_feedback_in_db[asyncio]&#34;, &#34;duration&#34;: &#34;40 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_database.py::test_create_feedback_in_db[asyncio]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;40 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n2026-06-07 18:53:42,607 - mlops_detector - INFO - Feedback saved: db_test_image.png (ID: 1)\n\n------------------------------ Captured log call -------------------------------\nINFO     mlops_detector:feedback_repo.py:61 Feedback saved: db_test_image.png (ID: 1)\n\n&#34;}], &#34;tests/test_model.py::test_preprocess_tensor_format&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_preprocess_tensor_format&#34;, &#34;duration&#34;: &#34;19 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_preprocess_tensor_format&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;19 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_generate_phash_consistency&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_generate_phash_consistency&#34;, &#34;duration&#34;: &#34;377 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_generate_phash_consistency&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;377 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_preprocess_edge_cases[L-size0]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_preprocess_edge_cases[L-size0]&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_preprocess_edge_cases[L-size0]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_preprocess_edge_cases[RGBA-size1]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_preprocess_edge_cases[RGBA-size1]&#34;, &#34;duration&#34;: &#34;15 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_preprocess_edge_cases[RGBA-size1]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;15 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;test_raporu.html&#34;}"></div>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.14.4&#34;, &#34;Platform&#34;: &#34;Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.43&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;9.0.3&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;asyncio&#34;: &#34;1.4.0&#34;, &#34;anyio&#34;: &#34;4.13.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;, &#34;html&#34;: &#34;4.2.0&#34;}}, &#34;tests&#34;: {&#34;tests/test_api.py::test_health_check_without_api_key&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_health_check_without_api_key&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_health_check_without_api_key&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_health_check_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_health_check_success&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_health_check_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_create_feedback_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_success&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_decision_boundary[0.95-AI_GENERATED]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_decision_boundary[0.95-AI_GENERATED]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_decision_boundary[0.95-AI_GENERATED]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_decision_boundary[0.3-REAL]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_decision_boundary[0.3-REAL]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_decision_boundary[0.3-REAL]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_decision_boundary[0.65-UNCERTAIN_LEANING_AI]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_decision_boundary[0.65-UNCERTAIN_LEANING_AI]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_decision_boundary[0.65-UNCERTAIN_LEANING_AI]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_decision_boundary[0.45-UNCERTAIN_LEANING_REAL]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_decision_boundary[0.45-UNCERTAIN_LEANING_REAL]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_decision_boundary[0.45-UNCERTAIN_LEANING_REAL]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_decision_boundary[0.58-UNCERTAIN_NEUTRAL]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_decision_boundary[0.58-UNCERTAIN_NEUTRAL]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_decision_boundary[0.58-UNCERTAIN_NEUTRAL]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_predict_image_file_too_large&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_image_file_too_large&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_image_file_too_large&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload0]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload0]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload0]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:11.459804+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;WARNING&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;12fc614a-7b00-483e-958a-9bfa361f64b1&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;string_too_short&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;filename&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;#x27;String should have at least 1 character&amp;#x27;, &amp;#x27;input&amp;#x27;: &amp;#x27;&amp;#x27;, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;min_length&amp;#x27;: 1}}] - Endpoint: /v1/feedback/&amp;quot;}\n&#34;}], &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload1]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload1]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload1]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:12.473415+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;WARNING&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;8acb9ef0-0027-4cac-a1a0-c225f776a3c1&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;enum&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;model_prediction&amp;#x27;), &amp;#x27;msg&amp;#x27;: \\&amp;quot;Input should be &amp;#x27;REAL&amp;#x27;, &amp;#x27;AI_GENERATED&amp;#x27;, &amp;#x27;UNCERTAIN_LEANING_AI&amp;#x27;, &amp;#x27;UNCERTAIN_LEANING_REAL&amp;#x27; or &amp;#x27;UNCERTAIN_NEUTRAL&amp;#x27;\\&amp;quot;, &amp;#x27;input&amp;#x27;: &amp;#x27;INVALID&amp;#x27;, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;expected&amp;#x27;: \\&amp;quot;&amp;#x27;REAL&amp;#x27;, &amp;#x27;AI_GENERATED&amp;#x27;, &amp;#x27;UNCERTAIN_LEANING_AI&amp;#x27;, &amp;#x27;UNCERTAIN_LEANING_REAL&amp;#x27; or &amp;#x27;UNCERTAIN_NEUTRAL&amp;#x27;\\&amp;quot;}}] - Endpoint: /v1/feedback/&amp;quot;}\n&#34;}], &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload2]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload2]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_create_feedback_validation_errors[invalid_payload2]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:13.486682+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;WARNING&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;c6be8acf-b18e-4acb-aff0-5b3034744e3c&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Unvalid data entry: [{&amp;#x27;type&amp;#x27;: &amp;#x27;less_than_equal&amp;#x27;, &amp;#x27;loc&amp;#x27;: (&amp;#x27;body&amp;#x27;, &amp;#x27;confidence&amp;#x27;), &amp;#x27;msg&amp;#x27;: &amp;#x27;Input should be less than or equal to 1&amp;#x27;, &amp;#x27;input&amp;#x27;: 1.5, &amp;#x27;ctx&amp;#x27;: {&amp;#x27;le&amp;#x27;: 1.0}}] - Endpoint: /v1/feedback/&amp;quot;}\n&#34;}], &#34;tests/test_api.py::test_predict_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_success&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_rate_limiting&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_rate_limiting&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_rate_limiting&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nWARNING  slowapi:extension.py:510 ratelimit 5 per 1 second (testclient) exceeded at endpoint: /v1/inference/predict\n\n&#34;}], &#34;tests/test_api.py::test_predict_invalid_format&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_invalid_format&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_invalid_format&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_predict_model_error&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_predict_model_error&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_predict_model_error&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:17.566463+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;ERROR&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;cd655fb2-31cc-4864-a7a0-9c743c88a8a7&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Model Inference Error: Mocked inference crash&amp;quot;}\n&#34;}], &#34;tests/test_api.py::test_auth_invalid_keys[]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_auth_invalid_keys[]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_auth_invalid_keys[]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_api.py::test_auth_invalid_keys[wrong_key_123]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_auth_invalid_keys[wrong_key_123]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_auth_invalid_keys[wrong_key_123]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:19.582129+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;WARNING&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;035083e0-b0cb-417a-bcf5-84f9891fab33&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Unauthorized API access attempt&amp;quot;}\n&#34;}], &#34;tests/test_api.py::test_auth_invalid_keys[   ]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_api.py::test_auth_invalid_keys[   ]&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_api.py::test_auth_invalid_keys[   ]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:20.590906+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;WARNING&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;719a8e27-329f-446f-9a0c-1526a97ab568&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Unauthorized API access attempt&amp;quot;}\n&#34;}], &#34;tests/test_database.py::test_create_feedback_in_db&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_database.py::test_create_feedback_in_db&#34;, &#34;duration&#34;: &#34;47 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_database.py::test_create_feedback_in_db&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;47 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:21.630124+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;INFO&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;N/A&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Feedback saved: db_test_image.png (ID: 1)&amp;quot;}\n&#34;}], &#34;tests/test_database.py::test_soft_delete&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_database.py::test_soft_delete&#34;, &#34;duration&#34;: &#34;38 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_database.py::test_soft_delete&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;38 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:21.663127+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;INFO&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;N/A&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Feedback saved: db_test_image.png (ID: 1)&amp;quot;}\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:21.670784+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;INFO&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;N/A&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Record has been soft deleted. ID: 1&amp;quot;}\n&#34;}], &#34;tests/test_database.py::test_get_recent_errors_pagination&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_database.py::test_get_recent_errors_pagination&#34;, &#34;duration&#34;: &#34;34 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_database.py::test_get_recent_errors_pagination&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;34 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:21.701193+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;INFO&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;N/A&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Feedback saved: 0_db_test_image.png (ID: 1)&amp;quot;}\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:21.703937+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;INFO&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;N/A&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Feedback saved: 1_db_test_image.png (ID: 2)&amp;quot;}\n{&amp;quot;timestamp&amp;quot;: &amp;quot;2026-06-20T15:18:21.706379+00:00&amp;quot;, &amp;quot;level&amp;quot;: &amp;quot;INFO&amp;quot;, &amp;quot;request_id&amp;quot;: &amp;quot;N/A&amp;quot;, &amp;quot;logger&amp;quot;: &amp;quot;mlops_detector&amp;quot;, &amp;quot;message&amp;quot;: &amp;quot;Feedback saved: 2_db_test_image.png (ID: 3)&amp;quot;}\n&#34;}], &#34;tests/test_database.py::test_get_feedback_by_filename_not_found&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_database.py::test_get_feedback_by_filename_not_found&#34;, &#34;duration&#34;: &#34;23 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_database.py::test_get_feedback_by_filename_not_found&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;23 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_preprocess_tensor_format&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_preprocess_tensor_format&#34;, &#34;duration&#34;: &#34;21 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_preprocess_tensor_format&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;21 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_generate_phash_consistency&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_generate_phash_consistency&#34;, &#34;duration&#34;: &#34;23 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_generate_phash_consistency&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;23 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_decide_class_boundariees[0.92-AI_GENERATED]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_decide_class_boundariees[0.92-AI_GENERATED]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_decide_class_boundariees[0.92-AI_GENERATED]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_decide_class_boundariees[0.25-REAL]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_decide_class_boundariees[0.25-REAL]&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_decide_class_boundariees[0.25-REAL]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_decide_class_boundariees[0.7-UNCERTAIN_LEANING_AI]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_decide_class_boundariees[0.7-UNCERTAIN_LEANING_AI]&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_decide_class_boundariees[0.7-UNCERTAIN_LEANING_AI]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_decide_class_boundariees[0.43-UNCERTAIN_LEANING_REAL]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_decide_class_boundariees[0.43-UNCERTAIN_LEANING_REAL]&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_decide_class_boundariees[0.43-UNCERTAIN_LEANING_REAL]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_decide_class_boundariees[0.58-UNCERTAIN_NEUTRAL]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_decide_class_boundariees[0.58-UNCERTAIN_NEUTRAL]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_decide_class_boundariees[0.58-UNCERTAIN_NEUTRAL]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_decide_class_boundariees[0.75-AI_GENERATED]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_decide_class_boundariees[0.75-AI_GENERATED]&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_decide_class_boundariees[0.75-AI_GENERATED]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_decide_class_boundariees[0.4-REAL]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_decide_class_boundariees[0.4-REAL]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_decide_class_boundariees[0.4-REAL]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_preprocess_edge_cases[L-size0]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_preprocess_edge_cases[L-size0]&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_preprocess_edge_cases[L-size0]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_preprocess_edge_cases[RGBA-size1]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_preprocess_edge_cases[RGBA-size1]&#34;, &#34;duration&#34;: &#34;19 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_preprocess_edge_cases[RGBA-size1]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;19 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_process_applies_normalization&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_process_applies_normalization&#34;, &#34;duration&#34;: &#34;16 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_process_applies_normalization&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;16 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_model.py::test_preprocess_invalid_image&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_model.py::test_preprocess_invalid_image&#34;, &#34;duration&#34;: &#34;34 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_model.py::test_preprocess_invalid_image&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;34 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;test_raporu.html&#34;}"></div>
     <script>
       (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')

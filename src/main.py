@@ -1,6 +1,8 @@
 from arq import create_pool
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -75,6 +77,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+
+@app.get("/", include_in_schema=False)
+async def serve_playground():
+    return FileResponse("frontends/index.html")
+
 
 @app.get("/health", tags=["System"], status_code=status.HTTP_200_OK)
 async def health_check():
@@ -104,7 +113,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "details": "Invalid request data submitted",
-            "errors": exc.errors(include_url=False),
+            "errors": exc.errors(),
         },
     )
 
