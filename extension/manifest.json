@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "AI or Not — Image Detector",
+    "version": "1.0.0",
+    "description": "Right-click any image to instantly detect if it was made by AI or a human.",
+    "permissions": [
+        "contextMenus",
+        "storage"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "AI or Not — Settings"
+    }
+}

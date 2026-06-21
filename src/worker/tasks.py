@@ -1,10 +1,11 @@
 import asyncio
 from urllib.parse import urlparse
 from arq.connections import RedisSettings
-from arq import Retry
+from arq import Retry, cron
 
 from src.logger import logger
 from src.config import settings
+from src.api.routes import check_drift
 
 async def retrain_model(ctx):
     """
@@ -36,7 +37,7 @@ parsed_url = urlparse(settings.REDIS_URL)
 
 
 class WorkerSettings:
-    functions = [retrain_model]
+    functions = [retrain_model]  
     redis_settings = RedisSettings(
         host=parsed_url.hostname or 'localhost',
         port=parsed_url.port or 6379,

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>AI or Not — Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0A0A0F;
+            --surface: #1A1A24;
+            --border: #2A2A3A;
+            --text: #F0F0F0;
+            --muted: #8888A0;
+            --ai: #6C63FF;
+            --real: #22D3A5;
+            --danger: #FF6B6B;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            width: 300px;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
+
+        .logo .ai {
+            color: var(--ai);
+        }
+
+        .logo .sep {
+            color: var(--muted);
+            margin: 0 4px;
+        }
+
+        .logo .not {
+            color: var(--real);
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--muted);
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin: 14px 0 5px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--ai);
+        }
+
+        input::placeholder {
+            color: var(--muted);
+        }
+
+        select option {
+            background: var(--surface);
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 18px;
+            padding: 10px;
+            background: var(--ai);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .15s;
+        }
+
+        .btn:hover {
+            opacity: .85;
+        }
+
+        .btn:active {
+            opacity: .7;
+        }
+
+        .status {
+            min-height: 20px;
+            margin-top: 10px;
+            font-size: 0.78rem;
+            text-align: center;
+            color: var(--muted);
+            transition: color .2s;
+        }
+
+        .status.ok {
+            color: var(--real);
+        }
+
+        .status.err {
+            color: var(--danger);
+        }
+
+        .hint {
+            margin-top: 18px;
+            padding: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .hint strong {
+            color: var(--text);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">
+            <span class="ai">AI</span>
+            <span class="sep">or</span>
+            <span class="not">Not</span>
+        </div>
+    </div>
+
+    <label>API URL</label>
+    <input id="apiUrl" type="url" placeholder="http://localhost:8000" spellcheck="false" />
+
+    <label>API Key</label>
+    <input id="apiKey" type="password" placeholder="Your X-API-Key" />
+
+    <label>Analysis Mode</label>
+    <select id="mode">
+        <option value="explain">🔍 Explain — with GradCAM heatmap</option>
+        <option value="predict">⚡ Fast — prediction only</option>
+    </select>
+
+    <button class="btn" id="save">Save &amp; Test Connection</button>
+    <div class="status" id="status"></div>
+
+    <div class="hint">
+        <strong>How to use:</strong><br>
+        Right-click any image on any website and choose
+        <strong>🔍 Analyze with AI Detector</strong>.
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

@@ -44,9 +44,9 @@ class FeedbackRepository(AbstractFeedbackRepository):
             return ErrorType.FALSE_NEGATIVE
         elif model_pred == user_corr.value:
             return ErrorType.CORRECT
-        
-        logger.warning(f"Unclassifiable error type: pred= {model_pred}, corr = {user_corr}")
-        return ErrorType.UNCERTAIN_FAIL
+        else:            
+            logger.warning(f"Unclassifiable error type: pred= {model_pred}, corr = {user_corr}")
+            return ErrorType.UNCERTAIN_FAIL
         
     async def create_feedback(
         self, filename: str, model_prediction: str, confidence: float, user_correction: FeedbackLabel, client_source: str = "API_v1") -> FeedbackItem:
@@ -97,7 +97,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
             db_item = result.scalar_one_or_none()
                 
             if db_item:
-                db_item.is_deleted = True
+                db_item.is_deleted.is_(False)
                 await self.session.commit()
                 logger.info(f"Record has been soft deleted. ID: {record_id}")
                 return True

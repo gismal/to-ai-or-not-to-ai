@@ -504,6 +504,20 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
+    // Auto-load image from URL param (used by browser extension deep-link)
+    useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const imageUrl = params.get('imageUrl');
+      if (!imageUrl) return;
+
+      fetch(imageUrl)
+        .then(r => r.blob())
+        .then(blob => {
+          const file = new File([blob], 'linked-image.jpg', { type: blob.type });
+          handleFile(file);
+        })
+        .catch(() => console.warn('Could not auto-load image from URL param'));
+    }, []);
 
     const { useState, useRef, useCallback, useEffect } = React;
 

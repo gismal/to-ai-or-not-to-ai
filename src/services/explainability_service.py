@@ -125,7 +125,7 @@ class ExplainabilityService:
         with torch.no_grad():
             output = self.model(input_tensor)
             probs = torch.softmax(output[0], dim=0)
-            confidence = float(probs)
+            confidence = float(probs[0])
 
         buffer = io.BytesIO()
         Image.fromarray(overlay).save(buffer, format="PNG")
