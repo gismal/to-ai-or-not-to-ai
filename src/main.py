@@ -67,7 +67,7 @@ app.include_router(feedback_router)
 Instrumentator().instrument(app).expose(app, include_in_schema=False)
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
 app.add_middleware(
     CORSMiddleware,
@@ -146,3 +146,6 @@ async def request_id_middleware(request: Request, call_next):
     response.headers["X-Request-ID"] = request_id
     request_id_ctx.reset(token)
     return response
+
+
+Instrumentator().instrument(app).expose(app)
