@@ -110,12 +110,12 @@ class ExplainabilityService:
         Synchronous GradCAM execution — called via asyncio.to_thread.
 
         Returns:
-            - confidence:   raw sigmoid score from the model
+            - confidence:   raw softmax score from the model
             - heatmap_b64:  base64-encoded PNG of the overlay
         """
         input_tensor, original_image = self._preprocess(image_bytes)
 
-        # GradCAM as context manager — ensures hooks are cleaned up after use
+        # GradCAM as context manager. it ensures hooks are cleaned up after use
         # targets=None → GradCAM automatically targets the highest-scoring class
         with GradCAM(model=self.model, target_layers=self.target_layers) as cam:
             grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]

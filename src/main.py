@@ -82,7 +82,7 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/", include_in_schema=False)
 async def serve_playground():
-    return FileResponse("frontends/index.html")
+    return FileResponse("frontend/index.html")
 
 
 @app.get("/health", tags=["System"], status_code=status.HTTP_200_OK)

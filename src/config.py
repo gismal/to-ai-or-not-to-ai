@@ -1,16 +1,24 @@
 import os
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import SecretStr, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # Auth
     API_KEY: SecretStr
+
+    # Model
     MODEL_THRESHOLD: float = 0.75
     GRAY_AREA_MARGIN: float = 0.35
-    DEBUG: bool = False
-    DATABASE_URL: str
-    REDIS_URL: str = "redis://localhost:6379/0"
     DRIFT_THRESHOLD: float = 0.15
+
+    # Infrastructure
+    DATABASE_URL: str
+    REDIS_URL: str = "redis://redis:6379/0"
+    DEBUG: bool = False
+
+    # Security
+    GRAFANA_PASSWORD: SecretStr = SecretStr("admin")
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:8000",
         "http://localhost:3000",
@@ -24,10 +32,13 @@ class Settings(BaseSettings):
     )
 
     @model_validator(mode="after")
-    def validate_threshold(self) -> "Settings":
+    def validate_thresholds(self) -> "Settings":
         if self.GRAY_AREA_MARGIN >= self.MODEL_THRESHOLD:
-            raise ValueError("GRAY_AREA_MARGIN must be smaller than MODEL_THRESHOLD")
+            raise ValueError(
+                f"GRAY_AREA_MARGIN ({self.GRAY_AREA_MARGIN}) must be "
+                f"smaller than MODEL_THRESHOLD ({self.MODEL_THRESHOLD})"
+            )
+        return self
 
 
-# Singleton Pattern: We'll reach to settings from all over the project with one instance
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]
