@@ -21,6 +21,7 @@ from src.core.exceptions import (
     DatabaseError,
 )
 from src.services.inference_service import InferenceService
+from src.services.cache_service import CacheService
 from src.worker.tasks import WorkerSettings
 from src.services.explainability_service import ExplainabilityService
 from src.api.routes import router as inference_router
@@ -38,9 +39,11 @@ async def lifespan(app: FastAPI):
         app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
 
         predictor = ONNXPredictor()
+        app.state.cache_service = CacheService(redis_pool=app.state.arq_pool)
+
         app.state.inference_service = InferenceService(
             predictor=predictor,
-            redis_pool=app.state.arq_pool,
+            cache=app.state.cache_service,
             threshold=settings.MODEL_THRESHOLD,
             gray_area_margin=settings.GRAY_AREA_MARGIN,
         )

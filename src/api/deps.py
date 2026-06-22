@@ -7,7 +7,9 @@ from fastapi.security import APIKeyHeader
 from src.logger import logger
 from src.infra.database import AsyncSessionLocal
 from src.services.inference_service import InferenceService
+from src.services.cache_service import CacheService
 from src.repositories.feedback_repo import FeedbackRepository
+from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.services.feedback_service import FeedbackService
 from src.services.explainability_service import ExplainabilityService
 from src.config import settings
@@ -79,3 +81,19 @@ def get_explainability_service(request: Request) -> ExplainabilityService:
     Retrieves the ExplainabilityService from the app state
     """
     return request.app.state.explainability_service
+
+
+def get_cache_service(request: Request) -> CacheService:
+    """
+    Retrieves the CacheService from app state
+    """
+    return request.app.state.cache_service
+
+
+async def get_prediction_log_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> PredictionLogRepository:
+    """
+    Provides a PredictionLogRepository with the current request's session
+    """
+    return PredictionLogRepository(session)

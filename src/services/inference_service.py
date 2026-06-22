@@ -1,35 +1,53 @@
+import asyncio
+import io
+import time
+
+from src.core.enums import InferenceStatus, PredictionLabel
+from src.core.exceptions import ModelInferenceError
 from src.inference import ONNXPredictor
-from src.core.enums import PredictionLabel
+from src.logger import logger
+from src.services.cache_service import CacheService
+
 
 class InferenceService:
     """
-    Encapsulates the core business logic, includng asynchronous file streaming, model execution and granular uncertainty classification
+    Orchastrates rpediciton for a single image
     """
 
     def __init__(
         self,
         predictor: ONNXPredictor,
+        cache: CacheService,
         threshold: float,
         gray_area_margin: float = 0.35,
-    ):
+    ) -> None:
         """
         Initializes the inference service with its dependencies
 
         Args:
             - predictor (ONNXPredictor): The loaded ONNX runtime engine
             - threshold (float): The base confidence score to flag an image as AI
+            - cache (CacheService): cache service to get the images from the redis cache
             - gray_area_margin (float): The amrgin below the threshol to classify as UNCERTAIN
 
         """
         self.predictor = predictor
         self.threshold = threshold
+        self.cache = cache
         self.lower_bound = threshold - gray_area_margin
         self.one_third = gray_area_margin / 3
 
-    
     def _decide_class(self, confidence: float) -> PredictionLabel:
         """
-        Determines the final label with detailed granularity for uncertain cases
+        Maps a confidence score. There are five labels:
+
+                The confidence score represents probability of AI_GENERATED (class 0).
+        Zones:
+          [0.00 - lower_bound]          → REAL
+          [lower_bound - lower_bound+⅓] → UNCERTAIN_LEANING_REAL
+          [lower_bound+⅓ - threshold-⅓] → UNCERTAIN_NEUTRAL
+          [threshold-⅓  - threshold]    → UNCERTAIN_LEANING_AI
+          [threshold - 1.00]            → AI_GENERATED
 
         Args:
             - confidence (float): The prediction score from the ONNX model
@@ -52,4 +70,62 @@ class InferenceService:
         else:
             return PredictionLabel.UNCERTAIN_NEUTRAL
 
-    
+    # -- Prediction -------------------------
+    async def predict(
+        self,
+        content_bytes: bytes,
+        filename: str,
+    ) -> dict:
+        """
+        Full prediction pipeline: cache -> ONNX -> classify -> cache
+
+        Args:
+            - content_bytes: Raw, validated image bytes
+            - filename: safe sanitized filename
+
+        Returns:
+            Response dict matching PredictionResponse schema
+
+        Raises:
+            - ModelInferenceError: If ONNX runtime fails
+        """
+        start = time.time()
+
+        # -- 1. Cache lookup ---------------------
+        cached = await self.cache.get(content_bytes)
+        if cached:
+            cached["processing_time_ms"] = round((time.time() - start) * 1000, 2)
+            cached["cached"] = True
+            logger.info(f"Cache hit: {filename}")
+            return cached
+
+        # -- 2. ONNX ------------------------------
+        file_stream = io.BytesIO(content_bytes)
+        result = await asyncio.to_thread(self.predictor.predict, file_stream, filename)
+
+        if result.status == InferenceStatus.FAILED:
+            raise ModelInferenceError(str(result.confidence))
+
+        # -- 3. Classify ------------------------
+        prediction = self._decide_class(result.confidence)
+
+        if "UNCERTAIN" in prediction.value:
+            logger.warning(
+                f"UNCERTAIN prediction: {filename} "
+                f"(confidence: {result.confidence:.4f})"
+            )
+
+        # -- 4. Build response --------------------
+        response = {
+            "filename": filename,
+            "confidence": result.confidence,
+            "prediction": prediction,
+            "status": InferenceStatus.SUCCESS,
+            "processing_time_ms": round((time.time() - start) * 1000, 2),
+            "cached": False,
+        }
+
+        # -- 5. Cache the result ------------------------
+        await self.cache.set(content_bytes, response)
+
+        return response

@@ -5,9 +5,7 @@ Clean, production ready transfer learning wirh MobileNetV3-Small
 
 import copy
 import json
-from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
@@ -69,13 +67,21 @@ def get_dataloaders(config: TrainConfig) -> Tuple[DataLoader, DataLoader, List[s
     train_dataset = datasets.ImageFolder(config.train_dir, transform=train_transform)
     val_dataset = datasets.ImageFolder(config.val_dir, transform=val_transform)
 
-    loader_kwargs = dict(
-        batch_size=config.batch_size,
-        num_workers=config.num_workers,
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=int(config.batch_size),
+        shuffle=True,
+        num_workers=int(config.num_workers),
         pin_memory=True,
     )
-    train_loader = DataLoader(train_dataset, shuffle=True, **loader_kwargs)
-    val_loader = DataLoader(val_dataset, shuffle=False, **loader_kwargs)
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=int(config.batch_size),
+        shuffle=False,
+        num_workers=int(config.num_workers),
+        pin_memory=True,
+    )
 
     logger.info(
         f"Dataset ready — train: {len(train_dataset)}, "
@@ -93,7 +99,10 @@ def build_model(num_classes: int, freeze_backbone: bool = True) -> nn.Module:
         for param in model.features.parameters():
             param.requires_grad = False
 
-    in_features = model.classifier[-1].in_features
+    last_layer = model.classifier[-1]
+    assert isinstance(last_layer, nn.Linear)
+
+    in_features = last_layer.in_features
     model.classifier[-1] = nn.Linear(in_features, num_classes)
 
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -123,7 +132,7 @@ class EarlyStopping:
 
 # -- Trainer  ----
 class Trainer:
-    """Owns the full training loog, checkpointing and early stopping"""
+    """Owns the full training loop, checkpointing and early stopping"""
 
     def __init__(
         self, model: nn.Module, config: TrainConfig, device: torch.device
@@ -244,7 +253,7 @@ def export_model(
 
     torch.onnx.export(
         export_copy,
-        dummy_input,
+        (dummy_input,),
         config.onnx_path,
         export_params=True,
         opset_version=18,

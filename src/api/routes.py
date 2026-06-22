@@ -1,10 +1,21 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Request, status, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    UploadFile,
+    File,
+    Request,
+    status,
+    HTTPException,
+    BackgroundTasks,
+)
 from sqlalchemy.ext.asyncio import AsyncSession  # Eksik import eklendi
 from sqlalchemy import text
 from arq import ArqRedis
 import magic
 from pathlib import PurePosixPath
 
+from src.api.deps import get_prediction_log_repository
+from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.infra.limiter import limiter
 from src.services.inference_service import InferenceService
 from src.schemas.predict import PredictionResponse
@@ -93,18 +104,43 @@ async def health_check(
 @limiter.limit("5/second")
 async def predict_image(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    service: InferenceService = Depends(get_inference_service),
+    service: InferenceService = Depends(get_prediction_log_repository),
+    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
 ):
-    """
-    Delegates the uploaded file to the underlying InferenceService
-    """
-    # early download limit
+    # -- Size Guard ----------------------
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > 10 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="File too large. Max 10 MB allowed")
 
-    return await service.process_upload(file)
+    # -- Read -----------------------------
+    content_bytes = await file.read()
+
+    # -- Validate MIME ------------------
+    mime = magic.from_buffer(content_bytes[:2048], mime=True)
+    if mime not in ("image/jpeg", "image/png"):
+        raise InvalidImageFormatError(
+            f"Unsupported file type: {mime}. Only JPEG and PNG accepted"
+        )
+
+    # -- Sanitize filename --------------------------
+    # path traversal protection
+    safe_filename = PurePosixPath(file.filename or "unnamed").name
+
+    # -- Predict ------------------------------------
+    result = await service.predict(content_bytes, safe_filename)
+
+    # -- asycn Log prediction ---------------------
+    background_tasks.add_task(
+        log_repo.create_log,
+        filename=safe_filename,
+        confidence=result["confidence"],
+        predicted_label=result["prediction"],
+        processing_time_ms=result["processing_time_ms"],
+    )
+
+    return result
 
 
 @router.post(

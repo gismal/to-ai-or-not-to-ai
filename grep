@@ -1,0 +1,10 @@
+Name: onnxruntime
+Version: 1.26.0
+Summary: ONNX Runtime is a runtime accelerator for Machine Learning models
+Home-page: https://onnxruntime.ai
+Author: Microsoft Corporation
+Author-email: onnxruntime@microsoft.com
+License: MIT License
+Location: /home/goksu/ai-image-detector-mlops/venv/lib/python3.14/site-packages
+Requires: flatbuffers, numpy, packaging, protobuf
+Required-by: 
