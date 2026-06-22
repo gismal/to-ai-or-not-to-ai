@@ -5,52 +5,58 @@ from arq import ArqRedis
 from src.infra.feedbacks import FeedbackItem
 from src.core.enums import ErrorType
 from src.config import settings
-from src.logger import logger  
+from src.logger import logger
+
 
 class RetrainService:
-    
     @staticmethod
     async def check_drift_and_trigger(
-        session: AsyncSession,
-        arq_pool: ArqRedis
+        session: AsyncSession, arq_pool: ArqRedis
     ) -> dict:
         """
         Calculates recent error rate
         Enqueues retraining via ARQ if drift exceeds threshold
         """
         total = await session.scalar(
-            select(func.count()).select_from(FeedbackItem)
+            select(func.count())
+            .select_from(FeedbackItem)
             .where(FeedbackItem.is_deleted.is_(False))
         )
-        
+
         if not total:
             return {"status": "no_data", "error_rate": 0.0}
-        
+
         errors = await session.scalar(
-            select(func.count()).select_from(FeedbackItem)
-            .where(FeedbackItem.error_type.in_([
-                ErrorType.FALSE_POSITIVE,
-                ErrorType.FALSE_NEGATIVE
-            ]),
-                   FeedbackItem.is_deleted.is_(False)
-        ))
-                    
+            select(func.count())
+            .select_from(FeedbackItem)
+            .where(
+                FeedbackItem.error_type.in_(
+                    [ErrorType.FALSE_POSITIVE, ErrorType.FALSE_NEGATIVE]
+                ),
+                FeedbackItem.is_deleted.is_(False),
+            )
+        )
+
+        errors = errors or 0
+        total = total or 1
+
         error_rate = round(errors / total, 4)
         logger.info(f"Drift Check. Error Rate: {error_rate:.2%} ({errors}/{total})")
 
         if error_rate >= settings.DRIFT_THRESHOLD:
-            job = await arq_pool.enqueue_job('retrain_model')
+            job = await arq_pool.enqueue_job("retrain_model")
+
+            if not job:
+                logger.error("Drift spotted but can't enqueued to retraining ")
+                return {
+                    "status": "error",
+                    "message": "Failed to enqueue retraining job",
+                }
 
             logger.warning(
                 f"Drift threshold exceed ({error_rate:.2%}). "
                 f"Retraining enqueued. Job ID: {job.job_id}"
             )
-            return {
-                "status": "retraining_enqueued",
-                "job_id": job.job_id
-            }
+            return {"status": "retraining_enqueued", "job_id": job.job_id}
 
-        return {
-            "status": "ok",
-            "error_rate": error_rate
-        }
+        return {"status": "ok", "error_rate": error_rate}

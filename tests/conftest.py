@@ -1,15 +1,15 @@
-import pytest
 import os
+import pytest
 
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["API_KEY"] = "test_gizli_anahtar_123"
 os.environ["MODEL_THRESHOLD"] = "0.75"
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from src.infra.database import Base
-from src.repositories.feedback_repo import FeedbackRepository
-from src.schemas.feedback import FeedbackCreateRequest
-from src.schemas.feedback import PredictionLabel, FeedbackLabel
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker  # noqa: E402
+from src.infra.database import Base  # noqa: E402
+from src.repositories.feedback_repo import FeedbackRepository  # noqa: E402
+from src.schemas.feedback import FeedbackCreateRequest  # noqa: E402
+from src.schemas.feedback import PredictionLabel, FeedbackLabel  # noqa: E402
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)

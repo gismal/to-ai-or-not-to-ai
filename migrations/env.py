@@ -14,7 +14,6 @@ from alembic import context
 # Kendi ayarlarımızı ve modellerimizi içeri aktarıyoruz
 from src.config import settings
 from src.infra.database import Base
-from src.infra.feedbacks import FeedbackItem, PredictionLog
 
 # Alembic Config nesnesi
 config = context.config
@@ -25,6 +24,7 @@ if config.config_file_name is not None:
 config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))
 
 target_metadata = Base.metadata
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
@@ -38,15 +38,17 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def do_run_migrations(connection: Connection) -> None:
     """Synchronous migration runner — called by run_sync inside the async engine."""
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
-        render_as_batch = True   #SQLite ALTER TABLE support
-        )
+        render_as_batch=True,  # SQLite ALTER TABLE support
+    )
     with context.begin_transaction():
         context.run_migrations()
+
 
 async def run_async_migrations() -> None:
     """Creates an async engine and runs migrations via run_sync."""
@@ -61,15 +63,17 @@ async def run_async_migrations() -> None:
 
     await connectable.dispose()
 
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     asyncio.run(run_async_migrations())
-    
+
+
 def run_mitigations_offline() -> None:
     context.configure(
-        url = url,
-        target_metadata = target_metadata,
+        url=config.get_main_option("sqlalchemy.url"),
+        target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=True
+        render_as_batch=True,
     )

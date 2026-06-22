@@ -5,19 +5,20 @@ future ideas to be added
 import pytest
 import io
 from PIL import Image
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 import numpy as np
 
 from src.utils import generate_phash
 from src.inference import _preprocess
 from src.services.inference_service import InferenceService
+from hypothesis import given, settings, HealthCheck, strategies as st
 
 
 @pytest.fixture
 def service():
     return InferenceService(
         predictor=MagicMock(),
-        redis_pool=MagicMock(),
+        cache=AsyncMock(),
         threshold=0.75,
         gray_area_margin=0.35,
     )
@@ -74,7 +75,7 @@ def test_generate_phash_consistency(dummy_image):
         (0.40, "REAL"),  # boundary: exactly at lower bound
     ],
 )
-def test_decide_class_boundariees(service, confidence, expected):
+def test_decide_class_boundaries(service, confidence, expected):
     assert service._decide_class(confidence).value == expected
 
 
@@ -116,3 +117,20 @@ def test_preprocess_invalid_image():
     path_str, tensor, error = _preprocess(io.BytesIO(b"this is not an image"))
     assert tensor is None
     assert error is not None
+
+
+@given(st.floats(min_value=0.0, max_value=1.0))
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_decide_class_property(service, confidence):
+    """
+    Tests the boundary logic against all possible float values between 0 and 1.
+    """
+    result = service._decide_class(confidence)
+    assert result is not None
+
+    if confidence >= service.threshold:
+        assert result.value == "AI_GENERATED"
+    elif confidence <= service.lower_bound:
+        assert result.value == "REAL"
+    else:
+        assert "UNCERTAIN" in result.value

@@ -106,7 +106,7 @@ async def predict_image(
     request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    service: InferenceService = Depends(get_prediction_log_repository),
+    service: InferenceService = Depends(get_inference_service),
     log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
 ):
     # -- Size Guard ----------------------
