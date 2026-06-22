@@ -87,8 +87,8 @@ Preprocessing edge cases
 @pytest.mark.parametrize(
     "mode, size",
     [
-        ("L", (1, 1)),  # Çok küçük siyah-beyaz
-        ("RGBA", (500, 500)),  # Saydamlık içeren büyük resim
+        ("L", (1, 1)),  # Tiny greyscale
+        ("RGBA", (500, 500)),  # Large image with transparency channel
     ],
 )
 def test_preprocess_edge_cases(mode, size):

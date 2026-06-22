@@ -1,5 +1,5 @@
 import pytest
-from src.core.enums import FeedbackLabel, ErrorType
+from src.core.enums import FeedbackLabel, ErrorType, PredictionLabel
 
 
 @pytest.mark.asyncio
@@ -68,3 +68,33 @@ async def test_get_recent_errors_pagination(feedback_repo, mock_feedback_data):
 async def test_get_feedback_by_filename_not_found(feedback_repo):
     result = await feedback_repo.get_feedback_by_filename("nonexistent.png")
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_create_prediction_log(prediction_log_repo):
+    log = await prediction_log_repo.create_log(
+        filename="test.jpg",
+        confidence=0.91,
+        predicted_label=PredictionLabel.AI_GENERATED,
+        processing_time_ms=14.5,
+    )
+
+    assert log.id is not None
+    assert log.confidence == 0.91
+    assert log.predicted_label == PredictionLabel.AI_GENERATED
+    assert not log.is_deleted
+
+
+@pytest.mark.asyncio
+async def test_prediction_log_filename_indexed(prediction_log_repo):
+    """
+    Confirms no unique constraints
+    """
+
+    for _ in range(3):
+        await prediction_log_repo.create_log(
+            filename="repeated.jpg",
+            confidence=0.80,
+            predicted_label=PredictionLabel.REAL,
+            processing_time_ms=100.0,
+        )

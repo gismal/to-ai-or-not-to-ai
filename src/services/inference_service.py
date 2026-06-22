@@ -7,6 +7,7 @@ from src.core.exceptions import ModelInferenceError
 from src.inference import ONNXPredictor
 from src.logger import logger
 from src.services.cache_service import CacheService
+from src.infra.metrics import CACHE_COUNTER, INFERENCE_HISTOGRAM, PREDICTION_COUNTER
 
 
 class InferenceService:
@@ -65,10 +66,9 @@ class InferenceService:
         # analysis of uncertain area
         if confidence >= (self.threshold - self.one_third):
             return PredictionLabel.UNCERTAIN_LEANING_AI
-        elif confidence <= (self.lower_bound + self.one_third):
+        if confidence <= (self.lower_bound + self.one_third):
             return PredictionLabel.UNCERTAIN_LEANING_REAL
-        else:
-            return PredictionLabel.UNCERTAIN_NEUTRAL
+        return PredictionLabel.UNCERTAIN_NEUTRAL
 
     # -- Prediction -------------------------
     async def predict(
@@ -94,20 +94,27 @@ class InferenceService:
         # -- 1. Cache lookup ---------------------
         cached = await self.cache.get(content_bytes)
         if cached:
+            CACHE_COUNTER.labels(result="hit").inc()
             cached["processing_time_ms"] = round((time.time() - start) * 1000, 2)
             cached["cached"] = True
             logger.info(f"Cache hit: {filename}")
             return cached
 
+        CACHE_COUNTER.labels(result="miss").inc()
         # -- 2. ONNX ------------------------------
+        inference_start = time.time()
+
         file_stream = io.BytesIO(content_bytes)
         result = await asyncio.to_thread(self.predictor.predict, file_stream, filename)
+
+        INFERENCE_HISTOGRAM.observe(time.time() - inference_start)
 
         if result.status == InferenceStatus.FAILED:
             raise ModelInferenceError(str(result.confidence))
 
         # -- 3. Classify ------------------------
         prediction = self._decide_class(result.confidence)
+        PREDICTION_COUNTER.labels(label=prediction.value).inc()
 
         if "UNCERTAIN" in prediction.value:
             logger.warning(

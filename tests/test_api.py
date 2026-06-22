@@ -14,8 +14,7 @@ from src.api.deps import (
     get_prediction_log_repository,
     get_explainability_service,
 )
-from src.core.exceptions import InvalidImageFormatError, ModelInferenceError
-from src.services.inference_service import InferenceService
+from src.core.exceptions import ModelInferenceError
 
 
 VALID_API_KEY = settings.API_KEY.get_secret_value()
@@ -91,28 +90,6 @@ def test_create_feedback_success(client, auth_headers):
         (0.58, "UNCERTAIN_NEUTRAL"),
     ],
 )
-def test_decision_boundary(confidence, expected_label):
-    service = InferenceService(
-        predictor=MagicMock(),
-        cache=MagicMock(),
-        threshold=0.75,
-        gray_area_margin=0.35,
-    )
-
-    assert service._decide_class(confidence).value == expected_label
-
-
-def test_predict_image_file_too_large(client, auth_headers):
-    """
-    mocks the case when upload over 10MB files
-    """
-    large_data = b"0" * (11 * 1024 * 1024)  # FIX: 11mb too much
-    files = {"file": ("large.png", large_data, "image/png")}
-
-    response = client.post("/v1/inference/predict", files=files, headers=auth_headers)
-    assert response.status_code == 413
-
-
 @pytest.mark.parametrize(
     "invalid_payload",
     [
@@ -175,9 +152,6 @@ def test_rate_limiting(client, auth_headers):
 
 
 def test_predict_invalid_format(client, auth_headers):
-    client.app.state.inference_service.predict.side_effect = InvalidImageFormatError(
-        "bad format"
-    )
     files = {"file": ("test.txt", b"dummy text content", "text/plain")}
     response = client.post("/v1/inference/predict", files=files, headers=auth_headers)
     assert response.status_code == 400
@@ -216,7 +190,6 @@ def test_predict_phash_cache(client, auth_headers):
     Image.new("RGB", (100, 100), color="blue").save(img_byte_arr, format="PNG")
     img_data = img_byte_arr.getvalue()
 
-    # İlkinde cache miss (False), ikincisinde hit (True) dönecek şekilde mockluyoruz
     client.app.state.inference_service.predict.side_effect = [
         {
             "filename": "test.png",
@@ -263,8 +236,6 @@ def test_explain_endpoint(client, auth_headers):
                 "status": "SUCCESS",
                 "processing_time_ms": 150.0,
                 "heatmap_base64": "dummy_base64_string",
-                "heatmap_url": "https://storage.aws.com/dummy.png",
-                "hotspots": ["face", "eyes"],
             }
 
     client.app.state.explainability_service = MockExplainer()

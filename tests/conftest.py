@@ -9,7 +9,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker  # no
 from src.infra.database import Base  # noqa: E402
 from src.repositories.feedback_repo import FeedbackRepository  # noqa: E402
 from src.schemas.feedback import FeedbackCreateRequest  # noqa: E402
-from src.schemas.feedback import PredictionLabel, FeedbackLabel  # noqa: E402
+from src.core.enums import PredictionLabel, FeedbackLabel  # noqa: E402
+from src.repositories.prediction_log_repository import PredictionLogRepository  # noqa: E402
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
@@ -58,3 +59,8 @@ def mock_feedback_data():
         user_correction=FeedbackLabel.REAL,
         client_source="API_v1",
     )
+
+
+@pytest.fixture
+async def prediction_log_repo(db_session):
+    return PredictionLogRepository(db_session)

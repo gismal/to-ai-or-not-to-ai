@@ -1,3 +1,5 @@
+import io
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -13,6 +15,7 @@ from sqlalchemy import text
 from arq import ArqRedis
 import magic
 from pathlib import PurePosixPath
+from PIL import Image as PILImage
 
 from src.api.deps import get_prediction_log_repository
 from src.repositories.prediction_log_repository import PredictionLogRepository
@@ -124,6 +127,12 @@ async def predict_image(
             f"Unsupported file type: {mime}. Only JPEG and PNG accepted"
         )
 
+    with PILImage.open(io.BytesIO(content_bytes)) as img:
+        width, height = img.size
+        if min(width, height) < 32:
+            raise InvalidImageFormatError(
+                f"Image too small ({width}x{height}px). Minimum dimension is 32px."
+            )
     # -- Sanitize filename --------------------------
     # path traversal protection
     safe_filename = PurePosixPath(file.filename or "unnamed").name
