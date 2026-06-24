@@ -27,29 +27,23 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 from src.logger import logger
 from src.core.enums import PredictionLabel, InferenceStatus
 from src.core.exceptions import ModelInferenceError
+from src.services.base_engine import BaseMLEngine
 
 # Must match inference.py exactly — same normalization, same model sees same numbers
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 _STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
 
-class ExplainabilityService:
+class ExplainabilityService(BaseMLEngine):
     """
     Loads the PyTorch checkpoint and runs GradCAM on demand.
-
-    GradCAM works by:
-        1. Running a forward pass through the model
-        2. Tracking which neurons in the target layer activated most strongly
-        3. Computing gradients back from the predicted class to that layer
-        4. Weighting the activation maps by those gradients
-        5. Producing a spatial heatmap showing which regions influenced the decision
 
     Focused on the `model.features[-1]` which is the last convolutional
     block before the classifier head, where the most semantically rich spatial
     features live.
     """
 
-    def __init__(self, checkpoint_path: str | Path, num_classes: int = 1) -> None:
+    def __init__(self, checkpoint_path: str | Path, num_classes: int = 2) -> None:
         """
         Args:
             - checkpoint_path: Path to best_checkpoint.pt saved by train.py
@@ -59,27 +53,24 @@ class ExplainabilityService:
             - FileNotFoundError: If checkpoint doesn't exist — caught at startup so
                                we know immediately, not on the first explain request.
         """
-        self.checkpoint_path = Path(checkpoint_path)
+        self.num_classes = num_classes
+        self.model = None
+        self.target_layers = None
+        super().__init__(checkpoint_path)
 
-        if not self.checkpoint_path.exists():
-            raise FileNotFoundError(
-                f"PyTorch checkpoint not found: {self.checkpoint_path}\n"
-                f"Run training first or copy best_checkpoint.pt into models/"
-            )
-
-        #  same architecture used in train.py
+    def _load(self) -> None:
+        """Load PyTorch checkppoint and configure GradCAM target layers"""
+        assert self.model is not None
         self.model = models.mobilenet_v3_small(weights=None)
         in_features = self.model.classifier[-1].in_features
-        self.model.classifier[-1] = nn.Linear(in_features, num_classes)
+        self.model.classifier[-1] = nn.Linear(in_features, self.num_classes)  # type: ignore
 
-        checkpoint = torch.load(str(self.checkpoint_path), map_location="cpu")
+        checkpoint = torch.load(str(self.model_path), map_location="cpu")
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.model.eval()
 
-        # Target the last conv block  for rich spatial features, correct granularity
-        self.target_layers = [self.model.features[-1]]
-
-        logger.info(f"ExplainabilityService ready — checkpoint: {self.checkpoint_path}")
+        # last conv block
+        self.target_layers = [self.model.features[-1]]  # type: ignore
 
     # ── Private ───────────────────────────────────────────────────────────────
 
@@ -122,7 +113,8 @@ class ExplainabilityService:
 
         overlay = show_cam_on_image(original_image, grayscale_cam, use_rgb=True)
 
-        with torch.no_grad():
+        with torch.no_grad():  # type: ignore
+            assert self.model is not None
             output = self.model(input_tensor)
             probs = torch.softmax(output[0], dim=0)
             confidence = float(probs[0])

@@ -72,7 +72,7 @@
             margin: 14px 0 5px;
         }
 
-        input,
+        input:not([type="checkbox"]),
         select {
             width: 100%;
             background: var(--surface);
@@ -86,7 +86,7 @@
             transition: border-color .2s;
         }
 
-        input:focus,
+        input:not([type="checkbox"]):focus,
         select:focus {
             border-color: var(--ai);
         }
@@ -97,6 +97,27 @@
 
         select option {
             background: var(--surface);
+        }
+
+        /* Yeni Eklenen Toggle CSS'leri */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--ai);
+            cursor: pointer;
+        }
+
+        .toggle-desc {
+            font-size: 0.78rem;
+            color: var(--muted);
+            line-height: 1.4;
         }
 
         .btn {
@@ -177,13 +198,21 @@
         <option value="predict">⚡ Fast — prediction only</option>
     </select>
 
+    <label>Passive Badge Mode</label>
+    <div class="toggle-row">
+        <input type="checkbox" id="passiveBadge" />
+        <span class="toggle-desc">
+            Automatically badge AI-generated images as you browse
+        </span>
+    </div>
+
     <button class="btn" id="save">Save &amp; Test Connection</button>
+
     <div class="status" id="status"></div>
 
     <div class="hint">
-        <strong>How to use:</strong><br>
-        Right-click any image on any website and choose
-        <strong>🔍 Analyze with AI Detector</strong>.
+        <strong>How to use:</strong><br>Right-click any image on any website and choose <strong>🔍 Analyze with AI
+            Detector</strong>.
     </div>
 
     <script src="popup.js"></script>

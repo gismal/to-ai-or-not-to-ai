@@ -29,6 +29,17 @@ services:
       db:
         condition: service_healthy
     networks: [ mlops_network ]
+mlflow:
+  image: ghcr.io/mlflow/mlflow:latest
+  container_name: mlops_mlflow
+  restart: unless-stopped
+  ports:
+    - "5000:5000"
+  command: >
+    mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow/mlflow.db --default-artifact-root /mlflow/artifacts
+  volumes:
+    - mlflow_data:/mlflow
+  networks: [ mlops_network ]
 
   redis:
     image: redis:7-alpine
@@ -95,6 +106,7 @@ services:
 volumes:
   postgres_data:
   grafana_data:
+  mlflow_data:
 
 networks:
   mlops_network:

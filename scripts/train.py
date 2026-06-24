@@ -16,6 +16,8 @@ import torchvision.transforms as transforms
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import DataLoader
 from torchvision import datasets
+import mlflow
+import mlflow.pytorch
 
 from scripts.train_config import TrainConfig
 from src.config import settings
@@ -290,21 +292,51 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Device: {device}")
 
+    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_experiment("ai-detector")
+
     try:
         train_loader, val_loader, classes = get_dataloaders(config)
-        model = build_model(len(classes), config.freeze_backbone).to(device)
-        trainer = Trainer(model, config, device)
 
-        best_metrics = trainer.run(train_loader, val_loader)
-        export_model(model, config, best_metrics, classes)
+        with mlflow.start_run():
+            mlflow.log_params(
+                {
+                    "epochs": config.epochs,
+                    "batch_size": config.batch_size,
+                    "learning_rate": config.learning_rate,
+                    "freeze_backbone": config.freeze_backbone,
+                    "patience": config.patience,
+                    "num_classes": len(classes),
+                    "classes": str(classes),
+                    "base_model": "MobileNetV3-Small",
+                    "optimizer": "Adam",
+                    "scheduler": "CosineAnnealingLR",
+                }
+            )
 
-        logger.info("Pipeline complete.")
-        logger.info(
-            f"Best metrics: { {k: round(v, 4) for k, v in best_metrics.items()} }"
-        )
+            model = build_model(len(classes), config.freeze_backbone).to(device)
+            trainer = Trainer(model, config, device)
+
+            best_metrics = trainer.run(train_loader, val_loader)
+
+            # log final metrics
+            mlflow.log_metrics({k: round(v, 4) for k, v in best_metrics.items()})
+
+            export_model(model, config, best_metrics, classes)
+
+            mlflow.log_artifact(str(config.onnx_path), artifact_path="models")
+            mlflow.log_artifact(str(config.checkpoint_path), artifact_path="models")
+            mlflow.log_artifact(str(config.metadata_path), artifact_path="models")
+
+            mlflow.pytorch.log_model(model, "pytorch_model")
+
+            logger.info("Pipeline complete.")
+            logger.info(
+                f"Best metrics: { {k: round(v, 4) for k, v in best_metrics.items()} }"
+            )
 
     except FileNotFoundError as e:
-        logger.warning(f"Aborted — {e}. Prepare the dataset and retry.")
+        logger.warning(f"Aborted: {e}. Prepare the dataset and retry.")
     except Exception as e:
         logger.critical(f"Unexpected error: {e}", exc_info=True)
         raise

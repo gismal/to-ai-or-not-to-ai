@@ -1,5 +1,5 @@
 import io
-
+import asyncio
 from fastapi import (
     APIRouter,
     Depends,
@@ -17,6 +17,9 @@ import magic
 from pathlib import PurePosixPath
 from PIL import Image as PILImage
 
+from core.enums import PredictionLabel
+from schemas.batch import BatchPredictionResponse
+from schemas.label import LabelRequest, LabelResponse, UncertainPrediction
 from src.api.deps import get_prediction_log_repository
 from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.infra.limiter import limiter
@@ -36,7 +39,7 @@ from src.services.retrain_service import RetrainService
 from src.services.explainability_service import ExplainabilityService
 from src.schemas.explain import ExplainResponse
 from src.core.exceptions import InvalidImageFormatError
-
+from src.logger import logger
 
 """
 Inference Router
@@ -238,4 +241,163 @@ async def create_user_feedback(
 
     return FeedbackResponse(
         filename=payload.filename, message="Feedback received and queued for processing"
+    )
+
+
+@router.post(
+    "/predict-batch",
+    response_model=BatchPredictionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Classify multiple images in one request",
+    description=(
+        "Accepts up to 10 images simultaneously. "
+        "Each image is validated and predicted concurrently. "
+        "Failed images are included in the response with an error field rather "
+        "than aborting the entire batch."
+    ),
+    responses={
+        200: {"description": "Batch processed — check each item's status"},
+        401: {"description": "Invalid or missing API key"},
+    },
+)
+async def predict_batch(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    files: list[UploadFile] = File(...),
+    service: InferenceService = Depends(get_inference_service),
+    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
+):
+    MAX_BATCH = 10
+    if len(files) > MAX_BATCH:
+        files = files[:MAX_BATCH]
+
+    async def process_one(file: UploadFile) -> dict:
+        try:
+            content_bytes = await file.read()
+            mime = magic.from_buffer(content_bytes[:2048], mime=True)
+            if mime not in ("image/jpeg", "image/png"):
+                return {
+                    "filename": file.filename,
+                    "error": f"Unsupported type: {mime}",
+                    "status": "FAILED",
+                }
+            safe_name = PurePosixPath(file.filename or "unnamed").name
+            result = await service.predict(content_bytes, safe_name)
+
+            background_tasks.add_task(
+                log_repo.create_log,
+                filename=safe_name,
+                confidence=result["confidence"],
+                predicted_label=result["prediction"],
+                processing_time_ms=result["processing_time_ms"],
+            )
+            return result
+
+        except Exception as exc:
+            return {"filename": file.filename, "error": str(exc), "status": "FAILED"}
+
+    results = await asyncio.gather(*[process_one(f) for f in files])
+    successful = sum(1 for r in results if r.get("status") != "FAILED")
+
+    return BatchPredictionResponse(
+        predictions=list(results),
+        total=len(results),
+        successful=successful,
+        failed=len(results) - successful,
+    )
+
+
+@router.get(
+    "/admin/uncertain",
+    response_model=list[UncertainPrediction],
+    status_code=status.HTTP_200_OK,
+    summary="List recent UNCERTAIN predictions awaiting human review",
+    tags=["Admin"],
+)
+async def list_uncertain(
+    limit: int = 20, session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Returns the most recent predictions the model was uncertain about
+    These are candidates for human labeling via POST /admin/label
+    """
+    from sqlalchemy import select
+    from src.infra.feedbacks import PredictionLog
+
+    uncertain_labels = [
+        PredictionLabel.UNCERTAIN_LEANING_AI.value,
+        PredictionLabel.UNCERTAIN_LEANING_REAL.value,
+        PredictionLabel.UNCERTAIN_NEUTRAL.value,
+    ]
+
+    stmt = (
+        select(PredictionLog)
+        .where(
+            PredictionLog.predicted_label.in_(uncertain_labels),
+            PredictionLog.is_deleted == False,  # noqa: E712
+        )
+        .order_by(PredictionLog.created_at.desc())
+        .limit(limit)
+    )
+
+    result = await session.execute(stmt)
+    rows = result.scalars().all()
+
+    return [
+        UncertainPrediction(
+            id=row.id,
+            filename=row.filename,
+            confidence=row.confidence,
+            predicted_label=row.predicted_label,
+            processing_time_ms=row.processing_time_ms,
+            created_at=row.created_at.isoformat(),
+        )
+        for row in rows
+    ]
+
+
+@router.post(
+    "/admin/label",
+    response_model=LabelResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Submit a human-verified label for an UNCERTAIN prediction",
+    tags=["Admin"],
+)
+async def submit_label(
+    payload: LabelRequest, session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Saves a human-provided correct label for a prediction
+    Labeled samples are automatically included in the next training run
+    """
+    from sqlalchemy import select
+    from src.infra.feedbacks import PredictionLog
+    from src.infra.labeled_samples import LabeledSample
+
+    log_row = await session.scalar(
+        select(PredictionLog).where(PredictionLog.id == payload.prediction_log_id)
+    )
+    if not log_row:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Prediction log {payload.prediction_log_id} not found",
+        )
+
+    label = LabeledSample(
+        prediction_log_id=payload.prediction_log_id,
+        filename=log_row.filename,
+        original_prediction=log_row.predicted_label,
+        correct_label=payload.correct_label,
+    )
+    session.add(label)
+    await session.flush()
+
+    logger.info(
+        f"Label saved: prediction {payload.prediction_log_id} > {payload.correct_label.value}"
+    )
+
+    return LabelResponse(
+        prediction_log_id=payload.prediction_log_id,
+        correct_label=payload.correct_label,
+        original_prediction=log_row.predicted_label,
     )

@@ -9,5 +9,5 @@ repos:
     rev: v1.9.0
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic, fastapi, sqlalchemy, pytest, hypothesis, types-PyYAML]
+        additional_dependencies: [pydantic, fastapi, sqlalchemy, pytest, hypothesis, types-PyYAML, types-redis]
         args: [--ignore-missing-imports, --explicit-package-bases]

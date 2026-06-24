@@ -11,6 +11,10 @@ from src.logger import logger
 
 
 class RetrainService:
+    def __init__(self, session: AsyncSession, arq_pool: ArqRedis) -> None:
+        self.session = session
+        self.arq_pool = arq_pool
+
     LOOKBACK_DAYS: int = 7
 
     @staticmethod

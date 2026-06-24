@@ -3,7 +3,7 @@ Handles phash and Redis caching for prediction result
 """
 
 import json
-from arq import ArqRedis
+import redis.asyncio as aioredis
 
 from src.core.enums import PredictionLabel
 from src.logger import logger
@@ -19,8 +19,8 @@ class CacheService:
     CACHE_TTL = 86_400  # 24 hours
     KEY_PREFIX = "prediction"  # "prediction: {phash}"
 
-    def __init__(self, redis_pool: ArqRedis) -> None:
-        self._redis = redis_pool
+    def __init__(self, redis_client: aioredis.Redis) -> None:
+        self._redis = redis_client
 
     # -- Private -----------------------
     def _make_key(self, image_bytes: bytes) -> str | None:
@@ -29,9 +29,7 @@ class CacheService:
         None means caching is skipped for this image
         """
         img_hash = generate_phash(image_bytes)
-        if not img_hash:
-            return None
-        return f"{self.KEY_PREFIX}:{img_hash}"
+        return f"{self.KEY_PREFIX}:{img_hash}" if img_hash else None
 
     # --- Public API -------------
     async def get(self, image_bytes: bytes) -> dict | None:

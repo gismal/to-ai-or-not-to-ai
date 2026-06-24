@@ -8,10 +8,11 @@ const get = id => document.getElementById(id);
 
 // ── Load saved settings ──────────────────────────────────────────────────────
 
-chrome.storage.sync.get(['apiUrl', 'apiKey', 'mode'], ({ apiUrl, apiKey, mode }) => {
+chrome.storage.sync.get(['apiUrl', 'apiKey', 'mode', 'passiveBadge'], ({ apiUrl, apiKey, mode, passiveBadge }) => {
     get('apiUrl').value = apiUrl || 'http://localhost:8000';
     get('apiKey').value = apiKey || '';
     get('mode').value = mode || 'explain';
+    get('passiveBadge').checked = passiveBadge || false;
 });
 
 // ── Save + test ──────────────────────────────────────────────────────────────
@@ -25,7 +26,7 @@ get('save').addEventListener('click', async () => {
     if (!apiKey) { showStatus('Enter an API key.', 'err'); return; }
 
     // Save before testing so the values are persisted even if the test fails
-    await chrome.storage.sync.set({ apiUrl, apiKey, mode });
+    await chrome.storage.sync.set({ apiUrl, apiKey, mode, passiveBadge: get('passiveBadge').checked });
     showStatus('Saved. Testing connection…', '');
 
     try {

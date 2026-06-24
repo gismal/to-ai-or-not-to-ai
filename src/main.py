@@ -15,6 +15,7 @@ from src.config import settings
 from src.logger import logger, request_id_ctx
 from src.inference import ONNXPredictor
 from src.infra.limiter import limiter
+from src.infra.redis_client import create_cache_client
 from src.core.exceptions import (
     InvalidImageFormatError,
     ModelInferenceError,
@@ -31,16 +32,27 @@ from src.api.routes import feedback_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Manages the lifecycle events of the FastAPI application. Loads the ONNX model into memo on startup and cleans up temporary directories on
-    shutdown to prevent memo leaks and disk clutter
+        Startup:
+      1. ARQ pool: job queue (Redis db 0)
+      2. Cache client: pHash cache (Redis db 1)
+      3. ONNX predictor
+      4. InferenceService (receives cache, not arq_pool)
+      5. ExplainabilityService
+    Shutdown:
+      - Close both Redis clients
+
     """
     logger.info("Starting up API, loading ONNX model")
     try:
+        # -- Redis: job queue (db 0 ) -------------
         app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
 
-        predictor = ONNXPredictor()
-        app.state.cache_service = CacheService(redis_pool=app.state.arq_pool)
+        # -- Redis: cache client (db 1) seperate from job queue --------------
+        app.state.cache_client = await create_cache_client()
+        app.state.cache_service = CacheService(redis_client=app.state.cache_client)
 
+        # -- ONNX Inference -----------------------
+        predictor = ONNXPredictor()
         app.state.inference_service = InferenceService(
             predictor=predictor,
             cache=app.state.cache_service,

@@ -4,6 +4,7 @@ from fastapi import Request, Depends, HTTPException, Security, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import APIKeyHeader
 
+from services.retrain_service import RetrainService
 from src.logger import logger
 from src.infra.database import AsyncSessionLocal
 from src.services.inference_service import InferenceService
@@ -97,3 +98,10 @@ async def get_prediction_log_repository(
     Provides a PredictionLogRepository with the current request's session
     """
     return PredictionLogRepository(session)
+
+
+async def get_retrain_service(
+    session: AsyncSession = Depends(get_db_session),
+    arq_pool: ArqRedis = Depends(get_arq_pool),
+) -> RetrainService:
+    return RetrainService(session, arq_pool)

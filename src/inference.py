@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from src.config import settings
 from src.logger import logger
 from src.core.enums import InferenceStatus
+from src.services.base_engine import BaseMLEngine
 
 
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
@@ -35,28 +36,7 @@ class InferenceResult:
     error: str | None = None
 
 
-def _preprocess(
-    image_source: str | Path | io.BytesIO,
-) -> tuple[str, np.ndarray | None, str | None]:
-    """
-    Reads and preprocesses the image for the neural network
-
-    The processing pipeline consists of:
-    1. Load the image and converting it to the RGB color space
-    2. Resizing the image to the model's target dimensions (224x224)
-    3. Normalizing using ImageNet statistics (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    4. Transposing the matrix from HWC (Height, Width, Channels) to CHW form
-    5. Expanding dimensions to include a batch axis, resulting in (1, 3, 224, 224)
-
-    Args:
-        - image_source (Path): Path object pointing to the target image file
-
-    Returns:
-        - np.ndarray: A NumPy array formatted as a float32 tensor ready for inference
-
-    Raises:
-        - ValueError: If the image cannot be opened, ready or processed
-    """
+def _preprocess(image_source):
     try:
         with Image.open(image_source) as img:
             img = img.convert("RGB").resize((224, 224))
@@ -70,13 +50,13 @@ def _preprocess(
         return str(image_source), None, str(e)
 
 
-class ONNXPredictor:
+class ONNXPredictor(BaseMLEngine):
     """
     This class handles the initialization of the ONNX runtime session, preprocessing of input images (resizing, normalization, tensor formatting) and the execution of the model
     to generate predictions
     """
 
-    def __init__(self, model_path: str | Path = "models/model_v1.onnx"):
+    def __init__(self, model_path: str | Path = "models/model_v1.onnx") -> None:
         """
         Initializes the ONNX inference session and loads model configuration
 
@@ -87,36 +67,45 @@ class ONNXPredictor:
             - FileNotFoundError: If the specified ONNX model file does not exist
 
         """
-        self.model_path = Path(model_path)
+        self.threshold = settings.MODEL_THRESHOLD
+        self._session: ort.InferenceSession | None = None
+        self._input_name: str | None = None
+        super().__init__(model_path)
 
-        if not self.model_path.exists():
-            raise FileNotFoundError(f"No model found at: {self.model_path}")
-
-        # graph optimization
-        session_options = ort.SessionOptions()
+    def _load(self) -> None:
+        """
+        Loads ONNX session, configure providers, warm up, validate output
+        """
+        session_options = ort.SessionOptions
         session_options.graph_optimization_level = (
             ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         )
 
-        # Dynamic Hardware
-        available_providers = ort.get_available_providers()
-        if "CUDAExecutionProvider" in available_providers:
-            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-            logger.info("GPU detected. Using CUDAExecutionProvider")
-        else:
-            providers = ["CPUExecutionProvider"]
-            logger.info("GPU not found. Falling back to CPUExecutionProvider")
-
-        self.session = ort.InferenceSession(
-            str(self.model_path), session_options=session_options, providers=providers
+        available = ort.get_available_providers()
+        providers = (
+            ["CUDAExecutionProvider", "CPUExecutionProvider"]
+            if "CUDAExecutionProvider" in available
+            else ["CPUExecutionProvider"]
         )
-        self.threshold = settings.MODEL_THRESHOLD
-        self.input_name = self.session.get_inputs()[0].name
 
-        # warming up session for model
-        logger.info("Warming up the ONNX Model")
-        dummy_input = np.zeros((1, 3, 224, 224), dtype=np.float32)
-        self.session.run(None, {self.input_name: dummy_input})
+        logger.info(f"Using providers: {providers}")
+
+        self._session = ort.InferenceSession(
+            str(self.model_path), sess_options=session_options, providers=providers
+        )
+        self._input_name = self._session.get_inputs()[0].name
+
+        logger.info("Warming up ONNX session")
+        dummy = np.zeros((1, 3, 224, 224), dtype=np.float32)
+        output = self._session.run(None, {self._input_name: dummy})  # type: ignore
+        preds = np.asarray(output[0])
+
+        if preds.shape[1] != 2:
+            raise ValueError(
+                f"Unexpected model output: {preds.shape}. "
+                "Expected 2 classes (AI_GENERATED, REAL)."
+            )
+        logger.info("ONNX warmup validated, output shape confirmed.")
 
     def predict(
         self, image_source: str | Path | io.BytesIO, filename: str = "image"
@@ -130,6 +119,9 @@ class ONNXPredictor:
         Returns:
             - InferenceResult: A structured data containing prediction outcomes, confidence scores and status flags
         """
+        assert self._session is not None, "Model session is not loaded!"
+        assert self._input_name is not None, "Model input name is not loaded!"
+
         _, input_data, error = _preprocess(image_source)
 
         if error:
@@ -138,8 +130,10 @@ class ONNXPredictor:
             )
 
         try:
-            outputs = self.session.run(None, {self.input_name: input_data})
-            confidence_score = float(outputs[0][0][0])
+            outputs = self._session.run(None, {self._input_name: input_data})  # type: ignore
+            preds = np.asarray(outputs[0])
+
+            confidence_score = float(preds[0][0])
             return InferenceResult(
                 image=filename,
                 confidence=round(confidence_score, 4),
@@ -164,6 +158,8 @@ class ONNXPredictor:
         Returns:
             - list[InferenceResult]: A list containing the prediction outcomes, confidence scores and status flags
         """
+        assert self._session is not None, "Model session is not loaded!"
+        assert self._input_name is not None, "Model input name is not loaded!"
 
         # OOM GUARD
         original_count = len(image_paths)
@@ -191,9 +187,9 @@ class ONNXPredictor:
         valid_paths, valid_tensor = zip(*valid_batch)
         try:
             batch_data = np.stack([t.squeeze(0) for t in valid_tensor], axis=0)
-            outputs = self.session.run(None, {self.input_name: batch_data})
-
-            for path_str, out in zip(valid_paths, outputs[0]):
+            outputs = self._session.run(None, {self._input_name: batch_data})  # type: ignore
+            preds = np.asarray(outputs[0])
+            for path_str, out in zip(valid_paths, preds):
                 conf = float(out[0]) if np.ndim(out) > 0 else float(out)
                 results.append(
                     InferenceResult(
