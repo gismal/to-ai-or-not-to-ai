@@ -1,6 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel, Field, ConfigDict
-from src.infra.feedbacks import FeedbackLabel
+from src.infra.feedback_item import FeedbackLabel
 from src.schemas.predict import PredictionLabel
 
 
