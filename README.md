@@ -1,6 +1,8 @@
 # 🎭 To AI or Not to AI
 
-> *"That is the question."* — Shakespeare (probably would have asked this in 2025)
+> *"That's the question."* — Shakespeare (probably would have asked this in 2025)
+*(Insert Demo GIF here)* 
+### [🔗 Live API Demo](#) | [🔗 Chrome Extension](#) | [📊 Grafana Dashboard](#)
 
 A production-grade MLOps microservice that looks at an image and tells you whether a human or an AI made it. Not just a yes or no, it tells you **how confident** it is, and when it genuinely isn't sure, it admits it.
 
@@ -28,14 +30,14 @@ That last category is intentional. Most detectors give you a binary answer even 
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   Client / Browser                   │
+│                   Client / Browser                  │
 └───────────────────────┬─────────────────────────────┘
                         │ HTTPS
                         ▼
 ┌─────────────────────────────────────────────────────┐
-│              FastAPI  (src/main.py)                  │
-│  • API key auth      • Rate limiting (5 req/s)       │
-│  • Request ID trace  • Prometheus metrics            │
+│              FastAPI  (src/main.py)                 │
+│  • API key auth      • Rate limiting (5 req/s)      │
+│  • Request ID trace  • Prometheus metrics           │
 └──────┬─────────────────────────┬────────────────────┘
        │                         │
        ▼                         ▼
@@ -51,9 +53,9 @@ That last category is intentional. Most detectors give you a binary answer even 
        │                        │
        ▼                        ▼
 ┌─────────────────────────────────────────────────────┐
-│                      PostgreSQL                      │
-│         prediction_logs │ feedback_logs              │
-│              (Alembic versioned migrations)          │
+│                      PostgreSQL                     │
+│         prediction_logs │ feedback_logs             │
+│              (Alembic versioned migrations)         │
 └─────────────────────────────────────────────────────┘
        │
        ▼

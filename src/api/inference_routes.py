@@ -120,9 +120,9 @@ async def predict_image(
     background_tasks.add_task(
         log_repo.create_log,
         filename=safe_filename,
-        confidence=result["confidence"],
-        predicted_label=result["prediction"],
-        processing_time_ms=result["processing_time_ms"],
+        confidence=result["confidence"],  # type: ignore
+        predicted_label=result["prediction"],  # type: ignore
+        processing_time_ms=result["processing_time_ms"],  # type: ignore
     )
     return result
 
@@ -153,9 +153,9 @@ async def predict_batch(
             background_tasks.add_task(
                 log_repo.create_log,
                 filename=safe_name,
-                confidence=result["confidence"],
-                predicted_label=result["prediction"],
-                processing_time_ms=result["processing_time_ms"],
+                confidence=result["confidence"],  # type: ignore
+                predicted_label=result["prediction"],  # type: ignore
+                processing_time_ms=result["processing_time_ms"],  # type: ignore
             )
             return result
         except Exception as exc:

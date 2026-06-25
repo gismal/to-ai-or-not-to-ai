@@ -2,6 +2,7 @@ import asyncio
 import io
 import time
 
+from schemas.predict import PredictionResponse
 from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
 from src.inference import ONNXPredictor
@@ -75,7 +76,7 @@ class InferenceService:
         self,
         content_bytes: bytes,
         filename: str,
-    ) -> dict:
+    ) -> PredictionResponse:
         """
         Full prediction pipeline: cache -> ONNX -> classify -> cache
 
@@ -95,10 +96,11 @@ class InferenceService:
         cached = await self.cache.get(content_bytes)
         if cached:
             CACHE_COUNTER.labels(result="hit").inc()
-            cached["processing_time_ms"] = round((time.time() - start) * 1000, 2)
-            cached["cached"] = True
-            logger.info(f"Cache hit: {filename}")
-            return cached
+            return PredictionResponse(
+                **cached,
+                processing_time_ms=round((time.time() - start) * 1000, 2),
+                cached=True,
+            )
 
         CACHE_COUNTER.labels(result="miss").inc()
         # -- 2. ONNX ------------------------------
