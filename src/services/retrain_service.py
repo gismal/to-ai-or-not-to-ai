@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from arq import ArqRedis
 
-from src.infra.feedbacks import FeedbackItem, PredictionLog
+from src.infra.feedback_item import FeedbackItem
+from src.infra.prediction_log import PredictionLog
 from src.core.enums import ErrorType
 from src.config import settings
 from src.logger import logger
@@ -15,13 +16,9 @@ class RetrainService:
         self.session = session
         self.arq_pool = arq_pool
 
-    LOOKBACK_DAYS: int = 7
-
-    @staticmethod
     async def check_drift_and_trigger(
-        session: AsyncSession,
-        arq_pool: ArqRedis,
-        lookback_days: int = LOOKBACK_DAYS,
+        self,
+        lookback_days: int = 7,
     ) -> dict:
         """
         Calculates the recent error rate using both tables, then enqueues
@@ -37,7 +34,7 @@ class RetrainService:
         """
         cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
 
-        total_with_feedback = await session.scalar(
+        total_with_feedback = await self.session.scalar(
             select(func.count(PredictionLog.id))
             .join(FeedbackItem, FeedbackItem.filename == PredictionLog.filename)
             .where(
@@ -57,10 +54,8 @@ class RetrainService:
                 "lookback_days": lookback_days,
             }
 
-        errors = await session.scalar(
-            select(func.count())
-            .select_from(FeedbackItem)
-            .where(
+        errors = await self.session.scalar(
+            select(func.count(FeedbackItem.id)).where(
                 FeedbackItem.error_type.in_(
                     [ErrorType.FALSE_POSITIVE, ErrorType.FALSE_NEGATIVE]
                 ),
@@ -81,7 +76,7 @@ class RetrainService:
 
         # -- Trigger retraining if threshold exceeded ----------
         if error_rate >= settings.DRIFT_THRESHOLD:
-            job = await arq_pool.enqueue_job("retrain_model")
+            job = await self.arq_pool.enqueue_job("retrain_model")
 
             if not job:
                 logger.error("Drift spotted but can't enqueued to retraining ")

@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.enums import PredictionLabel
 from src.core.exceptions import DatabaseError
-from src.infra.feedbacks import PredictionLog
+from src.infra.prediction_log import PredictionLog
 from src.logger import logger
 
 

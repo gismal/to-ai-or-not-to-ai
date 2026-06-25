@@ -37,6 +37,7 @@ class TrainConfig(BaseModel):
     def metadata_path(self) -> Path:
         return self.output_dir / "metadata.json"
 
+    # -- Serialization -----------------------------
     @classmethod
     def from_yaml(cls, path: Path) -> "TrainConfig":
         import yaml
@@ -45,3 +46,13 @@ class TrainConfig(BaseModel):
 
     def save(self, path: Path) -> None:
         path.write_text(self.model_dump_json(indent=4))
+
+    def to_mlflow_params(self) -> dict:
+        return {
+            "epochs": self.epochs,
+            "batch_size": self.batch_size,
+            "learning_rate": self.learning_rate,
+            "freeze_backbone": self.freeze_backbone,
+            "patience": self.patience,
+            "num_workers": self.num_workers,
+        }

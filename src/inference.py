@@ -189,6 +189,7 @@ class ONNXPredictor(BaseMLEngine):
             batch_data = np.stack([t.squeeze(0) for t in valid_tensor], axis=0)
             outputs = self._session.run(None, {self._input_name: batch_data})  # type: ignore
             preds = np.asarray(outputs[0])
+
             for path_str, out in zip(valid_paths, preds):
                 conf = float(out[0]) if np.ndim(out) > 0 else float(out)
                 results.append(

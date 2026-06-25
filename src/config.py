@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     GRAY_AREA_MARGIN: float = 0.35
     DRIFT_THRESHOLD: float = 0.15
 
+    # upload limits
+    MAX_UPLOAD_SIZE_MB: int = 10
+    MAX_BATCH_SIZE: int = 10
+    MIN_IMAGE_DIMENSION: int = 32
+
+    # Cache
+    CACHE_TTL_SECONDS: int = 86_400
+
     # Infrastructure
     DATABASE_URL: str
     REDIS_URL: str = "redis://redis:6379/0"

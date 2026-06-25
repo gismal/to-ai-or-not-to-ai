@@ -109,7 +109,7 @@ class ExplainabilityService(BaseMLEngine):
         # GradCAM as context manager. it ensures hooks are cleaned up after use
         # targets=None → GradCAM automatically targets the highest-scoring class
         with GradCAM(model=self.model, target_layers=self.target_layers) as cam:
-            grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]
+            grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]  # type: ignore
 
         overlay = show_cam_on_image(original_image, grayscale_cam, use_rgb=True)
 

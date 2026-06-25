@@ -63,7 +63,8 @@ async def check_drift_scheduled(ctx: dict) -> dict:
     async with AsyncSessionLocal() as session:
         # short-lived ARQ pool special for this task
         async with await create_pool(WorkerSettings.redis_settings) as pool:
-            result = await RetrainService.check_drift_and_trigger(session, pool)
+            service = RetrainService(session=session, arq_pool=pool)
+            result = await service.check_drift_and_trigger()
 
     logger.info(f"Scheduled drift check complete: {result}")
     return result

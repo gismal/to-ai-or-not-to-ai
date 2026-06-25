@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from logging.config import fileConfig
 
-# Proje kök dizinini Python yoluna ekle
 sys.path.append(str(Path(__file__).parent.parent))
 
 from sqlalchemy import pool
@@ -11,11 +10,14 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
-# Kendi ayarlarımızı ve modellerimizi içeri aktarıyoruz
 from src.config import settings
 from src.infra.database import Base
+from src.infra.feedback_item import FeedbackItem  # noqa: F401
+from src.infra.prediction_log import PredictionLog  # noqa: F401
+from src.infra.labeled_sample import LabeledSample  # noqa: F401
+from src.infra.task_results import TaskResult  # noqa: F401
+from src.infra.api_keys import APIKey  # noqa: F401
 
-# Alembic Config nesnesi
 config = context.config
 
 if config.config_file_name is not None:

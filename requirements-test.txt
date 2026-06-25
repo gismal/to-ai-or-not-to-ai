@@ -16,3 +16,4 @@ ImageHash
 python-multipart
 scikit-learn
 ruff
+hypothesis
