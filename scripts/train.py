@@ -5,19 +5,17 @@ Clean, production ready transfer learning wirh MobileNetV3-Small
 
 import copy
 import json
+import os
 from datetime import datetime, timezone
-from typing import Dict, List, Tuple
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torchvision.models as models
-import torchvision.transforms as transforms
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-from torch.utils.data import DataLoader
-from torchvision import datasets
 import mlflow
 import mlflow.pytorch
+import torch
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from torch import nn, optim
+from torch.utils.data import DataLoader
+from torchvision import datasets, models, transforms
+from tqdm import tqdm
 
 from scripts.train_config import TrainConfig
 from src.config import settings
@@ -26,7 +24,7 @@ from src.logger import logger
 # -- Data ---------------
 
 
-def get_transforms() -> Tuple[transforms.Compose, transforms.Compose]:
+def get_transforms() -> tuple[transforms.Compose, transforms.Compose]:
     """
     Augmented transform for training
     Clean transform for validation
@@ -58,7 +56,7 @@ def get_transforms() -> Tuple[transforms.Compose, transforms.Compose]:
     return train_transform, val_transform
 
 
-def get_dataloaders(config: TrainConfig) -> Tuple[DataLoader, DataLoader, List[str]]:
+def get_dataloaders(config: TrainConfig) -> tuple[DataLoader, DataLoader, list[str]]:
     """Load ImageFolder datasets and return DataLoaders + class names"""
     for path in (config.train_dir, config.val_dir):
         if not path.exists():
@@ -155,14 +153,14 @@ class Trainer:
 
         self._best_val_loss = float("inf")
         self._best_weights: dict = {}
-        self._best_metrics: Dict[str, float] = {}
+        self._best_metrics: dict[str, float] = {}
 
     # -- Private Helpers ----
     def _train_epoch(self, loader: DataLoader) -> float:
         self.model.train()
         total_loss = 0.0
 
-        for inputs, labels in loader:
+        for inputs, labels in tqdm(loader, leave=False):
             inputs, labels = inputs.to(self.device), labels.to(self.device)
             self.optimizer.zero_grad()
             loss = self.criterion(self.model(inputs), labels)
@@ -173,7 +171,7 @@ class Trainer:
         return total_loss / len(loader)
 
     @torch.no_grad()
-    def _validate_epoch(self, loader: DataLoader) -> Tuple[float, Dict[str, float]]:
+    def _validate_epoch(self, loader: DataLoader) -> tuple[float, dict[str, float]]:
         self.model.eval()
         total_loss = 0.0
         all_preds, all_labels = [], []
@@ -197,7 +195,7 @@ class Trainer:
         }
         return total_loss / len(loader), metrics
 
-    def _save_checkpoint(self, metrics: Dict[str, float]) -> None:
+    def _save_checkpoint(self, metrics: dict[str, float]) -> None:
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
         torch.save(
             {
@@ -210,7 +208,7 @@ class Trainer:
 
     # -- Public API ------
 
-    def run(self, train_loader: DataLoader, val_loader: DataLoader) -> Dict[str, float]:
+    def run(self, train_loader: DataLoader, val_loader: DataLoader) -> dict[str, float]:
         """Run the full training loop and return the best validation metrics"""
         logger.info(f"Training on {self.device} for up to {self.config.epochs}")
 
@@ -244,8 +242,8 @@ class Trainer:
 def export_model(
     model: nn.Module,
     config: TrainConfig,
-    metrics: Dict[str, float],
-    classes: List[str],
+    metrics: dict[str, float],
+    classes: list[str],
 ) -> None:
     """Export to ONNX + write metadata. Uses a deep copy — original model untouched."""
     config.output_dir.mkdir(parents=True, exist_ok=True)
@@ -292,7 +290,8 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Device: {device}")
 
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "./mlruns")
+    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment("ai-detector")
 
     try:

@@ -10,3 +10,5 @@ heatmap.png
 .DS_Store
 __pycache__/
 test_raporu.html
+best_checkpoint.pt
+*.pt

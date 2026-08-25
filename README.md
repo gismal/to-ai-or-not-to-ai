@@ -1,7 +1,6 @@
-# 🎭 To AI or Not to AI
+# To AI or Not to AI
 
-> *"That's the question."* — Shakespeare (probably would have asked this in 2025)
-*(Insert Demo GIF here)* 
+> *"That's the question."* — Shakespeare (probably would have asked this in 2026)
 ### [🔗 Live API Demo](#) | [🔗 Chrome Extension](#) | [📊 Grafana Dashboard](#)
 
 A production-grade MLOps microservice that looks at an image and tells you whether a human or an AI made it. Not just a yes or no, it tells you **how confident** it is, and when it genuinely isn't sure, it admits it.
@@ -71,35 +70,35 @@ That last category is intentional. Most detectors give you a binary answer even 
 
 ## Features
 
-### 🧠 Intelligent Inference
+### Intelligent Inference
 - **MobileNetV3-Small** converted to **ONNX** for CPU/GPU agnostic, low-latency predictions
 - **5-label uncertainty system** is not just binary, but granular confidence zones
 - **Startup warm-up** model is pre-heated on boot so the first request is as fast as the tenth
 - **Batch inference** with thread-safe concurrent preprocessing
 
-### ⚡ Performance
+### Performance
 - **Perceptual hash caching (pHash + Redis)** helps to  identical images never hit the model twice
 - `asyncio.to_thread` for non-blocking ONNX execution
 - Response times under 200ms for cached results, ~400ms for fresh inference
 
-### 🔒 Security
+### Security
 - **API key authentication** on every endpoint
 - **python-magic** for file validation. It checks not just file extensions also actual byte signatures.
 - **Path traversal protection** filenames sanitized with `PurePosixPath`
 - **Rate limiting** 5 requests/second per IP
 
-### 📊 Observability
+### Observability
 - **Prometheus metrics** via `/metrics` — request latency, prediction distribution, error rates
 - **Structured JSON logging** with `X-Request-ID` tracing across every log line
 - **Deep health check** at `/v1/inference/health` — verifies model, database, and Redis are all actually alive (not just "the process is running")
 
-### 🔄 The MLOps Loop
+### The MLOps Loop
 - **Prediction logging** — every inference stored with confidence score and label
 - **Feedback endpoint** — clients report misclassifications (false positives / false negatives)
 - **Drift detection** — `/v1/inference/admin/check-drift` calculates real error rate and triggers retraining via ARQ when it crosses the threshold
 - **Alembic migrations** — schema changes without data loss
 
-### 🏗️ Engineering Patterns
+### Engineering Patterns
 - Layered architecture: routes → services → repositories → database
 - Dependency injection throughout (FastAPI `Depends`)
 - Abstract repository interface for loose coupling

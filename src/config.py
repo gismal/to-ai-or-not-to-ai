@@ -1,4 +1,5 @@
 import os
+
 from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -19,6 +20,8 @@ class Settings(BaseSettings):
 
     # Cache
     CACHE_TTL_SECONDS: int = 86_400
+
+    MLFLOW_URI: str = "http://mlflow:5000"
 
     # Infrastructure
     DATABASE_URL: str
