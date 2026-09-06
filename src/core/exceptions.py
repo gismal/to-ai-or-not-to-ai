@@ -5,13 +5,11 @@ class AppError(Exception):
     """
 
 
-
 class InvalidImageFormatError(AppError):
     """
     Exception raised when the uploaded file format is not supported.
     API handles this by returning a 400 Bad Request response.
     """
-
 
 
 class ModelInferenceError(AppError):
@@ -21,10 +19,8 @@ class ModelInferenceError(AppError):
     """
 
 
-
 class DatabaseError(AppError):
     """
     Exception raised when a database operation fails.
     API handles this by returning a 500 Internal Server Error response.
     """
-

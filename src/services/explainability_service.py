@@ -60,6 +60,7 @@ class ExplainabilityService(BaseMLEngine):
 
     def _load(self) -> None:
         """Load PyTorch checkppoint and configure GradCAM target layers"""
+        assert self.model is not None, "Model is not initialized"
         self.model = models.mobilenet_v3_small(weights=None)
         in_features = self.model.classifier[-1].in_features
         self.model.classifier[-1] = nn.Linear(in_features, self.num_classes)  # type: ignore

@@ -134,9 +134,9 @@ def test_rate_limiting(client, auth_headers):
         )
         for _ in range(6)
     ]
-    assert any(r.status_code == 429 for r in responses), (
-        f"Expected 429, got: {[r.status_code for r in responses]}"
-    )
+    assert any(
+        r.status_code == 429 for r in responses
+    ), f"Expected 429, got: {[r.status_code for r in responses]}"
 
 
 def test_predict_invalid_format(client, auth_headers):

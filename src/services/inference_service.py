@@ -140,4 +140,4 @@ class InferenceService:
         # -- 5. Cache the result ------------------------
         await self.cache.set(content_bytes, response)
 
-        return response
+        return PredictionResponse(**response)

@@ -19,6 +19,7 @@ class PredictionResponse(BaseModel):
     prediction: PredictionLabel
     status: InferenceStatus
     processing_time_ms: float = Field(default=0.0, ge=0.0)
+    cached: bool = False
 
     # Swagger Doc Example
     model_config = ConfigDict(
