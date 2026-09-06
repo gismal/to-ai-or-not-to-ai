@@ -1,19 +1,11 @@
-fastapi
-uvicorn
-slowapi
-pydantic-settings
-sqlalchemy
-aiosqlite
-asyncpg
-pytest
-pytest-asyncio
-pytest-html
-httpx
-numpy
-Pillow
-onnxruntime
-ImageHash
-python-multipart
-scikit-learn
+# Test dependencies — extends requirements.txt
+# Install with: pip install -r requirements.txt -r requirements-test.txt
+
+pytest==9.0.3
+pytest-asyncio==1.4.0
+pytest-html==4.2.0
+pytest-metadata==3.1.1
+hypothesis==6.155.7
+pluggy==1.6.0
+iniconfig==2.3.0
 ruff
-hypothesis

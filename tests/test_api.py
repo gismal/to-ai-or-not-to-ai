@@ -1,21 +1,19 @@
 import io
-import pytest
 import time
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from fastapi.testclient import TestClient
 from PIL import Image
 
-from unittest.mock import MagicMock
-from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock
-
-from src.main import app
-from src.config import settings
 from src.api.deps import (
+    get_explainability_service,
     get_feedback_service,
     get_prediction_log_repository,
-    get_explainability_service,
 )
+from src.config import settings
 from src.core.exceptions import ModelInferenceError
-
+from src.main import app
 
 VALID_API_KEY = settings.API_KEY.get_secret_value()
 
@@ -77,19 +75,9 @@ def test_create_feedback_success(client, auth_headers):
     }
     response = client.post("/v1/feedback", json=payload, headers=auth_headers)
     assert response.status_code == 200
-    assert "queued for processing" in response.json()["message"]
+    assert "Feedback received and saved" in response.json()["message"]
 
 
-@pytest.mark.parametrize(
-    "confidence,expected_label",
-    [
-        (0.95, "AI_GENERATED"),
-        (0.30, "REAL"),
-        (0.65, "UNCERTAIN_LEANING_AI"),
-        (0.45, "UNCERTAIN_LEANING_REAL"),
-        (0.58, "UNCERTAIN_NEUTRAL"),
-    ],
-)
 @pytest.mark.parametrize(
     "invalid_payload",
     [
@@ -146,9 +134,9 @@ def test_rate_limiting(client, auth_headers):
         )
         for _ in range(6)
     ]
-    assert any(
-        r.status_code == 429 for r in responses
-    ), f"Expected 429, got: {[r.status_code for r in responses]}"
+    assert any(r.status_code == 429 for r in responses), (
+        f"Expected 429, got: {[r.status_code for r in responses]}"
+    )
 
 
 def test_predict_invalid_format(client, auth_headers):
@@ -162,7 +150,7 @@ def test_predict_model_error(client, auth_headers):
         "Mocked inference crash"
     )
     img_byte_arr = io.BytesIO()
-    Image.new("RGB", (10, 10)).save(img_byte_arr, format="PNG")
+    Image.new("RGB", (224, 224)).save(img_byte_arr, format="PNG")
     img_byte_arr.seek(0)
     files = {"file": ("test.png", img_byte_arr.read(), "image/png")}
 
@@ -241,7 +229,7 @@ def test_explain_endpoint(client, auth_headers):
     client.app.state.explainability_service = MockExplainer()
 
     img_byte_arr = io.BytesIO()
-    Image.new("RGB", (10, 10), color="blue").save(img_byte_arr, format="PNG")
+    Image.new("RGB", (224, 224), color="blue").save(img_byte_arr, format="PNG")
     files = {"file": ("test.png", img_byte_arr.getvalue(), "image/png")}
 
     response = client.post("/v1/inference/explain", files=files, headers=auth_headers)

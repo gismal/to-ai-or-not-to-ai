@@ -2,16 +2,18 @@
 future ideas to be added
 """
 
-import pytest
 import io
-from PIL import Image
 from unittest.mock import AsyncMock, MagicMock
-import numpy as np
 
-from src.utils import generate_phash
+import numpy as np
+import pytest
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
+from PIL import Image
+
 from src.inference import _preprocess
 from src.services.inference_service import InferenceService
-from hypothesis import given, settings, HealthCheck, strategies as st
+from src.utils import generate_phash
 
 
 @pytest.fixture
@@ -42,7 +44,7 @@ def test_preprocess_tensor_format(dummy_image):
     """
     image_io = io.BytesIO(dummy_image)
 
-    path_str, tensor, error = _preprocess(image_io)
+    _, tensor, error = _preprocess(image_io)
 
     assert error is None
     assert tensor is not None
@@ -96,7 +98,7 @@ def test_preprocess_edge_cases(mode, size):
     Image.new(mode, size).save(img_byte_arr, format="PNG")
     img_byte_arr.seek(0)
 
-    path_str, tensor, error = _preprocess(img_byte_arr)
+    _, tensor, error = _preprocess(img_byte_arr)
 
     assert error is None
     assert tensor is not None
@@ -114,7 +116,7 @@ def test_process_applies_normalization(dummy_image):
 
 
 def test_preprocess_invalid_image():
-    path_str, tensor, error = _preprocess(io.BytesIO(b"this is not an image"))
+    _, tensor, error = _preprocess(io.BytesIO(b"this is not an image"))
     assert tensor is None
     assert error is not None
 

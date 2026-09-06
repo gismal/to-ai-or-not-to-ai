@@ -1,6 +1,8 @@
 import io
-from PIL import Image
+
 import imagehash
+from PIL import Image
+
 from src.logger import logger
 
 

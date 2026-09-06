@@ -28,7 +28,6 @@ from sklearn.metrics import brier_score_loss
 
 from src.logger import logger
 
-
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 _STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 

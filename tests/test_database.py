@@ -1,5 +1,6 @@
 import pytest
-from src.core.enums import FeedbackLabel, ErrorType, PredictionLabel
+
+from src.core.enums import ErrorType, FeedbackLabel, PredictionLabel
 
 
 @pytest.mark.asyncio

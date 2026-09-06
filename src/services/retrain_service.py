@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 from arq import ArqRedis
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config import settings
+from src.core.enums import ErrorType
 from src.infra.feedback_item import FeedbackItem
 from src.infra.prediction_log import PredictionLog
-from src.core.enums import ErrorType
-from src.config import settings
 from src.logger import logger
 
 

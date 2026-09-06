@@ -2,12 +2,19 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc build-essential libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip wheel --default-timeout=1000 --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+# Use CPU-only PyTorch index — reduces image by ~1.7GB
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r requirements.txt
 
 # ── Runner ────────────────────────────────────────────────
 FROM python:3.11-slim
@@ -19,6 +26,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libmagic1 \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/wheels /wheels

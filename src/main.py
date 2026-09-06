@@ -1,33 +1,34 @@
-from arq import create_pool
+import uuid
 from contextlib import asynccontextmanager
+
+from arq import create_pool
 from fastapi import FastAPI, Request, status
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
+from pathlib import Path
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-import uuid
 
+from src.api.admin_routes import admin_router
+from src.api.feedback_routes import feedback_router
+from src.api.inference_routes import router as inference_router
 from src.config import settings
-from src.logger import logger, request_id_ctx
+from src.core.exceptions import (
+    DatabaseError,
+    InvalidImageFormatError,
+    ModelInferenceError,
+)
 from src.inference import ONNXPredictor
 from src.infra.limiter import limiter
 from src.infra.redis_client import create_cache_client
-from src.core.exceptions import (
-    InvalidImageFormatError,
-    ModelInferenceError,
-    DatabaseError,
-)
-from src.services.inference_service import InferenceService
+from src.logger import logger, request_id_ctx
 from src.services.cache_service import CacheService
-from src.worker.tasks import WorkerSettings
 from src.services.explainability_service import ExplainabilityService
-from src.api.inference_routes import router as inference_router
-from src.api.feedback_routes import feedback_router
-from src.api.admin_routes import admin_router
+from src.services.inference_service import InferenceService
+from src.worker.tasks import WorkerSettings
 
 
 @asynccontextmanager
@@ -45,12 +46,22 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting up API, loading ONNX model")
     try:
-        # -- Redis: job queue (db 0 ) -------------
-        app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
+        redis_url = settings.REDIS_URL
+        if redis_url and redis_url != "none":
+            try:
+                # -- Redis: job queue (db 0 ) -------------
+                app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
 
-        # -- Redis: cache client (db 1) seperate from job queue --------------
-        app.state.cache_client = await create_cache_client()
-        app.state.cache_service = CacheService(redis_client=app.state.cache_client)
+                # -- Redis: cache client (db 1) seperate from job queue --------------
+                app.state.cache_client = await create_cache_client()
+                app.state.cache_service = CacheService(
+                    redis_client=app.state.cache_client
+                )
+                logger.info("Redis connected")
+            except Exception as e:  # todo: special exception
+                logger.warning(f"Redis unavailable ({e}) - caching disabled")
+                app.state.arq_pool = None
+                app.state.cache_service = None
 
         # -- ONNX Inference -----------------------
         predictor = ONNXPredictor()
@@ -63,9 +74,10 @@ async def lifespan(app: FastAPI):
 
         # -- GradCAM explainability --------------------------
         app.state.explainability_service = ExplainabilityService(
-            checkpoint_path="models/best_checkpoint.pt", num_classes=2
+            checkpoint_path="models/best_checkpoint.pt",
+            num_classes=2,
         )
-        logger.info("Model loaded successfully")
+        logger.info("All services ready")
 
     except Exception as e:
         logger.critical(f"Startup failed, can't load model: {e}", exc_info=True)
@@ -73,8 +85,11 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    logger.info("Shutting down, releasing model session")
-    await app.state.arq_pool.aclose()
+    logger.info("Shutting down")
+    if app.state.arq_pool:
+        await app.state.arq_pool.aclose()
+    if hasattr(app.state, "cache_client") and app.state.cache_client:
+        await app.state.cache_client.aclose()
 
 
 app = FastAPI(title="To AI or Not to AI", version="1.0.0", lifespan=lifespan)
@@ -149,7 +164,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     """
     Handles all errors can occur unexpected and logs all of them
     """
-    logger.error(f"Unexpected system error: {str(exc)} - Endpoint: {request.url.path}")
+    logger.error(f"Unexpected system error: {exc!s} - Endpoint: {request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Unexpected error occured"},
@@ -164,6 +179,3 @@ async def request_id_middleware(request: Request, call_next):
     response.headers["X-Request-ID"] = request_id
     request_id_ctx.reset(token)
     return response
-
-
-Instrumentator().instrument(app).expose(app)

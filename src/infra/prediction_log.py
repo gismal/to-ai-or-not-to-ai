@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -6,10 +7,13 @@ from sqlalchemy import (
     Float,
     Integer,
     String,
+)
+from sqlalchemy import (
     Enum as SQLEnum,
 )
-from src.infra.database import Base
+
 from src.core.enums import PredictionLabel
+from src.infra.database import Base
 
 
 class PredictionLog(Base):
@@ -27,6 +31,3 @@ class PredictionLog(Base):
     client_source = Column(String, default="API_v1")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_deleted = Column(Boolean, default=False)
-    created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), index=True
-    )

@@ -13,7 +13,10 @@ Verification: hash(incoming_key) == stored_hash
 
 import enum
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Enum as SQLEnum
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import Enum as SQLEnum
+
 from src.infra.database import Base
 
 

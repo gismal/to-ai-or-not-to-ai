@@ -3,12 +3,13 @@ Creates and updates task result records
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
 
-from src.infra.task_results import TaskResult, TaskStatus
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.exceptions import DatabaseError
+from src.infra.task_results import TaskResult, TaskStatus
 from src.logger import logger
 
 

@@ -5,7 +5,10 @@ Saves the job history for future Postgres queries
 
 import enum
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime, Text, Enum as SQLEnum
+
+from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import Enum as SQLEnum
+
 from src.infra.database import Base
 
 

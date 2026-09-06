@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # Infrastructure
     DATABASE_URL: str
-    REDIS_URL: str = "redis://redis:6379/0"
+    REDIS_URL: str = "none"
     DEBUG: bool = False
 
     # Security

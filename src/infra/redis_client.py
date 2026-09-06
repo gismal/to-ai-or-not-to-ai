@@ -1,4 +1,5 @@
 import redis.asyncio as aioredis
+
 from src.config import settings
 from src.logger import logger
 

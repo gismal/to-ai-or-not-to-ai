@@ -1,19 +1,21 @@
-from typing import AsyncGenerator, Annotated
-from arq import ArqRedis
-from fastapi import Request, Depends, HTTPException, Security, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.security import APIKeyHeader
+from collections.abc import AsyncGenerator
+from typing import Annotated
 
-from services.retrain_service import RetrainService
-from src.logger import logger
+from arq import ArqRedis
+from fastapi import Depends, HTTPException, Request, Security, status
+from fastapi.security import APIKeyHeader
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.config import settings
 from src.infra.database import AsyncSessionLocal
-from src.services.inference_service import InferenceService
-from src.services.cache_service import CacheService
+from src.logger import logger
 from src.repositories.feedback_repo import FeedbackRepository
 from src.repositories.prediction_log_repository import PredictionLogRepository
-from src.services.feedback_service import FeedbackService
+from src.services.cache_service import CacheService
 from src.services.explainability_service import ExplainabilityService
-from src.config import settings
+from src.services.feedback_service import FeedbackService
+from src.services.inference_service import InferenceService
+from src.services.retrain_service import RetrainService
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=True)
 

@@ -1,13 +1,14 @@
 import asyncio
 from datetime import datetime, timezone
 from urllib.parse import urlparse
-from arq.connections import RedisSettings, create_pool
-from arq import Retry, cron
 
-from src.logger import logger
-from src.infra.database import AsyncSessionLocal
-from src.repositories.task_result_repo import TaskResultRepository
+from arq import Retry, cron
+from arq.connections import RedisSettings, create_pool
+
 from src.config import settings
+from src.infra.database import AsyncSessionLocal
+from src.logger import logger
+from src.repositories.task_result_repo import TaskResultRepository
 
 
 # -- Model Retraining --------------------------
@@ -30,7 +31,7 @@ async def retrain_model(ctx: dict) -> dict:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=3600)
+        _, stderr = await asyncio.wait_for(process.communicate(), timeout=3600)
 
         if process.returncode != 0:
             raise RuntimeError(stderr.decode().strip())
@@ -60,11 +61,12 @@ async def check_drift_scheduled(ctx: dict) -> dict:
     # lazy import to avoid circular dependency
     from src.services.retrain_service import RetrainService
 
-    async with AsyncSessionLocal() as session:
-        # short-lived ARQ pool special for this task
-        async with await create_pool(WorkerSettings.redis_settings) as pool:
-            service = RetrainService(session=session, arq_pool=pool)
-            result = await service.check_drift_and_trigger()
+    async with (
+        AsyncSessionLocal() as session,
+        await create_pool(WorkerSettings.redis_settings) as pool,
+    ):
+        service = RetrainService(session=session, arq_pool=pool)
+        result = await service.check_drift_and_trigger()
 
     logger.info(f"Scheduled drift check complete: {result}")
     return result

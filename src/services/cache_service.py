@@ -3,6 +3,7 @@ Handles phash and Redis caching for prediction result
 """
 
 import json
+
 import redis.asyncio as aioredis
 
 from src.core.enums import PredictionLabel
@@ -37,6 +38,8 @@ class CacheService:
         Returns the cached prediction dict or None on a miss.
         Deserialized the PredictionLabel enum from its stored string value
         """
+        if self._redis is None:
+            return
         key = self._make_key(image_bytes)
         if not key:
             return None
@@ -62,6 +65,8 @@ class CacheService:
         Caches a prediction result for 24 hours
         Serialized PredictionLabel enum to string value before storing
         """
+        if self._redis is None:
+            return
         key = self._make_key(image_bytes)
         if not key:
             return

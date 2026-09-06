@@ -4,7 +4,6 @@ class AppError(Exception):
     Added for exception hierarchy
     """
 
-    pass
 
 
 class InvalidImageFormatError(AppError):
@@ -13,7 +12,6 @@ class InvalidImageFormatError(AppError):
     API handles this by returning a 400 Bad Request response.
     """
 
-    pass
 
 
 class ModelInferenceError(AppError):
@@ -22,7 +20,6 @@ class ModelInferenceError(AppError):
     API handles this by returning a 500 Internal Server Error response.
     """
 
-    pass
 
 
 class DatabaseError(AppError):
@@ -31,4 +28,3 @@ class DatabaseError(AppError):
     API handles this by returning a 500 Internal Server Error response.
     """
 
-    pass

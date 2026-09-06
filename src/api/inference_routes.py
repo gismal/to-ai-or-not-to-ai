@@ -5,9 +5,9 @@ Inference domain: predict, predict-batch, explain, health.
 
 import asyncio
 import io
-import magic
 from pathlib import PurePosixPath
 
+import magic
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -38,7 +38,6 @@ from src.schemas.explain import ExplainResponse
 from src.schemas.predict import PredictionResponse
 from src.services.explainability_service import ExplainabilityService
 from src.services.inference_service import InferenceService
-
 
 router = APIRouter(
     prefix="/v1/inference",

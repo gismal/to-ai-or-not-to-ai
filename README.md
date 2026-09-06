@@ -1,5 +1,3 @@
-# To AI or Not to AI
-
 > *"That's the question."* — Shakespeare (probably would have asked this in 2026)
 ### [🔗 Live API Demo](#) | [🔗 Chrome Extension](#) | [📊 Grafana Dashboard](#)
 

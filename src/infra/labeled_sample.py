@@ -12,6 +12,7 @@ This closes the human-in-the-loop gap in the MLOps cycle.
 """
 
 from datetime import datetime, timezone
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -20,10 +21,13 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+)
+from sqlalchemy import (
     Enum as SQLEnum,
 )
-from src.infra.database import Base
+
 from src.core.enums import FeedbackLabel, PredictionLabel
+from src.infra.database import Base
 
 
 class LabeledSample(Base):

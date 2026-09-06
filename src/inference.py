@@ -1,16 +1,16 @@
+import concurrent.futures
 import io
+from dataclasses import dataclass
+from pathlib import Path
+
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
-from pathlib import Path
-import concurrent.futures
-from dataclasses import dataclass
 
 from src.config import settings
-from src.logger import logger
 from src.core.enums import InferenceStatus
+from src.logger import logger
 from src.services.base_engine import BaseMLEngine
-
 
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 _STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
@@ -90,9 +90,7 @@ class ONNXPredictor(BaseMLEngine):
 
         logger.info(f"Using providers: {providers}")
 
-        self._session = ort.InferenceSession(
-            str(self.model_path), sess_options=session_options, providers=providers
-        )
+        self._session = ort.InferenceSession(str(self.model_path), providers=providers)
         self._input_name = self._session.get_inputs()[0].name
 
         logger.info("Warming up ONNX session")

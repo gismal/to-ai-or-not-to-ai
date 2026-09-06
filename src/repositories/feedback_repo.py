@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Sequence
+from collections.abc import Sequence
+
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
+from src.core.enums import ErrorType, FeedbackLabel
+from src.core.exceptions import DatabaseError
 from src.infra.feedback_item import FeedbackItem
 from src.logger import logger
-from src.core.exceptions import DatabaseError
-from src.core.enums import FeedbackLabel, ErrorType
 
 
 # Dependency Inversion
@@ -91,7 +92,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
             return db_item
         except SQLAlchemyError as e:
             await self.session.rollback()
-            logger.error(f"Error during saving the feedback: {str(e)}")
+            logger.error(f"Error during saving the feedback: {e!s}")
             raise DatabaseError("Feedback could not be saved to the database.")
 
     async def get_recent_errors(
@@ -112,7 +113,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
             result = await self.session.execute(stmt)
             return result.scalars().all()
         except SQLAlchemyError as e:
-            logger.error(f"Data reading error: {str(e)}")
+            logger.error(f"Data reading error: {e!s}")
             raise DatabaseError("Failed to fetch recent errors.")
 
     async def soft_delete(self, record_id: int) -> bool:
@@ -133,7 +134,7 @@ class FeedbackRepository(AbstractFeedbackRepository):
             return False
         except SQLAlchemyError as e:
             await self.session.rollback()
-            logger.error(f"Soft delete error. ID: {record_id}: {str(e)}")
+            logger.error(f"Soft delete error. ID: {record_id}: {e!s}")
             raise DatabaseError("Soft delete fails")
 
     async def get_feedback_by_filename(self, filename: str) -> FeedbackItem | None:

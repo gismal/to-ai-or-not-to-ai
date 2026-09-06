@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -7,10 +8,13 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+)
+from sqlalchemy import (
     Enum as SQLEnum,
 )
-from src.infra.database import Base
+
 from src.core.enums import ErrorType, FeedbackLabel, PredictionLabel
+from src.infra.database import Base
 
 
 class FeedbackItem(Base):

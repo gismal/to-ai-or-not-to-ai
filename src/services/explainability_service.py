@@ -9,24 +9,24 @@ specifically for this purpose. Inference stays fast via ONNX; explanations
 use PyTorch on-demand.
 """
 
-import io
-import base64
-import time
 import asyncio
+import base64
+import io
+import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 import torch
-import torch.nn as nn
-import torchvision.models as models
 from PIL import Image
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
+from torch import nn
+from torchvision import models
 
-from src.logger import logger
-from src.core.enums import PredictionLabel, InferenceStatus
+from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
+from src.logger import logger
 from src.services.base_engine import BaseMLEngine
 
 # Must match inference.py exactly — same normalization, same model sees same numbers
@@ -60,7 +60,6 @@ class ExplainabilityService(BaseMLEngine):
 
     def _load(self) -> None:
         """Load PyTorch checkppoint and configure GradCAM target layers"""
-        assert self.model is not None
         self.model = models.mobilenet_v3_small(weights=None)
         in_features = self.model.classifier[-1].in_features
         self.model.classifier[-1] = nn.Linear(in_features, self.num_classes)  # type: ignore

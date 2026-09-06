@@ -2,7 +2,7 @@ import asyncio
 import io
 import time
 
-from schemas.predict import PredictionResponse
+from src.schemas.predict import PredictionResponse
 from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
 from src.inference import ONNXPredictor
@@ -93,7 +93,10 @@ class InferenceService:
         start = time.time()
 
         # -- 1. Cache lookup ---------------------
-        cached = await self.cache.get(content_bytes)
+        cached = None
+        if self.cache is not None:
+            cached = await self.cache.get(content_bytes)
+
         if cached:
             CACHE_COUNTER.labels(result="hit").inc()
             return PredictionResponse(

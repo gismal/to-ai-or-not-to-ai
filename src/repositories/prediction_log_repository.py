@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 

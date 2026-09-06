@@ -1,6 +1,6 @@
+from src.logger import logger
 from src.repositories.feedback_repo import FeedbackRepository
 from src.schemas.feedback import FeedbackCreateRequest
-from src.logger import logger
 
 
 class FeedbackService:
