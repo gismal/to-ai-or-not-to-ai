@@ -4,11 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI or Not — Image Detector</title>
+  <title>AI or Not</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
@@ -22,17 +20,16 @@
     }
 
     :root {
-      --bg: #0A0A0F;
-      --surface: #1A1A24;
-      --border: #2A2A3A;
-      --text: #F0F0F0;
-      --muted: #8888A0;
-      --ai: #6C63FF;
-      --real: #22D3A5;
-      --uncertain: #FF9F43;
-      --danger: #FF6B6B;
-      --ai-glow: rgba(108, 99, 255, 0.25);
-      --real-glow: rgba(34, 211, 165, 0.25);
+      --bg: #0d0d0f;
+      --surface: #131316;
+      --border: #222228;
+      --border-hi: #404048;
+      --text: #f0f0f0;
+      --muted: #666;
+      --dim: #333;
+      --ai: #e04040;
+      --real: #2ecc72;
+      --uncertain: #d48b1a;
     }
 
     html,
@@ -43,74 +40,180 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
 
-    h1,
-    h2,
-    h3,
-    .mono {
-      font-family: 'Space Grotesk', sans-serif;
+    /* ── Top bar ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 44px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
     }
 
-    /* ── Layout ── */
-    .page {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 48px 24px 80px;
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 56px;
+    .wordmark {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
 
-    .header h1 {
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
+    /* Connection indicator */
+    .conn-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--dim);
+      transition: background 0.3s;
     }
 
-    .header h1 span.ai {
-      color: var(--ai);
+    .conn-dot.ok {
+      background: var(--real);
     }
 
-    .header h1 span.or {
+    .conn-dot.err {
+      background: var(--ai);
+    }
+
+    .seg {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .seg-btn {
+      padding: 4px 14px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
       color: var(--muted);
-      margin: 0 8px;
-    }
-
-    .header h1 span.not {
-      color: var(--real);
-    }
-
-    .header p {
-      color: var(--muted);
-      margin-top: 10px;
-      font-size: 1rem;
-    }
-
-    /* ── Upload zone ── */
-    .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 16px;
-      padding: 56px 32px;
-      text-align: center;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
       cursor: pointer;
-      transition: border-color .2s, background .2s;
+      letter-spacing: 0.04em;
+    }
+
+    .seg-btn.on {
+      background: var(--dim);
+      color: var(--text);
+    }
+
+    /* ── Main ── */
+    .main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ── API key row ── */
+    .key-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      align-items: flex-end;
+    }
+
+    .key-field {
+      flex: 1;
+    }
+
+    .label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .key-input-wrap {
       position: relative;
     }
 
-    .upload-zone:hover,
-    .upload-zone.drag-over {
-      border-color: var(--ai);
-      background: rgba(108, 99, 255, 0.05);
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
     }
 
-    .upload-zone input {
+    input:focus {
+      border-color: var(--border-hi);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    .key-saved {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: var(--real);
+      pointer-events: none;
+    }
+
+    .btn-save {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      align-self: flex-end;
+    }
+
+    .btn-save:hover {
+      border-color: var(--border-hi);
+      color: var(--text);
+    }
+
+    /* ── Drop zone ── */
+    .drop {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 64px 24px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      background: var(--surface);
+    }
+
+    .drop:hover,
+    .drop.over {
+      border-color: var(--border-hi);
+    }
+
+    .drop input {
       position: absolute;
       inset: 0;
       opacity: 0;
@@ -119,293 +222,159 @@
       height: 100%;
     }
 
-    .upload-zone .icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
-    }
-
-    .upload-zone p {
-      color: var(--muted);
-    }
-
-    .upload-zone p strong {
-      color: var(--text);
-    }
-
-    .upload-zone small {
-      color: var(--muted);
-      font-size: 0.8rem;
-      margin-top: 6px;
-      display: block;
-    }
-
-    /* ── API key input ── */
-    .api-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .api-row input {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 16px;
-      color: var(--text);
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color .2s;
-    }
-
-    .api-row input:focus {
-      border-color: var(--ai);
-    }
-
-    .api-row input::placeholder {
-      color: var(--muted);
-    }
-
-    /* ── Mode toggle ── */
-    .mode-toggle {
-      display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 4px;
-      gap: 4px;
-      margin-bottom: 24px;
-    }
-
-    .mode-toggle button {
-      flex: 1;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 7px;
-      background: transparent;
-      color: var(--muted);
-      font-family: 'Space Grotesk', sans-serif;
+    .drop-primary {
       font-weight: 500;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all .2s;
+      margin-bottom: 4px;
     }
 
-    .mode-toggle button.active {
-      background: var(--ai);
-      color: white;
-    }
-
-    /* ── Loading ── */
-    .loading {
-      text-align: center;
-      padding: 48px;
+    .drop-hint {
+      font-size: 11px;
       color: var(--muted);
     }
 
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--ai);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-      margin: 0 auto 16px;
+    /* ── Status ── */
+    .status {
+      padding: 24px 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
     }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
+    /* ── Error ── */
+    .err {
+      font-size: 12px;
+      color: var(--ai);
+      background: rgba(224, 64, 64, 0.06);
+      border: 1px solid rgba(224, 64, 64, 0.18);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
     }
 
-    /* ── Result card ── */
-    .result {
-      margin-top: 40px;
-      animation: fadeUp .4s ease;
-    }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(16px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* ── Result ── */
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .verdict {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
-      margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .verdict::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--glow-color, transparent);
-      pointer-events: none;
+      font-size: 26px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: -0.01em;
     }
 
     .verdict.ai {
-      --glow-color: var(--ai-glow);
-      border-color: var(--ai);
-    }
-
-    .verdict.real {
-      --glow-color: var(--real-glow);
-      border-color: var(--real);
-    }
-
-    .verdict.uncertain {
-      border-color: var(--uncertain);
-    }
-
-    .verdict-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .verdict-label {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .verdict.ai .verdict-label {
       color: var(--ai);
     }
 
-    .verdict.real .verdict-label {
+    .verdict.real {
       color: var(--real);
     }
 
-    .verdict.uncertain .verdict-label {
+    .verdict.uncertain {
       color: var(--uncertain);
     }
 
-    .verdict-meta {
+    .result-meta {
       text-align: right;
-    }
-
-    .verdict-meta .filename {
+      font-size: 11px;
       color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    .verdict-meta .timing {
-      color: var(--muted);
-      font-size: 0.8rem;
-      margin-top: 2px;
+      line-height: 1.7;
     }
 
     /* ── Confidence bar ── */
-    .confidence-section {
-      margin-top: 20px;
-    }
-
-    .confidence-label-row {
+    .conf-row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 0.85rem;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       color: var(--muted);
+      margin-bottom: 7px;
     }
 
-    .confidence-label-row .score {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .bar-track {
-      height: 8px;
-      background: var(--border);
-      border-radius: 99px;
+    .conf-track {
+      height: 3px;
+      background: var(--dim);
+      border-radius: 2px;
       overflow: hidden;
+      margin-bottom: 7px;
     }
 
-    .bar-fill {
+    .conf-fill {
       height: 100%;
-      border-radius: 99px;
-      transition: width 1s cubic-bezier(.16, 1, .3, 1);
+      border-radius: 2px;
+      transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .verdict.ai .bar-fill {
+    .conf-fill.ai {
       background: var(--ai);
     }
 
-    .verdict.real .bar-fill {
+    .conf-fill.real {
       background: var(--real);
     }
 
-    .verdict.uncertain .bar-fill {
+    .conf-fill.uncertain {
       background: var(--uncertain);
     }
 
-    /* Uncertainty zones under bar */
-    .zone-labels {
+    .conf-zones {
       display: flex;
       justify-content: space-between;
-      margin-top: 6px;
-      font-size: 0.7rem;
+      font-size: 9px;
       color: var(--muted);
-    }
-
-    /* ── Image comparison slider ── */
-    .compare-wrapper {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
-    }
-
-    .compare-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--muted);
-      letter-spacing: .06em;
       text-transform: uppercase;
-      margin-bottom: 14px;
+      letter-spacing: 0.06em;
+      margin-bottom: 24px;
     }
 
-    .compare-slider-wrapper {
+    /* ── Divider ── */
+    .rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 0 24px;
+    }
+
+    /* ── Section label ── */
+    .sec {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── GradCAM slider ── */
+    .slider {
       position: relative;
-      border-radius: 10px;
+      border-radius: 6px;
       overflow: hidden;
       cursor: col-resize;
       user-select: none;
+      border: 1px solid var(--border);
       line-height: 0;
+      margin-bottom: 8px;
     }
 
-    .compare-slider-wrapper img {
+    .slider img {
       display: block;
       width: 100%;
       height: auto;
     }
 
-    .compare-overlay {
+    .slider-over {
       position: absolute;
       inset: 0;
       overflow: hidden;
     }
 
-    .compare-overlay img {
+    .slider-over img {
       position: absolute;
       top: 0;
       left: 0;
@@ -414,89 +383,203 @@
       object-fit: cover;
     }
 
-    .compare-divider {
+    .slider-line {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 2px;
-      background: white;
-      cursor: col-resize;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.5);
+      z-index: 10;
     }
 
-    .compare-handle {
-      width: 36px;
-      height: 36px;
-      background: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
-      color: #333;
-      font-size: 14px;
-      font-weight: 700;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .compare-tag {
-      position: absolute;
-      bottom: 10px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-    }
-
-    .compare-tag.left {
-      left: 10px;
-      background: rgba(0, 0, 0, .6);
-      color: var(--real);
-    }
-
-    .compare-tag.right {
-      right: 10px;
-      background: rgba(0, 0, 0, .6);
-      color: var(--ai);
-    }
-
-    .compare-hint {
+    .slider-hint {
+      font-size: 10px;
+      color: var(--muted);
       text-align: center;
-      margin-top: 10px;
-      font-size: 0.8rem;
+      margin-bottom: 24px;
+    }
+
+    /* ── Plain image ── */
+    .img-box {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      line-height: 0;
+      margin-bottom: 24px;
+    }
+
+    .img-box img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 360px;
+      object-fit: contain;
+      background: var(--surface);
+    }
+
+    /* ── Buttons ── */
+    .btn-reset {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 40px;
+    }
+
+    .btn-reset:hover {
+      border-color: var(--border-hi);
+      color: var(--text);
+    }
+
+    /* ── Extension info section ── */
+    .ext-section {
+      border-top: 1px solid var(--border);
+      padding-top: 32px;
+    }
+
+    .ext-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .ext-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       color: var(--muted);
     }
 
-    /* ── Error ── */
-    .error-box {
-      background: rgba(255, 107, 107, 0.1);
-      border: 1px solid var(--danger);
-      border-radius: 12px;
-      padding: 16px 20px;
-      color: var(--danger);
-      margin-top: 24px;
-      font-size: 0.9rem;
+    .ext-chevron {
+      font-size: 10px;
+      color: var(--muted);
     }
 
-    /* ── Tags ── */
-    .tag {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 99px;
-      font-size: 0.75rem;
-      font-family: 'Space Grotesk', sans-serif;
+    .ext-body {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .ext-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .ext-step-num {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.06em;
+    }
+
+    .ext-step-title {
+      font-size: 12px;
       font-weight: 600;
+      margin-bottom: 6px;
     }
 
-    .tag.cached {
-      background: rgba(108, 99, 255, .15);
+    .ext-step-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Mockup screenshot */
+    .ext-mockup {
+      background: #1a1a1e;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 11px;
+      margin-top: 4px;
+      line-height: 1.8;
+    }
+
+    .mock-menu {
+      background: #2a2a30;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 0;
+    }
+
+    .mock-item {
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .mock-item.hi {
+      background: rgba(64, 64, 72, 0.5);
+      color: var(--text);
+    }
+
+    .mock-popup {
+      background: #18181c;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .mock-verdict {
+      font-size: 16px;
+      font-weight: 600;
       color: var(--ai);
-      border: 1px solid var(--ai);
+      margin-bottom: 4px;
+    }
+
+    .mock-conf {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .mock-bar {
+      height: 2px;
+      background: var(--dim);
+      border-radius: 1px;
+      margin-bottom: 10px;
+    }
+
+    .mock-bar-fill {
+      height: 100%;
+      width: 88%;
+      background: var(--ai);
+      border-radius: 1px;
+    }
+
+    .mock-img {
+      height: 60px;
+      background: var(--dim);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .mock-link {
+      font-size: 10px;
+      color: #7a7aff;
+    }
+
+    .ext-install {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.7;
     }
   </style>
 </head>
@@ -506,310 +589,413 @@
   <script type="text/babel">
     const { useState, useRef, useCallback, useEffect } = React;
 
-    // ── Utilities ──────────────────────────────────────────────────────────────
+    const LABELS = {
+      REAL: 'Human Made',
+      AI_GENERATED: 'AI Generated',
+      UNCERTAIN_LEANING_AI: 'Uncertain — Leaning AI',
+      UNCERTAIN_LEANING_REAL: 'Uncertain — Leaning Real',
+      UNCERTAIN_NEUTRAL: 'Uncertain',
+    };
 
-    function getVerdictClass(prediction) {
-      if (!prediction) return '';
-      if (prediction.includes('REAL')) return 'real';
-      if (prediction.includes('AI_GENERATED')) return 'ai';
+    function verdictCls(p) {
+      if (!p) return '';
+      if (p === 'REAL') return 'real';
+      if (p === 'AI_GENERATED') return 'ai';
       return 'uncertain';
     }
 
-    function formatLabel(prediction) {
-      const map = {
-        REAL: 'Human Made',
-        AI_GENERATED: 'AI Generated',
-        UNCERTAIN_LEANING_AI: 'Uncertain — Leaning AI',
-        UNCERTAIN_LEANING_REAL: 'Uncertain — Leaning Real',
-        UNCERTAIN_NEUTRAL: 'Uncertain — No Verdict',
-      };
-      return map[prediction] || prediction;
+    /* ── Client-side resize ── */
+    async function resizeImage(file, maxPx = 1500) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const { naturalWidth: w, naturalHeight: h } = img;
+          if (w <= maxPx && h <= maxPx) { resolve(file); return; }
+          const scale = maxPx / Math.max(w, h);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(w * scale);
+          canvas.height = Math.round(h * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })),
+            'image/jpeg', 0.92
+          );
+        };
+        img.src = url;
+      });
     }
 
-    // ── Comparison Slider ──────────────────────────────────────────────────────
-
-    function CompareSlider({ originalSrc, heatmapSrc }) {
+    /* ── GradCAM Slider ── */
+    function GradSlider({ original, heatmap }) {
       const [pos, setPos] = useState(50);
-      const [dragging, setDrag] = useState(false);
+      const [on, setOn] = useState(false);
       const ref = useRef(null);
 
-      const move = useCallback((clientX) => {
+      const move = useCallback((x) => {
         if (!ref.current) return;
-        const { left, width } = ref.current.getBoundingClientRect();
-        const pct = Math.min(100, Math.max(0, ((clientX - left) / width) * 100));
-        setPos(pct);
+        const r = ref.current.getBoundingClientRect();
+        setPos(Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100)));
       }, []);
 
       useEffect(() => {
-        if (!dragging) return;
-        const up = () => setDrag(false);
-        const move_ = (e) => move(e.clientX ?? e.touches?.[0]?.clientX);
-        window.addEventListener('mousemove', move_);
-        window.addEventListener('mouseup', up);
-        window.addEventListener('touchmove', move_);
-        window.addEventListener('touchend', up);
+        if (!on) return;
+        const end = () => setOn(false);
+        const go = (e) => move(e.clientX ?? e.touches?.[0]?.clientX);
+        window.addEventListener('mousemove', go);
+        window.addEventListener('mouseup', end);
+        window.addEventListener('touchmove', go);
+        window.addEventListener('touchend', end);
         return () => {
-          window.removeEventListener('mousemove', move_);
-          window.removeEventListener('mouseup', up);
-          window.removeEventListener('touchmove', move_);
-          window.removeEventListener('touchend', up);
+          window.removeEventListener('mousemove', go);
+          window.removeEventListener('mouseup', end);
+          window.removeEventListener('touchmove', go);
+          window.removeEventListener('touchend', end);
         };
-      }, [dragging, move]);
+      }, [on, move]);
 
       return (
-        <div className="compare-wrapper">
-          <p className="compare-title">Drag to reveal GradCAM heatmap</p>
+        <>
+          <div className="sec">GradCAM — drag to reveal heatmap</div>
           <div
             ref={ref}
-            className="compare-slider-wrapper"
-            onMouseDown={(e) => { setDrag(true); move(e.clientX); }}
-            onTouchStart={(e) => { setDrag(true); move(e.touches[0].clientX); }}
+            className="slider"
+            onMouseDown={(e) => { setOn(true); move(e.clientX); }}
+            onTouchStart={(e) => { setOn(true); move(e.touches[0].clientX); }}
           >
-            {/* Base: original */}
-            <img src={originalSrc} alt="Original" draggable={false} />
-
-            {/* Overlay: heatmap, clipped to left of slider */}
-            <div className="compare-overlay" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-              <img src={`data:image/png;base64,${heatmapSrc}`} alt="GradCAM" draggable={false} />
+            <img src={original} alt="Original" draggable={false} />
+            <div className="slider-over" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+              <img src={`data:image/png;base64,${heatmap}`} alt="Heatmap" draggable={false} />
             </div>
-
-            {/* Divider line + handle */}
-            <div className="compare-divider" style={{ left: `${pos}%` }}>
-              <div className="compare-handle">⇔</div>
-            </div>
-
-            {/* Corner labels */}
-            <span className="compare-tag left">Original</span>
-            <span className="compare-tag right">Heatmap</span>
+            <div className="slider-line" style={{ left: `${pos}%` }} />
           </div>
-          <p className="compare-hint">
-            Warm regions = what the model focused on to make its decision
-          </p>
-        </div>
+          <div className="slider-hint">original · · · heatmap</div>
+        </>
       );
     }
 
-    // ── Confidence bar ─────────────────────────────────────────────────────────
-
-    function ConfidenceBar({ confidence, verdictClass }) {
-      const [width, setWidth] = useState(0);
+    /* ── Confidence Bar ── */
+    function ConfBar({ confidence, prediction }) {
+      const [w, setW] = useState(0);
+      const c = verdictCls(prediction);
       useEffect(() => {
-        const t = setTimeout(() => setWidth(confidence * 100), 50);
+        const t = setTimeout(() => setW(confidence * 100), 60);
         return () => clearTimeout(t);
       }, [confidence]);
-
       return (
-        <div className="confidence-section">
-          <div className="confidence-label-row">
+        <>
+          <div className="conf-row">
             <span>Confidence</span>
-            <span className="score">{(confidence * 100).toFixed(1)}%</span>
+            <span>{(confidence * 100).toFixed(1)}%</span>
           </div>
-          <div className="bar-track">
-            <div className={`bar-fill ${verdictClass}`} style={{ width: `${width}%` }} />
+          <div className="conf-track">
+            <div className={`conf-fill ${c}`} style={{ width: `${w}%` }} />
           </div>
-          <div className="zone-labels">
-            <span>← REAL</span>
-            <span style={{ color: 'var(--uncertain)' }}>UNCERTAIN ZONE (40–75%)</span>
-            <span>AI →</span>
+          <div className="conf-zones">
+            <span>Real</span>
+            <span>Uncertain zone</span>
+            <span>AI</span>
           </div>
+        </>
+      );
+    }
+
+    /* ── Extension info section ── */
+    function ExtSection() {
+      const [open, setOpen] = useState(false);
+      return (
+        <div className="ext-section">
+          <div className="ext-header" onClick={() => setOpen(!open)}>
+            <span className="ext-title">Browser Extension</span>
+            <span className="ext-chevron">{open ? '▲' : '▼'}</span>
+          </div>
+
+          {open && (
+            <>
+              <div className="ext-body">
+                <div className="ext-step">
+                  <div className="ext-step-num">Step 1</div>
+                  <div className="ext-step-title">Install the extension</div>
+                  <div className="ext-step-desc">
+                    Load the extension from the Chrome Web Store or install it unpacked
+                    in developer mode via chrome://extensions.
+                  </div>
+                </div>
+
+                <div className="ext-step">
+                  <div className="ext-step-num">Step 2</div>
+                  <div className="ext-step-title">Enter your API key</div>
+                  <div className="ext-step-desc">
+                    Click the extension icon in the Chrome toolbar and enter your API key.
+                    It's saved locally — you only do this once.
+                  </div>
+                </div>
+
+                <div className="ext-step">
+                  <div className="ext-step-num">Step 3</div>
+                  <div className="ext-step-title">Right-click any image</div>
+                  <div className="ext-step-desc">
+                    On any website, right-click an image and choose
+                    "Analyze with AI Detector" from the context menu.
+                  </div>
+                  <div className="ext-mockup">
+                    <div className="mock-menu">
+                      <div className="mock-item">Open image in new tab</div>
+                      <div className="mock-item">Save image as...</div>
+                      <div className="mock-item">Copy image</div>
+                      <div className="mock-item hi">Analyze with AI Detector</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ext-step">
+                  <div className="ext-step-num">Step 4</div>
+                  <div className="ext-step-title">See the result</div>
+                  <div className="ext-step-desc">
+                    A popup opens with the verdict, confidence, and a GradCAM heatmap
+                    showing which regions drove the decision.
+                  </div>
+                  <div className="ext-mockup">
+                    <div className="mock-popup">
+                      <div className="mock-verdict">AI Generated</div>
+                      <div className="mock-conf">88.3% confidence · 214ms</div>
+                      <div className="mock-bar"><div className="mock-bar-fill" /></div>
+                      <div className="mock-img" />
+                      <div className="mock-link">Open full analysis →</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ext-install">
+                Enable <strong style={{ color: 'var(--text)' }}>Passive Badge Mode</strong> in extension settings
+                to automatically badge AI-generated images as you browse — no right-clicking needed.
+              </div>
+            </>
+          )}
         </div>
       );
     }
 
-    // ── Main App ───────────────────────────────────────────────────────────────
-
+    /* ── App ── */
     function App() {
-      const [apiKey, setApiKey] = useState('');
-      const [mode, setMode] = useState('explain'); // 'predict' | 'explain'
-      const [drag, setDrag] = useState(false);
+      const [apiKey, setApiKey] = useState(() => localStorage.getItem('aon_key') || '');
+      const [keySaved, setKeySaved] = useState(() => !!localStorage.getItem('aon_key'));
+      const [connState, setConnState] = useState('idle'); // idle | ok | err
+      const [mode, setMode] = useState('explain');
+      const [over, setOver] = useState(false);
       const [loading, setLoading] = useState(false);
+      const [elapsed, setElapsed] = useState(0);
       const [result, setResult] = useState(null);
       const [error, setError] = useState(null);
-      const [preview, setPreview] = useState(null);  // object URL for original
+      const [preview, setPreview] = useState(null);
       const fileRef = useRef(null);
+      const timerRef = useRef(null);
 
-      const API_BASE = 'http://localhost:8000/v1/inference';
+      const API = '/v1/inference';
 
-      const reset = () => { setResult(null); setError(null); setPreview(null); };
+      // Auto-load from URL param (browser extension deep-link)
+      useEffect(() => {
+        const url = new URLSearchParams(window.location.search).get('imageUrl');
+        if (!url) return;
+        fetch(url)
+          .then(r => r.blob())
+          .then(b => run(new File([b], 'linked.jpg', { type: b.type })))
+          .catch(() => { });
+      }, []);
 
-      const handleFile = async (file) => {
-        if (!file) return;
-        if (!apiKey.trim()) { setError('Enter your API key first.'); return; }
+      // Paste image from clipboard
+      useEffect(() => {
+        const handler = async (e) => {
+          const items = e.clipboardData?.items;
+          if (!items) return;
+          for (const item of items) {
+            if (item.type.startsWith('image/')) {
+              const file = item.getAsFile();
+              if (file) { e.preventDefault(); run(file); }
+              break;
+            }
+          }
+        };
+        window.addEventListener('paste', handler);
+        return () => window.removeEventListener('paste', handler);
+      }, [apiKey]);
 
+      // Ping health to set connection indicator
+      useEffect(() => {
+        if (!apiKey) return;
+        fetch('/v1/inference/health', { headers: { 'X-API-Key': apiKey } })
+          .then(r => setConnState(r.ok ? 'ok' : 'err'))
+          .catch(() => setConnState('err'));
+      }, [keySaved]);
+
+      const saveKey = () => {
+        const k = apiKey.trim();
+        if (!k) return;
+        localStorage.setItem('aon_key', k);
+        setKeySaved(true);
+        fetch('/v1/inference/health', { headers: { 'X-API-Key': k } })
+          .then(r => setConnState(r.ok ? 'ok' : 'err'))
+          .catch(() => setConnState('err'));
+      };
+
+      const reset = () => { setResult(null); setError(null); setPreview(null); setElapsed(0); };
+
+      const run = async (rawFile) => {
+        if (!apiKey.trim()) { setError('API key required. Enter it above and click Save.'); return; }
         reset();
         setLoading(true);
+
+        // Elapsed counter
+        const start = Date.now();
+        timerRef.current = setInterval(() => {
+          setElapsed(((Date.now() - start) / 1000).toFixed(1));
+        }, 100);
+
+        // Resize large images client-side before upload
+        const file = await resizeImage(rawFile, 1500);
         setPreview(URL.createObjectURL(file));
 
         const form = new FormData();
         form.append('file', file);
 
-        const endpoint = mode === 'explain' ? '/explain' : '/predict';
-
         try {
-          const res = await fetch(`${API_BASE}${endpoint}`, {
+          const res = await fetch(`${API}${mode === 'explain' ? '/explain' : '/predict'}`, {
             method: 'POST',
             headers: { 'X-API-Key': apiKey.trim() },
             body: form,
           });
-
-          if (res.status === 413) throw new Error('File too large (max 10 MB).');
           if (res.status === 401) throw new Error('Invalid API key.');
-          if (res.status === 400) throw new Error('Unsupported file type. Use JPEG or PNG.');
-          if (!res.ok) throw new Error(`Server error (${res.status}).`);
-
-          const data = await res.json();
-          setResult(data);
+          if (res.status === 413) throw new Error('File too large even after resize. Try a smaller image.');
+          if (res.status === 400) throw new Error('Unsupported format. Use JPEG or PNG.');
+          if (res.status === 429) throw new Error('Rate limit hit. Wait a moment and try again.');
+          if (res.status === 422) throw new Error('The server could not process this image.');
+          if (!res.ok) throw new Error(`Server error (${res.status}). Check that the API is running.`);
+          setResult(await res.json());
         } catch (e) {
-          setError(e.message || 'Something went wrong.');
+          // Distinguish network errors from API errors
+          if (e.name === 'TypeError' && e.message.includes('fetch')) {
+            setError('Cannot reach the API. Is the server running?');
+          } else {
+            setError(e.message);
+          }
         } finally {
+          clearInterval(timerRef.current);
           setLoading(false);
         }
       };
-      // Auto-load image from URL param (used by browser extension deep-link)
-      useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const imageUrl = params.get('imageUrl');
-        if (!imageUrl) return;
 
-        fetch(imageUrl)
-          .then(r => r.blob())
-          .then(blob => {
-            const file = new File([blob], 'linked-image.jpg', { type: blob.type });
-            handleFile(file);
-          })
-          .catch(() => console.warn('Could not auto-load image from URL param'));
-      }, []);
-
-      const onDrop = (e) => {
-        e.preventDefault(); setDrag(false);
-        const file = e.dataTransfer.files[0];
-        if (file) handleFile(file);
-      };
-
-      const verdictClass = result ? getVerdictClass(result.prediction) : '';
+      const vc = result ? verdictCls(result.prediction) : '';
 
       return (
-        <div className="page">
-          {/* Header */}
-          <header className="header">
-            <h1>
-              <span className="ai">AI</span>
-              <span className="or">or</span>
-              <span className="not">Not</span>
-            </h1>
-            <p>Upload an image. Find out if a human or a machine made it.</p>
-          </header>
-
-          {/* API key */}
-          <div className="api-row">
-            <input
-              type="password"
-              placeholder="X-API-Key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-          </div>
-
-          {/* Mode toggle */}
-          <div className="mode-toggle">
-            <button
-              className={mode === 'predict' ? 'active' : ''}
-              onClick={() => { setMode('predict'); reset(); }}
-            >
-              ⚡ Fast predict
-            </button>
-            <button
-              className={mode === 'explain' ? 'active' : ''}
-              onClick={() => { setMode('explain'); reset(); }}
-            >
-              🔍 Explain (GradCAM)
-            </button>
-          </div>
-
-          {/* Drop zone */}
-          <div
-            className={`upload-zone ${drag ? 'drag-over' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-            onDragLeave={() => setDrag(false)}
-            onDrop={onDrop}
-            onClick={() => fileRef.current?.click()}
-          >
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png"
-              onChange={(e) => handleFile(e.target.files[0])}
-              onClick={(e) => e.stopPropagation()}
-            />
-            <div className="icon">🖼️</div>
-            <p><strong>Drop an image here</strong> or click to browse</p>
-            <small>JPEG or PNG · max 10 MB</small>
-          </div>
-
-          {/* Loading */}
-          {loading && (
-            <div className="loading">
-              <div className="spinner" />
-              <p>{mode === 'explain' ? 'Running GradCAM — this takes a moment…' : 'Analysing…'}</p>
+        <div>
+          <nav className="topbar">
+            <div className="topbar-left">
+              <span className="wordmark">AI or Not</span>
+              <div
+                className={`conn-dot ${connState === 'ok' ? 'ok' : connState === 'err' ? 'err' : ''}`}
+                title={connState === 'ok' ? 'API connected' : connState === 'err' ? 'API unreachable' : 'Not checked'}
+              />
             </div>
-          )}
+            <div className="seg">
+              <button className={`seg-btn ${mode === 'predict' ? 'on' : ''}`}
+                onClick={() => { setMode('predict'); reset(); }}>Fast</button>
+              <button className={`seg-btn ${mode === 'explain' ? 'on' : ''}`}
+                onClick={() => { setMode('explain'); reset(); }}>GradCAM</button>
+            </div>
+          </nav>
 
-          {/* Error */}
-          {error && <div className="error-box">⚠ {error}</div>}
+          <main className="main">
 
-          {/* Result */}
-          {result && !loading && (
-            <div className="result">
-              <div className={`verdict ${verdictClass}`}>
-                <div className="verdict-header">
-                  <div>
-                    <div className="verdict-label">{formatLabel(result.prediction)}</div>
-                    {result.cached && <span className="tag cached">⚡ cached</span>}
-                  </div>
-                  <div className="verdict-meta">
-                    <div className="filename">{result.filename}</div>
-                    <div className="timing">{result.processing_time_ms} ms</div>
-                  </div>
+            {/* API key */}
+            <div className="key-row">
+              <div className="key-field">
+                <div className="label">API Key</div>
+                <div className="key-input-wrap">
+                  <input
+                    type="password"
+                    placeholder="Enter X-API-Key"
+                    value={apiKey}
+                    onChange={e => { setApiKey(e.target.value); setKeySaved(false); }}
+                    onKeyDown={e => e.key === 'Enter' && saveKey()}
+                  />
+                  {keySaved && <span className="key-saved">saved</span>}
                 </div>
-                <ConfidenceBar confidence={result.confidence} verdictClass={verdictClass} />
               </div>
+              <button className="btn-save" onClick={saveKey}>Save</button>
+            </div>
 
-              {/* Comparison slider — only in explain mode */}
-              {result.heatmap_base64 && preview && (
-                <CompareSlider originalSrc={preview} heatmapSrc={result.heatmap_base64} />
-              )}
+            {error && <div className="err">{error}</div>}
 
-              {/* Plain image preview for fast predict mode */}
-              {!result.heatmap_base64 && preview && (
-                <div className="compare-wrapper">
-                  <p className="compare-title">Analysed image</p>
-                  <img src={preview} alt="Uploaded" style={{ width: '100%', borderRadius: 10 }} />
+            {/* Drop zone */}
+            {!result && !loading && (
+              <div
+                className={`drop ${over ? 'over' : ''}`}
+                onDragOver={e => { e.preventDefault(); setOver(true); }}
+                onDragLeave={() => setOver(false)}
+                onDrop={e => { e.preventDefault(); setOver(false); const f = e.dataTransfer.files[0]; if (f) run(f); }}
+                onClick={() => fileRef.current?.click()}
+              >
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={e => { const f = e.target.files[0]; if (f) run(f); }}
+                  onClick={e => e.stopPropagation()}
+                />
+                <div className="drop-primary">Drop image, click to browse, or paste (Ctrl+V)</div>
+                <div className="drop-hint">JPEG / PNG — large images are resized automatically</div>
+              </div>
+            )}
+
+            {/* Loading with elapsed time */}
+            {loading && (
+              <div className="status">
+                {mode === 'explain' ? 'Running GradCAM' : 'Running inference'}... {elapsed}s
+              </div>
+            )}
+
+            {/* Result */}
+            {result && !loading && (
+              <>
+                <div className="result-head">
+                  <div className={`verdict ${vc}`}>
+                    {LABELS[result.prediction] || result.prediction}
+                  </div>
+                  <div className="result-meta">
+                    <div>{result.filename}</div>
+                    <div>{result.processing_time_ms} ms</div>
+                    {result.cached && <div>cached</div>}
+                  </div>
                 </div>
-              )}
 
-              {/* Try another */}
-              <div style={{ textAlign: 'center', marginTop: 24 }}>
-                <button
-                  onClick={() => { reset(); fileRef.current?.click(); }}
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid var(--border)',
-                    color: 'var(--muted)',
-                    borderRadius: 10,
-                    padding: '10px 24px',
-                    cursor: 'pointer',
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: '0.9rem',
-                    transition: 'all .2s',
-                  }}
-                  onMouseOver={(e) => e.target.style.borderColor = 'var(--ai)'}
-                  onMouseOut={(e) => e.target.style.borderColor = 'var(--border)'}
-                >
-                  Try another image
+                <ConfBar confidence={result.confidence} prediction={result.prediction} />
+                <hr className="rule" />
+
+                {result.heatmap_base64 && preview
+                  ? <GradSlider original={preview} heatmap={result.heatmap_base64} />
+                  : preview && (
+                    <>
+                      <div className="sec">Analyzed image</div>
+                      <div className="img-box">
+                        <img src={preview} alt="Uploaded" />
+                      </div>
+                    </>
+                  )
+                }
+
+                <button className="btn-reset"
+                  onClick={() => { reset(); fileRef.current?.click(); }}>
+                  Analyze another image
                 </button>
-              </div>
-            </div>
-          )}
+              </>
+            )}
+
+            {/* Extension info */}
+            <ExtSection />
+
+          </main>
         </div>
       );
     }
