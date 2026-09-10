@@ -1,6 +1,8 @@
+import subprocess
 import uuid
 from contextlib import asynccontextmanager
 
+import redis.exceptions
 from arq import create_pool
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -34,35 +36,53 @@ from src.worker.tasks import WorkerSettings
 async def lifespan(app: FastAPI):
     """
         Startup:
-      1. ARQ pool: job queue (Redis db 0)
+      1. DB Migrations
+      2. ARQ pool: job queue (Redis db 0)
       2. Cache client: pHash cache (Redis db 1)
       3. ONNX predictor
       4. InferenceService (receives cache, not arq_pool)
       5. ExplainabilityService
     Shutdown:
       - Close both Redis clients
-
     """
     logger.info("Starting up API, loading ONNX model")
     try:
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"], capture_output=True, text=True, cwd="/app"
+        )
+        if result.returncode == 0:
+            logger.info("Database migrations applied.")
+        else:
+            logger.warning(f"Migration warning: {result.stderr.strip()}")
+    except Exception as e:  # to do special error catch
+        logger.error(f"Unexpected error during migration: {e}", exc_info=True)
+
+    try:
         redis_url = settings.REDIS_URL
         if redis_url and redis_url != "none":
-            try:
-                # -- Redis: job queue (db 0 ) -------------
-                app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
+            # -- Redis: job queue (db 0 ) -------------
+            app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
 
-                # -- Redis: cache client (db 1) seperate from job queue --------------
-                app.state.cache_client = await create_cache_client()
-                app.state.cache_service = CacheService(
-                    redis_client=app.state.cache_client
-                )
-                logger.info("Redis connected")
-            except Exception as e:  # todo: special exception
-                logger.warning(f"Redis unavailable ({e}) - caching disabled")
-                app.state.arq_pool = None
-                app.state.cache_service = None
+            # -- Redis: cache client (db 1) seperate from job queue --------------
+            app.state.cache_client = await create_cache_client()
+            app.state.cache_service = CacheService(redis_client=app.state.cache_client)
+            logger.info("Redis connected")
+        else:
+            app.state.arq_pool = None
+            app.state.cache_service = None
 
+    except (
+        redis.exceptions.ConnectionError,
+        redis.exceptions.TimeoutError,
+    ) as redis_exc:  # todo: special exception for redis and migration
+        logger.warning(f"Redis unavailable ({redis_exc}) - caching disabled")
+        logger.warning(f"Migration warning: {redis_exc}", exc_info=True)
+        app.state.arq_pool = None
+        app.state.cache_service = None
+
+    try:
         # -- ONNX Inference -----------------------
+        logger.info("Uploading AI models")
         predictor = ONNXPredictor()
         app.state.inference_service = InferenceService(
             predictor=predictor,
@@ -96,6 +116,17 @@ app.include_router(inference_router)
 app.include_router(feedback_router)
 app.include_router(admin_router)
 
+
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    token = request_id_ctx.set(request_id)
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    request_id_ctx.reset(token)
+    return response
+
+
 Instrumentator().instrument(app).expose(app, include_in_schema=False)
 
 app.state.limiter = limiter
@@ -109,17 +140,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
-
-
-@app.get("/", include_in_schema=False)
-async def serve_playground():
-    return FileResponse("frontend/index.html")
-
 
 @app.get("/health", tags=["System"], status_code=status.HTTP_200_OK)
-async def health_check():
-    return {"status": "ok"}
+async def health_check(request: Request):
+    inference_ok = (
+        hasattr(request.app.state, "inference_service")
+        and request.app.state.inference_service is not None
+    )
+    return {"status": "ok" if inference_ok else "degraded"}
 
 
 @app.exception_handler(InvalidImageFormatError)
@@ -145,7 +173,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "details": "Invalid request data submitted",
-            "errors": exc.errors(),
+            "errors": exc.errors(include_url=False),
         },
     )
 
@@ -170,11 +198,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.middleware("http")
-async def request_id_middleware(request: Request, call_next):
-    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-    token = request_id_ctx.set(request_id)
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = request_id
-    request_id_ctx.reset(token)
-    return response
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+
+@app.get("/", include_in_schema=False)
+async def serve_playground():
+    return FileResponse("frontend/index.html")

@@ -71,11 +71,7 @@ def run_migrations_online() -> None:
     asyncio.run(run_async_migrations())
 
 
-def run_mitigations_offline() -> None:
-    context.configure(
-        url=config.get_main_option("sqlalchemy.url"),
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
-        render_as_batch=True,
-    )
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()

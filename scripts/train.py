@@ -1,6 +1,6 @@
 """
 MLOps Image Classification Training Pipeline
-Clean, production ready transfer learning wirh MobileNetV3-Small
+Clean, production-ready transfer learning with MobileNetV3-Small
 """
 
 import copy
@@ -9,7 +9,6 @@ import os
 from datetime import datetime, timezone
 
 import mlflow
-import mlflow.pytorch
 import torch
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch import nn, optim
@@ -95,21 +94,27 @@ def build_model(num_classes: int, freeze_backbone: bool = True) -> nn.Module:
     """Load pretrained MobileNetv3-Small and swap the classifier head"""
     model = models.mobilenet_v3_small(weights="DEFAULT")
 
+    # Fix 3: Assert features is an nn.Module
+    assert isinstance(model.features, nn.Module)
     if freeze_backbone:
         for param in model.features.parameters():
             param.requires_grad = False
 
+    # Fix 2: Assert last layer is nn.Linear
     last_layer = model.classifier[-1]
     assert isinstance(last_layer, nn.Linear)
 
-    in_features = last_layer.in_features
-    model.classifier[-1] = nn.Linear(in_features, num_classes)
-
-    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    total = sum(p.numel() for p in model.parameters())
-    logger.info(f"Model ready. Trainable params: {trainable:,} / {total:,}")
-
+    model.classifier[-1] = nn.Linear(last_layer.in_features, num_classes)
     return model
+
+
+def unfreeze_backbone(model: nn.Module, lr: float = 1e-5) -> optim.Optimizer:
+    """Unfreeze all with very low LR"""
+    assert isinstance(model.features, nn.Module)
+    for param in model.features.parameters():
+        param.requires_grad = True
+
+    return optim.Adam(model.parameters(), lr=lr)
 
 
 # -- Early Stopping -----
@@ -142,7 +147,7 @@ class Trainer:
         self.device = device
 
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(
+        self.optimizer: optim.Optimizer = optim.Adam(
             filter(lambda p: p.requires_grad, model.parameters()),
             lr=config.learning_rate,
         )
@@ -316,6 +321,24 @@ def main() -> None:
             model = build_model(len(classes), config.freeze_backbone).to(device)
             trainer = Trainer(model, config, device)
 
+            # Phase 1: Train just the classifier
+            logger.info("Phase 1: Training classifier head (frozen backbone)...")
+            best_metrics = trainer.run(train_loader, val_loader)
+
+            # Phase 2: fine tuning
+            logger.info("Phase 2: fine-tuning full network...")
+            optimizer = unfreeze_backbone(model, lr=1e-5)
+
+            # update the trainer params for Phase 2
+            trainer.optimizer = optimizer
+            trainer.scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5)
+            trainer.early_stopping = EarlyStopping(patience=3)
+            trainer.config.epochs = 5
+
+            # Reset best_loss for Phase 2 to ensure it saves a new model if it improves
+            trainer._best_val_loss = float("inf")
+
+            # Phase 2
             best_metrics = trainer.run(train_loader, val_loader)
 
             # log final metrics
@@ -326,8 +349,6 @@ def main() -> None:
             mlflow.log_artifact(str(config.onnx_path), artifact_path="models")
             mlflow.log_artifact(str(config.checkpoint_path), artifact_path="models")
             mlflow.log_artifact(str(config.metadata_path), artifact_path="models")
-
-            mlflow.pytorch.log_model(model, "pytorch_model")
 
             logger.info("Pipeline complete.")
             logger.info(

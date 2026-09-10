@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # Auth
     API_KEY: SecretStr
+    DEMO_API_KEY: str = "demo-public"
 
     # Model
     MODEL_THRESHOLD: float = 0.75

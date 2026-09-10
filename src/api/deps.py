@@ -21,7 +21,10 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=True)
 
 
 def verify_api_key(api_key: str = Security(api_key_header)) -> str:
-    if api_key != settings.API_KEY.get_secret_value():
+    real = settings.API_KEY.get_secret_value()
+    demo = settings.DEMO_API_KEY
+
+    if api_key not in (real, demo):
         logger.warning("Unauthorized API access attempt")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

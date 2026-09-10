@@ -4,9 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI or Not</title>
+  <title>AI or Not AI, That's the Question</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,600&display=swap"
+    rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
@@ -22,14 +25,18 @@
     :root {
       --bg: #0d0d0f;
       --surface: #131316;
-      --border: #222228;
-      --border-hi: #404048;
-      --text: #f0f0f0;
-      --muted: #666;
-      --dim: #333;
-      --ai: #e04040;
-      --real: #2ecc72;
-      --uncertain: #d48b1a;
+      --border: #2a2a32;
+      --border-hi: #555562;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --dim: #3f3f46;
+      --ai: #ef4444;
+      --real: #10b981;
+      --uncertain: #f59e0b;
+      --demo: #3b82f6;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-serif: 'Playfair Display', serif;
     }
 
     html,
@@ -40,10 +47,11 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-family: var(--font-mono);
       font-size: 13px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
     /* ── Top bar ── */
@@ -51,88 +59,175 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      height: 44px;
+      height: 80px;
       border-bottom: 1px solid var(--border);
-      background: var(--bg);
+      background: rgba(13, 13, 15, 0.9);
+      backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 40px;
     }
 
     .topbar-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 20px;
     }
 
+    /* Orijinal Wordmark stili */
     .wordmark {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
       text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
 
-    /* Connection indicator */
-    .conn-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--dim);
-      transition: background 0.3s;
-    }
-
-    .conn-dot.ok {
-      background: var(--real);
-    }
-
-    .conn-dot.err {
-      background: var(--ai);
+    /* Logo placeholder stili */
+    .logo-img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      /* opacity: 0.8; */
     }
 
     .seg {
       display: flex;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 3px;
-      gap: 2px;
+      border-radius: 8px;
+      padding: 6px;
+      gap: 6px;
     }
 
     .seg-btn {
-      padding: 4px 14px;
+      padding: 8px 24px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       background: transparent;
       color: var(--muted);
       font-family: inherit;
-      font-size: 11px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      letter-spacing: 0.04em;
+      transition: all 0.2s;
     }
 
     .seg-btn.on {
-      background: var(--dim);
-      color: var(--text);
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    /* ── Demo banner ── */
+    .demo-banner {
+      background: rgba(59, 130, 246, 0.08);
+      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--demo);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .demo-banner button {
+      background: transparent;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 4px;
+      color: var(--demo);
+      font-family: inherit;
+      font-size: 10px;
+      padding: 4px 10px;
+      cursor: pointer;
     }
 
     /* ── Main ── */
     .main {
-      max-width: 600px;
+      max-width: 640px;
       margin: 0 auto;
       padding: 32px 24px 80px;
     }
 
-    /* ── API key row ── */
-    .key-row {
+    /* ── The Quote Banner ── */
+    .quote-banner {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeIn 1.5s ease-out forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .quote-text {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      color: var(--text);
+      font-style: italic;
+      letter-spacing: 0.02em;
+    }
+
+    .quote-author {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-top: 8px;
+    }
+
+    /* ── API key ── */
+    .key-section {
+      margin-bottom: 24px;
+    }
+
+    .key-collapsed {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .key-collapsed button {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      opacity: 0.7;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--dim);
+      transition: opacity 0.2s;
+    }
+
+    .key-collapsed button:hover {
+      opacity: 1;
+    }
+
+    .tick-icon {
+      color: var(--real);
+      font-size: 12px;
+    }
+
+    .key-row,
+    .url-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
       align-items: flex-end;
     }
 
-    .key-field {
+    .key-field,
+    .url-row input {
       flex: 1;
     }
 
@@ -144,12 +239,13 @@
       margin-bottom: 6px;
     }
 
-    .key-input-wrap {
+    .key-wrap {
       position: relative;
     }
 
     input[type="password"],
-    input[type="text"] {
+    input[type="text"],
+    input[type="url"] {
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -159,6 +255,7 @@
       font-size: 13px;
       color: var(--text);
       outline: none;
+      transition: border-color 0.2s;
     }
 
     input:focus {
@@ -166,51 +263,50 @@
     }
 
     input::placeholder {
-      color: var(--muted);
+      color: var(--dim);
     }
 
-    .key-saved {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 10px;
-      color: var(--real);
-      pointer-events: none;
-    }
-
-    .btn-save {
+    .btn-save,
+    .btn-go {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px 14px;
       font-family: inherit;
       font-size: 11px;
+      font-weight: 600;
       color: var(--muted);
       cursor: pointer;
+      transition: all 0.2s;
       white-space: nowrap;
-      align-self: flex-end;
     }
 
-    .btn-save:hover {
+    .btn-save:hover,
+    .btn-go:hover {
       border-color: var(--border-hi);
       color: var(--text);
     }
 
     /* ── Drop zone ── */
     .drop {
-      border: 1px dashed var(--border);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
       border-radius: 8px;
-      padding: 64px 24px;
       text-align: center;
       cursor: pointer;
       position: relative;
       background: var(--surface);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .drop.empty {
+      padding: 64px 24px;
     }
 
     .drop:hover,
     .drop.over {
-      border-color: var(--border-hi);
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.02);
     }
 
     .drop input {
@@ -224,7 +320,9 @@
 
     .drop-primary {
       font-weight: 500;
-      margin-bottom: 4px;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: var(--text);
     }
 
     .drop-hint {
@@ -232,11 +330,108 @@
       color: var(--muted);
     }
 
-    /* ── Status ── */
-    .status {
-      padding: 24px 0;
+    .drop-preview {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      display: block;
+      background: var(--surface);
+    }
+
+    .drop-preview-bar {
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── URL input toggle ── */
+    .url-toggle {
       text-align: center;
-      font-size: 12px;
+      margin-top: 16px;
+      font-size: 11px;
+    }
+
+    .url-toggle>button {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--dim);
+      transition: color 0.2s;
+    }
+
+    .url-toggle>button:hover {
+      color: var(--text);
+    }
+
+    /* ── Keyboard hints ── */
+    .kb-hints {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+      font-size: 10px;
+      color: var(--muted);
+      justify-content: center;
+    }
+
+    .kb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: inherit;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── Quill Loader ── */
+    .loader-wrap {
+      padding: 48px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .quill-svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--text);
+      stroke-width: 1.5;
+      fill: none;
+      animation: write 1.5s infinite ease-in-out alternate;
+    }
+
+    @keyframes write {
+      0% {
+        transform: translate(-4px, -4px) rotate(-10deg);
+      }
+
+      100% {
+        transform: translate(4px, 4px) rotate(10deg);
+      }
+    }
+
+    .status-text {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      font-style: italic;
       color: var(--muted);
     }
 
@@ -244,28 +439,54 @@
     .err {
       font-size: 12px;
       color: var(--ai);
-      background: rgba(224, 64, 64, 0.06);
-      border: 1px solid rgba(224, 64, 64, 0.18);
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
       border-radius: 6px;
-      padding: 10px 14px;
-      margin-bottom: 16px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-retry {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 4px;
+      color: var(--ai);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-retry:hover {
+      background: rgba(239, 68, 68, 0.1);
     }
 
     /* ── Result ── */
     .result-head {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 20px;
+      align-items: flex-end;
+      margin-bottom: 24px;
       flex-wrap: wrap;
       gap: 12px;
     }
 
+    .verdict-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .verdict {
-      font-size: 26px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
       line-height: 1;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
     }
 
     .verdict.ai {
@@ -280,6 +501,13 @@
       color: var(--uncertain);
     }
 
+    .verdict-sub {
+      font-family: var(--font-serif);
+      font-size: 12px;
+      font-style: italic;
+      color: var(--muted);
+    }
+
     .result-meta {
       text-align: right;
       font-size: 11px;
@@ -287,29 +515,48 @@
       line-height: 1.7;
     }
 
-    /* ── Confidence bar ── */
+    .share-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      opacity: 0.7;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .share-btn:hover {
+      opacity: 1;
+    }
+
+    /* Confidence bar */
     .conf-row {
       display: flex;
       justify-content: space-between;
       font-size: 10px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted);
-      margin-bottom: 7px;
+      margin-bottom: 8px;
     }
 
     .conf-track {
-      height: 3px;
-      background: var(--dim);
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 2px;
       overflow: hidden;
-      margin-bottom: 7px;
+      margin-bottom: 8px;
     }
 
     .conf-fill {
       height: 100%;
       border-radius: 2px;
-      transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .conf-fill.ai {
@@ -328,38 +575,40 @@
       display: flex;
       justify-content: space-between;
       font-size: 9px;
-      color: var(--muted);
+      color: var(--dim);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 24px;
+      letter-spacing: 0.1em;
+      margin-bottom: 32px;
+      font-weight: 600;
     }
 
     /* ── Divider ── */
     .rule {
       border: none;
-      border-top: 1px solid var(--border);
-      margin: 0 0 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin: 0 0 32px;
     }
 
     /* ── Section label ── */
     .sec {
       font-size: 10px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--muted);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     /* ── GradCAM slider ── */
     .slider {
       position: relative;
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
       cursor: col-resize;
       user-select: none;
       border: 1px solid var(--border);
       line-height: 0;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
     .slider img {
@@ -387,58 +636,86 @@
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 1px;
-      background: rgba(255, 255, 255, 0.5);
+      width: 2px;
+      background: rgba(255, 255, 255, 0.8);
       z-index: 10;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .slider-handle {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #000;
+      font-weight: 700;
+      z-index: 11;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
     }
 
     .slider-hint {
       font-size: 10px;
       color: var(--muted);
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 32px;
+      font-weight: 500;
     }
 
     /* ── Plain image ── */
     .img-box {
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
       line-height: 0;
-      margin-bottom: 24px;
+      margin-bottom: 32px;
     }
 
     .img-box img {
       display: block;
       width: 100%;
       height: auto;
-      max-height: 360px;
+      max-height: 400px;
       object-fit: contain;
       background: var(--surface);
     }
 
-    /* ── Buttons ── */
+    /* ── Actions ── */
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
     .btn-reset {
-      width: 100%;
+      flex: 1;
       background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 10px;
+      border: 1px solid var(--border-hi);
+      color: var(--text);
+      padding: 12px;
       border-radius: 6px;
       font-family: inherit;
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
-      margin-bottom: 40px;
+      transition: all 0.2s;
     }
 
     .btn-reset:hover {
-      border-color: var(--border-hi);
-      color: var(--text);
+      background: var(--surface);
+      border-color: var(--muted);
     }
 
-    /* ── Extension info section ── */
+    /* ── Extension section ── */
     .ext-section {
-      border-top: 1px solid var(--border);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-top: 32px;
     }
 
@@ -447,12 +724,12 @@
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-      margin-bottom: 0;
-      padding-bottom: 0;
+      padding: 8px 0;
     }
 
     .ext-title {
       font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--muted);
@@ -461,125 +738,58 @@
     .ext-chevron {
       font-size: 10px;
       color: var(--muted);
+      transition: transform 0.2s;
     }
 
     .ext-body {
-      margin-top: 20px;
+      margin-top: 24px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 16px;
     }
 
     .ext-step {
-      background: var(--surface);
+      background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
+      padding: 20px;
     }
 
     .ext-step-num {
       font-size: 10px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      letter-spacing: 0.06em;
+      font-weight: 600;
+      color: var(--dim);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
     .ext-step-title {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      color: var(--text);
     }
 
     .ext-step-desc {
-      font-size: 11px;
+      font-family: var(--font-sans);
+      font-size: 13px;
       color: var(--muted);
       line-height: 1.6;
     }
 
-    /* Mockup screenshot */
-    .ext-mockup {
-      background: #1a1a1e;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 11px;
-      margin-top: 4px;
-      line-height: 1.8;
-    }
+    @media (max-width: 480px) {
+      .ext-body {
+        grid-template-columns: 1fr;
+      }
 
-    .mock-menu {
-      background: #2a2a30;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 6px 0;
-    }
+      .kb-hints {
+        display: none;
+      }
 
-    .mock-item {
-      padding: 4px 12px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .mock-item.hi {
-      background: rgba(64, 64, 72, 0.5);
-      color: var(--text);
-    }
-
-    .mock-popup {
-      background: #18181c;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 14px;
-    }
-
-    .mock-verdict {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--ai);
-      margin-bottom: 4px;
-    }
-
-    .mock-conf {
-      font-size: 10px;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    .mock-bar {
-      height: 2px;
-      background: var(--dim);
-      border-radius: 1px;
-      margin-bottom: 10px;
-    }
-
-    .mock-bar-fill {
-      height: 100%;
-      width: 88%;
-      background: var(--ai);
-      border-radius: 1px;
-    }
-
-    .mock-img {
-      height: 60px;
-      background: var(--dim);
-      border-radius: 4px;
-      margin-bottom: 8px;
-    }
-
-    .mock-link {
-      font-size: 10px;
-      color: #7a7aff;
-    }
-
-    .ext-install {
-      margin-top: 16px;
-      padding: 12px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.7;
+      .quote-text {
+        font-size: 1.4rem;
+      }
     }
   </style>
 </head>
@@ -589,6 +799,8 @@
   <script type="text/babel">
     const { useState, useRef, useCallback, useEffect } = React;
 
+    const DEMO_KEY = 'demo-public-2024';
+
     const LABELS = {
       REAL: 'Human Made',
       AI_GENERATED: 'AI Generated',
@@ -597,14 +809,21 @@
       UNCERTAIN_NEUTRAL: 'Uncertain',
     };
 
-    function verdictCls(p) {
+    const SHAKESPEARE_SUBS = {
+      REAL: "To be organic...",
+      AI_GENERATED: "To be synthesized...",
+      UNCERTAIN_LEANING_AI: "Alas, 'tis murky waters...",
+      UNCERTAIN_LEANING_REAL: "Alas, 'tis murky waters...",
+      UNCERTAIN_NEUTRAL: "To be, or not to be...",
+    };
+
+    function vcls(p) {
       if (!p) return '';
       if (p === 'REAL') return 'real';
       if (p === 'AI_GENERATED') return 'ai';
       return 'uncertain';
     }
 
-    /* ── Client-side resize ── */
     async function resizeImage(file, maxPx = 1500) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -618,171 +837,89 @@
           canvas.width = Math.round(w * scale);
           canvas.height = Math.round(h * scale);
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(
-            (blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })),
-            'image/jpeg', 0.92
-          );
+          canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.92);
         };
         img.src = url;
       });
     }
 
-    /* ── GradCAM Slider ── */
     function GradSlider({ original, heatmap }) {
       const [pos, setPos] = useState(50);
       const [on, setOn] = useState(false);
       const ref = useRef(null);
-
       const move = useCallback((x) => {
         if (!ref.current) return;
         const r = ref.current.getBoundingClientRect();
         setPos(Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100)));
       }, []);
-
       useEffect(() => {
         if (!on) return;
         const end = () => setOn(false);
         const go = (e) => move(e.clientX ?? e.touches?.[0]?.clientX);
-        window.addEventListener('mousemove', go);
-        window.addEventListener('mouseup', end);
-        window.addEventListener('touchmove', go);
-        window.addEventListener('touchend', end);
-        return () => {
-          window.removeEventListener('mousemove', go);
-          window.removeEventListener('mouseup', end);
-          window.removeEventListener('touchmove', go);
-          window.removeEventListener('touchend', end);
-        };
+        window.addEventListener('mousemove', go); window.addEventListener('mouseup', end);
+        window.addEventListener('touchmove', go, { passive: true }); window.addEventListener('touchend', end);
+        return () => { window.removeEventListener('mousemove', go); window.removeEventListener('mouseup', end); window.removeEventListener('touchmove', go); window.removeEventListener('touchend', end); };
       }, [on, move]);
 
       return (
         <>
-          <div className="sec">GradCAM — drag to reveal heatmap</div>
-          <div
-            ref={ref}
-            className="slider"
-            onMouseDown={(e) => { setOn(true); move(e.clientX); }}
-            onTouchStart={(e) => { setOn(true); move(e.touches[0].clientX); }}
-          >
-            <img src={original} alt="Original" draggable={false} />
+          <div className="sec">GradCAM — Drag to reveal</div>
+          <div ref={ref} className="slider" onMouseDown={(e) => { setOn(true); move(e.clientX); }} onTouchStart={(e) => { setOn(true); move(e.touches[0].clientX); }}>
+            <img src={original} alt="Original image" draggable={false} />
             <div className="slider-over" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
               <img src={`data:image/png;base64,${heatmap}`} alt="Heatmap" draggable={false} />
             </div>
-            <div className="slider-line" style={{ left: `${pos}%` }} />
+            <div className="slider-line" style={{ left: `${pos}%` }}>
+              <div className="slider-handle">⇔</div>
+            </div>
           </div>
-          <div className="slider-hint">original · · · heatmap</div>
+          <div className="slider-hint">← Original · · · Heatmap →</div>
         </>
       );
     }
 
-    /* ── Confidence Bar ── */
-    function ConfBar({ confidence, prediction }) {
-      const [w, setW] = useState(0);
-      const c = verdictCls(prediction);
-      useEffect(() => {
-        const t = setTimeout(() => setW(confidence * 100), 60);
-        return () => clearTimeout(t);
-      }, [confidence]);
-      return (
-        <>
-          <div className="conf-row">
-            <span>Confidence</span>
-            <span>{(confidence * 100).toFixed(1)}%</span>
-          </div>
-          <div className="conf-track">
-            <div className={`conf-fill ${c}`} style={{ width: `${w}%` }} />
-          </div>
-          <div className="conf-zones">
-            <span>Real</span>
-            <span>Uncertain zone</span>
-            <span>AI</span>
-          </div>
-        </>
-      );
-    }
-
-    /* ── Extension info section ── */
     function ExtSection() {
       const [open, setOpen] = useState(false);
       return (
         <div className="ext-section">
           <div className="ext-header" onClick={() => setOpen(!open)}>
             <span className="ext-title">Browser Extension</span>
-            <span className="ext-chevron">{open ? '▲' : '▼'}</span>
+            <span className="ext-chevron" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>▼</span>
           </div>
-
           {open && (
-            <>
-              <div className="ext-body">
-                <div className="ext-step">
-                  <div className="ext-step-num">Step 1</div>
-                  <div className="ext-step-title">Install the extension</div>
-                  <div className="ext-step-desc">
-                    Load the extension from the Chrome Web Store or install it unpacked
-                    in developer mode via chrome://extensions.
-                  </div>
-                </div>
-
-                <div className="ext-step">
-                  <div className="ext-step-num">Step 2</div>
-                  <div className="ext-step-title">Enter your API key</div>
-                  <div className="ext-step-desc">
-                    Click the extension icon in the Chrome toolbar and enter your API key.
-                    It's saved locally — you only do this once.
-                  </div>
-                </div>
-
-                <div className="ext-step">
-                  <div className="ext-step-num">Step 3</div>
-                  <div className="ext-step-title">Right-click any image</div>
-                  <div className="ext-step-desc">
-                    On any website, right-click an image and choose
-                    "Analyze with AI Detector" from the context menu.
-                  </div>
-                  <div className="ext-mockup">
-                    <div className="mock-menu">
-                      <div className="mock-item">Open image in new tab</div>
-                      <div className="mock-item">Save image as...</div>
-                      <div className="mock-item">Copy image</div>
-                      <div className="mock-item hi">Analyze with AI Detector</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="ext-step">
-                  <div className="ext-step-num">Step 4</div>
-                  <div className="ext-step-title">See the result</div>
-                  <div className="ext-step-desc">
-                    A popup opens with the verdict, confidence, and a GradCAM heatmap
-                    showing which regions drove the decision.
-                  </div>
-                  <div className="ext-mockup">
-                    <div className="mock-popup">
-                      <div className="mock-verdict">AI Generated</div>
-                      <div className="mock-conf">88.3% confidence · 214ms</div>
-                      <div className="mock-bar"><div className="mock-bar-fill" /></div>
-                      <div className="mock-img" />
-                      <div className="mock-link">Open full analysis →</div>
-                    </div>
-                  </div>
-                </div>
+            <div className="ext-body">
+              <div className="ext-step">
+                <div className="ext-step-num">Act I</div>
+                <div className="ext-step-title">Install the extension</div>
+                <div className="ext-step-desc">Load from Chrome Web Store or install unpacked via developer mode.</div>
               </div>
-
-              <div className="ext-install">
-                Enable <strong style={{ color: 'var(--text)' }}>Passive Badge Mode</strong> in extension settings
-                to automatically badge AI-generated images as you browse — no right-clicking needed.
+              <div className="ext-step">
+                <div className="ext-step-num">Act II</div>
+                <div className="ext-step-title">Configure settings</div>
+                <div className="ext-step-desc">Click the icon and enter your API key. Saved locally, forevermore.</div>
               </div>
-            </>
+              <div className="ext-step">
+                <div className="ext-step-num">Act III</div>
+                <div className="ext-step-title">Right-click any image</div>
+                <div className="ext-step-desc">Summon the detector on any canvas across the wide web.</div>
+              </div>
+              <div className="ext-step">
+                <div className="ext-step-num">Act IV</div>
+                <div className="ext-step-title">Behold the verdict</div>
+                <div className="ext-step-desc">A popup reveals the truth: Confidence scores and GradCAM heatmaps.</div>
+              </div>
+            </div>
           )}
         </div>
       );
     }
 
-    /* ── App ── */
     function App() {
-      const [apiKey, setApiKey] = useState(() => localStorage.getItem('aon_key') || '');
-      const [keySaved, setKeySaved] = useState(() => !!localStorage.getItem('aon_key'));
-      const [connState, setConnState] = useState('idle'); // idle | ok | err
+      const saved = localStorage.getItem('aon_key');
+      const [apiKey, setApiKey] = useState(saved || DEMO_KEY);
+      const [keySaved, setKeySaved] = useState(true);
+      const [keyOpen, setKeyOpen] = useState(false);
+      const [isDemo, setIsDemo] = useState(!saved || saved === DEMO_KEY);
       const [mode, setMode] = useState('explain');
       const [over, setOver] = useState(false);
       const [loading, setLoading] = useState(false);
@@ -790,211 +927,183 @@
       const [result, setResult] = useState(null);
       const [error, setError] = useState(null);
       const [preview, setPreview] = useState(null);
+      const [previewInfo, setPInfo] = useState(null);
+      const [showUrl, setShowUrl] = useState(false);
+      const [urlInput, setUrlInput] = useState('');
       const fileRef = useRef(null);
       const timerRef = useRef(null);
 
-      const API = '/v1/inference';
-
-      // Auto-load from URL param (browser extension deep-link)
       useEffect(() => {
-        const url = new URLSearchParams(window.location.search).get('imageUrl');
-        if (!url) return;
-        fetch(url)
-          .then(r => r.blob())
-          .then(b => run(new File([b], 'linked.jpg', { type: b.type })))
-          .catch(() => { });
+        if (!localStorage.getItem('aon_key')) localStorage.setItem('aon_key', DEMO_KEY);
       }, []);
 
-      // Paste image from clipboard
       useEffect(() => {
-        const handler = async (e) => {
-          const items = e.clipboardData?.items;
-          if (!items) return;
-          for (const item of items) {
-            if (item.type.startsWith('image/')) {
-              const file = item.getAsFile();
-              if (file) { e.preventDefault(); run(file); }
-              break;
-            }
-          }
+        const handler = (e) => {
+          if (e.target.tagName === 'INPUT') return;
+          if (e.key.toLowerCase() === 'r') reset();
+          if (e.key.toLowerCase() === 'e') { setMode('explain'); reset(); }
+          if (e.key.toLowerCase() === 'f') { setMode('predict'); reset(); }
+          if (e.key.toLowerCase() === 'u') setShowUrl(s => !s);
         };
-        window.addEventListener('paste', handler);
-        return () => window.removeEventListener('paste', handler);
-      }, [apiKey]);
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+      }, []);
 
-      // Ping health to set connection indicator
-      useEffect(() => {
-        if (!apiKey) return;
-        fetch('/v1/inference/health', { headers: { 'X-API-Key': apiKey } })
-          .then(r => setConnState(r.ok ? 'ok' : 'err'))
-          .catch(() => setConnState('err'));
-      }, [keySaved]);
+      const reset = () => { setResult(null); setError(null); setPreview(null); setPInfo(null); setElapsed(0); };
 
       const saveKey = () => {
-        const k = apiKey.trim();
-        if (!k) return;
-        localStorage.setItem('aon_key', k);
-        setKeySaved(true);
-        fetch('/v1/inference/health', { headers: { 'X-API-Key': k } })
-          .then(r => setConnState(r.ok ? 'ok' : 'err'))
-          .catch(() => setConnState('err'));
+        const k = apiKey.trim(); if (!k) return;
+        localStorage.setItem('aon_key', k); setKeySaved(true); setKeyOpen(false); setIsDemo(k === DEMO_KEY);
       };
 
-      const reset = () => { setResult(null); setError(null); setPreview(null); setElapsed(0); };
-
-      const run = async (rawFile) => {
-        if (!apiKey.trim()) { setError('API key required. Enter it above and click Save.'); return; }
-        reset();
-        setLoading(true);
-
-        // Elapsed counter
+      const startTimer = () => {
         const start = Date.now();
-        timerRef.current = setInterval(() => {
-          setElapsed(((Date.now() - start) / 1000).toFixed(1));
-        }, 100);
+        timerRef.current = setInterval(() => setElapsed(((Date.now() - start) / 1000).toFixed(1)), 100);
+      };
+      const stopTimer = () => clearInterval(timerRef.current);
 
-        // Resize large images client-side before upload
-        const file = await resizeImage(rawFile, 1500);
-        setPreview(URL.createObjectURL(file));
-
-        const form = new FormData();
-        form.append('file', file);
-
+      const runFiles = async (files) => {
+        if (!files?.length) return;
+        reset(); setLoading(true); startTimer();
         try {
-          const res = await fetch(`${API}${mode === 'explain' ? '/explain' : '/predict'}`, {
-            method: 'POST',
-            headers: { 'X-API-Key': apiKey.trim() },
-            body: form,
-          });
-          if (res.status === 401) throw new Error('Invalid API key.');
-          if (res.status === 413) throw new Error('File too large even after resize. Try a smaller image.');
-          if (res.status === 400) throw new Error('Unsupported format. Use JPEG or PNG.');
-          if (res.status === 429) throw new Error('Rate limit hit. Wait a moment and try again.');
-          if (res.status === 422) throw new Error('The server could not process this image.');
-          if (!res.ok) throw new Error(`Server error (${res.status}). Check that the API is running.`);
+          const file = await resizeImage(files[0], 1500);
+          setPreview(URL.createObjectURL(file)); setPInfo({ name: file.name, size: files[0].size });
+          const form = new FormData(); form.append('file', file);
+          const ep = mode === 'explain' ? '/explain' : '/predict';
+          const res = await fetch(`/v1/inference${ep}`, { method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form });
+          if (!res.ok) throw new Error(`Server Error (${res.status})`);
           setResult(await res.json());
-        } catch (e) {
-          // Distinguish network errors from API errors
-          if (e.name === 'TypeError' && e.message.includes('fetch')) {
-            setError('Cannot reach the API. Is the server running?');
-          } else {
-            setError(e.message);
-          }
-        } finally {
-          clearInterval(timerRef.current);
-          setLoading(false);
-        }
+        } catch (e) { setError(e.message); } finally { stopTimer(); setLoading(false); }
       };
 
-      const vc = result ? verdictCls(result.prediction) : '';
+      const showDrop = !result && !loading;
 
       return (
         <div>
           <nav className="topbar">
             <div className="topbar-left">
-              <span className="wordmark">AI or Not</span>
-              <div
-                className={`conn-dot ${connState === 'ok' ? 'ok' : connState === 'err' ? 'err' : ''}`}
-                title={connState === 'ok' ? 'API connected' : connState === 'err' ? 'API unreachable' : 'Not checked'}
-              />
+              {/* Çizimini buraya ekleyebilirsin */}
+              <img src="/static/images.jpg" alt="logo" className="logo-img" />
+              <span className="wordmark">AI or Not AI</span>
             </div>
             <div className="seg">
-              <button className={`seg-btn ${mode === 'predict' ? 'on' : ''}`}
-                onClick={() => { setMode('predict'); reset(); }}>Fast</button>
-              <button className={`seg-btn ${mode === 'explain' ? 'on' : ''}`}
-                onClick={() => { setMode('explain'); reset(); }}>GradCAM</button>
+              <button className={`seg-btn ${mode === 'predict' ? 'on' : ''}`} onClick={() => { setMode('predict'); reset(); }}>Fast</button>
+              <button className={`seg-btn ${mode === 'explain' ? 'on' : ''}`} onClick={() => { setMode('explain'); reset(); }}>GradCAM</button>
             </div>
           </nav>
 
-          <main className="main">
+          {isDemo && (
+            <div className="demo-banner">
+              <span>Demo mode — 5 requests/sec · No signup needed</span>
+              <button onClick={() => { setKeyOpen(true); setIsDemo(false); }}>Use your own key</button>
+            </div>
+          )}
 
-            {/* API key */}
-            <div className="key-row">
-              <div className="key-field">
-                <div className="label">API Key</div>
-                <div className="key-input-wrap">
-                  <input
-                    type="password"
-                    placeholder="Enter X-API-Key"
-                    value={apiKey}
-                    onChange={e => { setApiKey(e.target.value); setKeySaved(false); }}
-                    onKeyDown={e => e.key === 'Enter' && saveKey()}
-                  />
-                  {keySaved && <span className="key-saved">saved</span>}
-                </div>
+          <main className="main">
+            {/* The Quote Banner */}
+            {!result && !loading && (
+              <div className="quote-banner">
+                <div className="quote-text">"AI or Not AI, That's the Question."</div>
+                <div className="quote-author">— The Modern Bard</div>
               </div>
-              <button className="btn-save" onClick={saveKey}>Save</button>
+            )}
+
+            <div className="key-section">
+              {!keyOpen && !isDemo ? (
+                <div className="key-collapsed">
+                  <span className="tick-icon">✓</span><span>API key saved</span>
+                  <button onClick={() => setKeyOpen(true)}>change</button>
+                </div>
+              ) : keyOpen ? (
+                <div className="key-row">
+                  <div className="key-field">
+                    <div className="label">API Key</div>
+                    <div className="key-wrap">
+                      <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveKey()} />
+                    </div>
+                  </div>
+                  <button className="btn-save" onClick={saveKey}>Save</button>
+                </div>
+              ) : null}
             </div>
 
-            {error && <div className="err">{error}</div>}
-
-            {/* Drop zone */}
-            {!result && !loading && (
-              <div
-                className={`drop ${over ? 'over' : ''}`}
-                onDragOver={e => { e.preventDefault(); setOver(true); }}
-                onDragLeave={() => setOver(false)}
-                onDrop={e => { e.preventDefault(); setOver(false); const f = e.dataTransfer.files[0]; if (f) run(f); }}
-                onClick={() => fileRef.current?.click()}
-              >
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  onChange={e => { const f = e.target.files[0]; if (f) run(f); }}
-                  onClick={e => e.stopPropagation()}
-                />
-                <div className="drop-primary">Drop image, click to browse, or paste (Ctrl+V)</div>
-                <div className="drop-hint">JPEG / PNG — large images are resized automatically</div>
+            {error && (
+              <div className="err">
+                <span>{error}</span>
+                <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
               </div>
             )}
 
-            {/* Loading with elapsed time */}
-            {loading && (
-              <div className="status">
-                {mode === 'explain' ? 'Running GradCAM' : 'Running inference'}... {elapsed}s
-              </div>
-            )}
-
-            {/* Result */}
-            {result && !loading && (
+            {showDrop && (
               <>
+                <div className={`drop ${preview ? '' : 'empty'} ${over ? 'over' : ''}`}
+                  onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+                  onDrop={e => { e.preventDefault(); setOver(false); runFiles([...e.dataTransfer.files].filter(f => f.type.startsWith('image/'))); }}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <input ref={fileRef} type="file" accept="image/jpeg,image/png" onChange={e => runFiles([...e.target.files])} onClick={e => e.stopPropagation()} />
+                  <div className="drop-primary">Drop image, click to browse, or Ctrl+V</div>
+                  <div className="drop-hint">JPEG / PNG · Large images resized automatically</div>
+                </div>
+
+                <div className="url-toggle">
+                  {!showUrl ? <button onClick={() => setShowUrl(true)}>Or analyze from URL</button> : (
+                    <div className="url-row">
+                      <input type="url" placeholder="https://..." value={urlInput} onChange={e => setUrlInput(e.target.value)} />
+                      <button className="btn-go" onClick={() => {/* URL Logic */ }}>Analyze</button>
+                      <button className="btn-go" onClick={() => setShowUrl(false)}>✕</button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="kb-hints">
+                  <div className="kb"><kbd>E</kbd> GradCAM mode</div>
+                  <div className="kb"><kbd>F</kbd> Fast mode</div>
+                  <div className="kb"><kbd>U</kbd> URL input</div>
+                  <div className="kb"><kbd>R</kbd> Reset</div>
+                  <div className="kb"><kbd>Ctrl+V</kbd> Paste image</div>
+                </div>
+              </>
+            )}
+
+            {loading && (
+              <div className="loader-wrap">
+                <svg className="quill-svg" viewBox="0 0 24 24">
+                  <path d="M19 3l-4 4-2.5-1.5L9 9c-1.5 1.5-2 4-2 4s2.5-.5 4-2l3.5-3.5L13 5l4-4 2 2zM5 19c2 0 4-1 6-3 0 0-3-1-4-3s-2-4-2-4-1 4-1 6c0 1.5.5 3 1 4z" />
+                </svg>
+                <div className="status-text">Seeking the truth... {elapsed}s</div>
+              </div>
+            )}
+
+            {result && !loading && (
+              <section>
                 <div className="result-head">
-                  <div className={`verdict ${vc}`}>
-                    {LABELS[result.prediction] || result.prediction}
+                  <div className="verdict-box">
+                    <div className={`verdict ${vcls(result.prediction)}`}>{LABELS[result.prediction] || result.prediction}</div>
+                    <div className="verdict-sub">{SHAKESPEARE_SUBS[result.prediction]}</div>
                   </div>
                   <div className="result-meta">
                     <div>{result.filename}</div>
                     <div>{result.processing_time_ms} ms</div>
-                    {result.cached && <div>cached</div>}
                   </div>
                 </div>
 
-                <ConfBar confidence={result.confidence} prediction={result.prediction} />
+                <div className="conf-row"><span>Confidence</span><span>{(result.confidence * 100).toFixed(1)}%</span></div>
+                <div className="conf-track"><div className={`conf-fill ${vcls(result.prediction)}`} style={{ width: `${result.confidence * 100}%` }} /></div>
+                <div className="conf-zones"><span>Real</span><span>Uncertain</span><span>AI</span></div>
                 <hr className="rule" />
 
-                {result.heatmap_base64 && preview
-                  ? <GradSlider original={preview} heatmap={result.heatmap_base64} />
-                  : preview && (
-                    <>
-                      <div className="sec">Analyzed image</div>
-                      <div className="img-box">
-                        <img src={preview} alt="Uploaded" />
-                      </div>
-                    </>
-                  )
-                }
+                {result.heatmap_base64 && preview ? <GradSlider original={preview} heatmap={result.heatmap_base64} /> : (
+                  preview && <><div className="sec">Analyzed image</div><div className="img-box"><img src={preview} alt="Analyzed" /></div></>
+                )}
 
-                <button className="btn-reset"
-                  onClick={() => { reset(); fileRef.current?.click(); }}>
-                  Analyze another image
-                </button>
-              </>
+                <div className="actions">
+                  <button className="btn-reset" onClick={() => { reset(); fileRef.current?.click(); }}>Analyze another manuscript</button>
+                </div>
+              </section>
             )}
 
-            {/* Extension info */}
             <ExtSection />
-
           </main>
         </div>
       );

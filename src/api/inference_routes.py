@@ -20,6 +20,7 @@ from fastapi import (
 )
 from PIL import Image as PILImage
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import (
@@ -32,6 +33,7 @@ from src.api.deps import (
 from src.config import settings
 from src.core.exceptions import InvalidImageFormatError
 from src.infra.limiter import limiter
+from src.logger import logger
 from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.schemas.batch import BatchPredictionResponse
 from src.schemas.explain import ExplainResponse
@@ -57,7 +59,7 @@ router = APIRouter(
 )
 async def health_check(
     request: Request,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_db_session),  # noqa: B008
 ):
     inference_service = request.app.state.inference_service
     is_model_loaded = (
@@ -68,8 +70,10 @@ async def health_check(
     try:
         await session.execute(text("SELECT 1"))
         db_ok = True
-    except Exception:
-        pass
+    except SQLAlchemyError as db_exc:
+        logger.error(f"Database health check failed: {db_exc}", exc_info=True)
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Database failed: {e}", exc_info=True)
 
     redis_ok = (
         hasattr(request.app.state, "arq_pool")
@@ -109,9 +113,9 @@ async def health_check(
 async def predict_image(
     request: Request,
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    service: InferenceService = Depends(get_inference_service),
-    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
+    file: UploadFile = File(...),  # noqa: B008
+    service: InferenceService = Depends(get_inference_service),  # noqa: B008
+    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),  # noqa: B008
 ):
     content_bytes, safe_filename = await _read_and_validate(request, file)
     result = await service.predict(content_bytes, safe_filename)
@@ -119,9 +123,9 @@ async def predict_image(
     background_tasks.add_task(
         log_repo.create_log,
         filename=safe_filename,
-        confidence=result["confidence"],  # type: ignore
-        predicted_label=result["prediction"],  # type: ignore
-        processing_time_ms=result["processing_time_ms"],  # type: ignore
+        confidence=result.confidence,
+        predicted_label=result.prediction,
+        processing_time_ms=result.processing_time_ms,
     )
     return result
 
@@ -138,9 +142,9 @@ async def predict_image(
 async def predict_batch(
     request: Request,
     background_tasks: BackgroundTasks,
-    files: list[UploadFile] = File(...),
-    service: InferenceService = Depends(get_inference_service),
-    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
+    files: list[UploadFile] = File(...),  # noqa: B008
+    service: InferenceService = Depends(get_inference_service),  # noqa: B008
+    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),  # noqa: B008
 ):
     if len(files) > settings.MAX_BATCH_SIZE:
         files = files[: settings.MAX_BATCH_SIZE]
@@ -152,12 +156,26 @@ async def predict_batch(
             background_tasks.add_task(
                 log_repo.create_log,
                 filename=safe_name,
-                confidence=result["confidence"],  # type: ignore
-                predicted_label=result["prediction"],  # type: ignore
-                processing_time_ms=result["processing_time_ms"],  # type: ignore
+                confidence=result.confidence,
+                predicted_label=result.prediction,
+                processing_time_ms=result.processing_time_ms,
             )
-            return result
-        except Exception as exc:
+            return result.model_dump()
+        except HTTPException as exc:
+            logger.warning(f"Batch item validation failed ({f.filename}): {exc.detail}")
+            return {
+                "filename": f.filename,
+                "error": str(exc.detail),
+                "status": "FAILED",
+            }
+        except InvalidImageFormatError as exc:
+            logger.warning(f"Batch item format failed ({f.filename}): {exc}")
+            return {"filename": f.filename, "error": str(exc), "status": "FAILED"}
+        except Exception as exc:  # noqa: BLE001
+            # Unexpected server errors
+            logger.error(
+                f"Batch item failed unexpectedly ({f.filename}): {exc}", exc_info=True
+            )
             return {"filename": f.filename, "error": str(exc), "status": "FAILED"}
 
     results = await asyncio.gather(*[process_one(f) for f in files])
@@ -194,9 +212,9 @@ async def predict_batch(
 )
 async def explain_image(
     request: Request,
-    file: UploadFile = File(...),
-    service: InferenceService = Depends(get_inference_service),
-    explainer: ExplainabilityService = Depends(get_explainability_service),
+    file: UploadFile = File(...),  # noqa: B008
+    service: InferenceService = Depends(get_inference_service),  # noqa: B008
+    explainer: ExplainabilityService = Depends(get_explainability_service),  # noqa: B008
 ):
     content_bytes, safe_filename = await _read_and_validate(request, file)
     return await explainer.explain(

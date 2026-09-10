@@ -18,8 +18,8 @@
     "calibration": {
         "calibrator_path": "models/calibrator.pkl",
         "method": "temperature_scaling",
-        "n_samples": 20000,
-        "brier_before": 0.1072,
-        "brier_after": 0.187
+        "n_samples": 2,
+        "brier_before": 0.4089,
+        "brier_after": 0.1781
     }
 }

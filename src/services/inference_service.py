@@ -1,14 +1,15 @@
 import asyncio
 import io
+import math
 import time
 
-from src.schemas.predict import PredictionResponse
 from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
 from src.inference import ONNXPredictor
-from src.logger import logger
-from src.services.cache_service import CacheService
 from src.infra.metrics import CACHE_COUNTER, INFERENCE_HISTOGRAM, PREDICTION_COUNTER
+from src.logger import logger
+from src.schemas.predict import PredictionResponse
+from src.services.cache_service import CacheService
 
 
 class InferenceService:
@@ -115,22 +116,24 @@ class InferenceService:
         INFERENCE_HISTOGRAM.observe(time.time() - inference_start)
 
         if result.status == InferenceStatus.FAILED:
-            raise ModelInferenceError(str(result.confidence))
+            raise ModelInferenceError(str(result.error))
 
         # -- 3. Classify ------------------------
-        prediction = self._decide_class(result.confidence)
+        raw_score = float(result.confidence)
+        safe_confidence = 1.0 / (1.0 + math.exp(-raw_score))
+
+        prediction = self._decide_class(safe_confidence)
         PREDICTION_COUNTER.labels(label=prediction.value).inc()
 
         if "UNCERTAIN" in prediction.value:
             logger.warning(
-                f"UNCERTAIN prediction: {filename} "
-                f"(confidence: {result.confidence:.4f})"
+                f"UNCERTAIN prediction: {filename} (confidence: {safe_confidence:.4f})"
             )
 
         # -- 4. Build response --------------------
         response = {
             "filename": filename,
-            "confidence": result.confidence,
+            "confidence": safe_confidence,
             "prediction": prediction,
             "status": InferenceStatus.SUCCESS,
             "processing_time_ms": round((time.time() - start) * 1000, 2),
