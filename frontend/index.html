@@ -61,7 +61,7 @@
       z-index: 100;
       height: 52px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-      background: rgba(13, 13, 15, 0.9);
+      background: rgba(13, 13, 15, 0.7);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       display: flex;
@@ -76,7 +76,6 @@
       gap: 20px;
     }
 
-    /* Orijinal Wordmark stili */
     .wordmark {
       font-family: 'Inter', sans-serif;
       font-weight: 500;
@@ -85,20 +84,12 @@
       letter-spacing: 0.15em;
     }
 
-    /* Logo placeholder stili */
-    .logo-img {
-      width: 150px;
-      height: 150px;
-      object-fit: contain;
-      /* opacity: 0.8; */
-    }
-
     .seg {
       display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
-      padding: 6px;
+      padding: 4px;
       gap: 2px;
     }
 
@@ -107,17 +98,25 @@
       border: none;
       border-radius: 16px;
       background: transparent;
-      color: var(--muted);
+      color: #a1a1aa;
       font-family: inherit;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s ease;
+      /* Ink Effect */
+      transition: background-color 0.7s ease-in-out, color 0.7s ease-in-out, border-color 0.7s ease-in-out;
     }
 
     .seg-btn.on {
-      background: #e4e4e7;
-      color: #18181b;
+      background: #f4f4f5;
+      color: #0d0d0f;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
     }
 
     /* ── Demo banner ── */
@@ -143,6 +142,7 @@
       font-size: 10px;
       padding: 4px 10px;
       cursor: pointer;
+      transition: background-color 0.7s ease-in-out, color 0.7s ease-in-out;
     }
 
     /* ── Main ── */
@@ -156,11 +156,8 @@
     .quote-banner {
       display: flex;
       align-items: center;
-      /* Logoyu ve metin bloğunu dikeyde ortalar */
       justify-content: center;
-      /* Tüm bloğu sayfanın ortasına alır */
       gap: 24px;
-      /* Logo ile metin bloğu arası boşluk */
       margin-bottom: 48px;
       animation: fadeIn 1.5s ease-out forwards;
       opacity: 0;
@@ -170,9 +167,7 @@
     .quote-content {
       display: flex;
       flex-direction: column;
-      /* Metni ve yazarı alt alta dizer */
       text-align: left;
-      /* Metin bloğunun sol hizalı olmasını sağlar */
     }
 
     @keyframes fadeIn {
@@ -198,76 +193,7 @@
       margin-top: 8px;
     }
 
-    .drop.over {
-      border-color: rgba(255, 255, 255, 0.6);
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
-    }
-
-    .drop-container {
-      margin-top: 48px;
-    }
-
-    /* ── API key ── */
-    .key-section {
-      margin-bottom: 24px;
-    }
-
-    .key-collapsed {
-      font-size: 11px;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .key-collapsed button {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      opacity: 0.7;
-      font-family: inherit;
-      font-size: 11px;
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      text-decoration-color: var(--dim);
-      transition: opacity 0.2s;
-    }
-
-    .key-collapsed button:hover {
-      opacity: 1;
-    }
-
-    .tick-icon {
-      color: var(--real);
-      font-size: 12px;
-    }
-
-    .key-row,
-    .url-row {
-      display: flex;
-      gap: 8px;
-      align-items: flex-end;
-    }
-
-    .key-field,
-    .url-row input {
-      flex: 1;
-    }
-
-    .label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .key-wrap {
-      position: relative;
-    }
-
+    /* ── Inputs & Buttons ── */
     input[type="password"],
     input[type="text"],
     input[type="url"] {
@@ -287,12 +213,10 @@
       border-color: var(--border-hi);
     }
 
-    input::placeholder {
-      color: var(--dim);
-    }
-
     .btn-save,
-    .btn-go {
+    .btn-go,
+    .btn-reset,
+    .btn-retry {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -302,17 +226,22 @@
       font-weight: 600;
       color: var(--muted);
       cursor: pointer;
-      transition: all 0.2s;
       white-space: nowrap;
+      transition: background-color 0.7s ease-in-out, color 0.7s ease-in-out, border-color 0.7s ease-in-out;
     }
 
     .btn-save:hover,
-    .btn-go:hover {
+    .btn-go:hover,
+    .btn-reset:hover {
       border-color: var(--border-hi);
       color: var(--text);
     }
 
     /* ── Drop zone ── */
+    .drop-container {
+      margin-top: 48px;
+    }
+
     .drop {
       border: 1px dashed rgba(255, 255, 255, 0.15);
       border-radius: 8px;
@@ -321,7 +250,7 @@
       position: relative;
       background: var(--surface);
       overflow: hidden;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
     }
 
     .drop.empty {
@@ -330,8 +259,9 @@
 
     .drop:hover,
     .drop.over {
-      border-color: rgba(255, 255, 255, 0.4);
-      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
     }
 
     .drop input {
@@ -355,24 +285,6 @@
       color: var(--muted);
     }
 
-    .drop-preview {
-      width: 100%;
-      max-height: 300px;
-      object-fit: contain;
-      display: block;
-      background: var(--surface);
-    }
-
-    .drop-preview-bar {
-      padding: 10px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
-    }
-
     /* ── URL input toggle ── */
     .url-toggle {
       text-align: center;
@@ -390,11 +302,18 @@
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-color: var(--dim);
-      transition: color 0.2s;
+      transition: color 0.7s ease-in-out;
     }
 
     .url-toggle>button:hover {
       color: var(--text);
+    }
+
+    .url-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
     }
 
     /* ── Keyboard hints ── */
@@ -425,37 +344,42 @@
       color: var(--text);
     }
 
-    /* ── Quill Loader ── */
+    /* ── Hourglass Loader ── */
+    @keyframes hourglass-pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+    }
+
+    .loading-hourglass {
+      font-size: 24px;
+      display: inline-block;
+      animation: hourglass-pulse 2s infinite ease-in-out;
+      margin-bottom: 12px;
+    }
+
     .loader-wrap {
       padding: 48px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-    }
-
-    .quill-svg {
-      width: 32px;
-      height: 32px;
-      stroke: var(--text);
-      stroke-width: 1.5;
-      fill: none;
-      animation: write 1.5s infinite ease-in-out alternate;
-    }
-
-    @keyframes write {
-      0% {
-        transform: translate(-4px, -4px) rotate(-10deg);
-      }
-
-      100% {
-        transform: translate(4px, 4px) rotate(10deg);
-      }
+      gap: 12px;
     }
 
     .status-text {
       font-family: var(--font-serif);
-      font-size: 14px;
+      font-size: 16px;
       font-style: italic;
       color: var(--muted);
     }
@@ -473,22 +397,6 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-    }
-
-    .btn-retry {
-      background: transparent;
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      border-radius: 4px;
-      color: var(--ai);
-      font-family: inherit;
-      font-size: 11px;
-      padding: 4px 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-retry:hover {
-      background: rgba(239, 68, 68, 0.1);
     }
 
     /* ── Result ── */
@@ -528,7 +436,7 @@
 
     .verdict-sub {
       font-family: var(--font-serif);
-      font-size: 12px;
+      font-size: 14px;
       font-style: italic;
       color: var(--muted);
     }
@@ -538,24 +446,6 @@
       font-size: 11px;
       color: var(--muted);
       line-height: 1.7;
-    }
-
-    .share-btn {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      opacity: 0.7;
-      font-family: inherit;
-      font-size: 11px;
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      display: block;
-      margin-top: 4px;
-    }
-
-    .share-btn:hover {
-      opacity: 1;
     }
 
     /* Confidence bar */
@@ -581,7 +471,7 @@
     .conf-fill {
       height: 100%;
       border-radius: 2px;
-      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .conf-fill.ai {
@@ -607,14 +497,12 @@
       font-weight: 600;
     }
 
-    /* ── Divider ── */
     .rule {
       border: none;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       margin: 0 0 32px;
     }
 
-    /* ── Section label ── */
     .sec {
       font-size: 10px;
       font-weight: 600;
@@ -694,7 +582,6 @@
       font-weight: 500;
     }
 
-    /* ── Plain image ── */
     .img-box {
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -712,7 +599,6 @@
       background: var(--surface);
     }
 
-    /* ── Actions ── */
     .actions {
       display: flex;
       gap: 12px;
@@ -721,27 +607,24 @@
 
     .btn-reset {
       flex: 1;
-      background: transparent;
-      border: 1px solid var(--border-hi);
-      color: var(--text);
       padding: 12px;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
     }
 
-    .btn-reset:hover {
-      background: var(--surface);
-      border-color: var(--muted);
+    /* ── Fleuron Divider ── */
+    .fleuron-divider {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 18px;
+      margin: 32px 0;
+    }
+
+    .fleuron-divider::before {
+      content: '❧';
     }
 
     /* ── Extension section ── */
     .ext-section {
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 32px;
+      padding-top: 16px;
     }
 
     .ext-header {
@@ -813,48 +696,17 @@
       }
 
       .quote-text {
-        font-size: 1.4rem;
+        font-size: 1.8rem;
       }
 
-      .seg-btn,
-      .btn-go,
-      .url-toggle button {
-        transition: background-color 0.7s ease-in-out, color 0.7s ease-in-out, border-color 0.7s ease-in-out;
-      }
-
-      .fleuron-divider {
+      .quote-banner {
+        flex-direction: column;
+        gap: 16px;
         text-align: center;
-        color: rgba(255, 255, 255, 0.2);
-        font-size: 18px;
-        margin: 24px 0;
       }
 
-      .fleuron-divider::before {
-        content: '❧';
-      }
-
-      @keyframes hourglass-pulse {
-        0% {
-          transform: scale(1);
-          opacity: 0.5;
-        }
-
-        50% {
-          transform: scale(1.1);
-          opacity: 1;
-        }
-
-        100% {
-          transform: scale(1);
-          opacity: 0.5;
-        }
-      }
-
-      .loading-hourglass {
-        font-size: 24px;
-        display: inline-block;
-        animation: hourglass-pulse 2s infinite ease-in-out;
-        margin-bottom: 12px;
+      .quote-content {
+        text-align: center;
       }
     }
   </style>
@@ -865,7 +717,7 @@
   <script type="text/babel">
     const { useState, useRef, useCallback, useEffect } = React;
 
-    const DEMO_KEY = 'demo-public-2024';
+    const DEMO_KEY = 'demo-public';
 
     const LABELS = {
       REAL: 'Human Made',
@@ -876,11 +728,11 @@
     };
 
     const SHAKESPEARE_SUBS = {
-      REAL: "To be organic...",
-      AI_GENERATED: "To be synthesized...",
-      UNCERTAIN_LEANING_AI: "Alas, 'tis murky waters...",
-      UNCERTAIN_LEANING_REAL: "Alas, 'tis murky waters...",
-      UNCERTAIN_NEUTRAL: "To be, or not to be...",
+      REAL: "Born of mortal hands.",
+      AI_GENERATED: "A machine's cold forgery.",
+      UNCERTAIN_LEANING_AI: "The vision is clouded, yet leans to the machine.",
+      UNCERTAIN_LEANING_REAL: "Truth will out, though heavily veiled.",
+      UNCERTAIN_NEUTRAL: "What light through yonder window breaks? 'Tis uncertain.",
     };
 
     function vcls(p) {
@@ -929,7 +781,7 @@
 
       return (
         <>
-          <div className="sec">GradCAM — Drag to reveal</div>
+          <div className="sec">Inner Vision (GradCAM)</div>
           <div ref={ref} className="slider" onMouseDown={(e) => { setOn(true); move(e.clientX); }} onTouchStart={(e) => { setOn(true); move(e.touches[0].clientX); }}>
             <img src={original} alt="Original image" draggable={false} />
             <div className="slider-over" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
@@ -939,7 +791,7 @@
               <div className="slider-handle">⇔</div>
             </div>
           </div>
-          <div className="slider-hint">← Original · · · Heatmap →</div>
+          <div className="slider-hint">← Original · · · Illumination →</div>
         </>
       );
     }
@@ -949,7 +801,10 @@
       return (
         <div className="ext-section">
           <div className="ext-header" onClick={() => setOpen(!open)}>
-            <span className="ext-title">Browser Extension</span>
+            <span className="ext-title">
+              <span style={{ fontSize: '14px', marginRight: '8px', verticalAlign: 'bottom' }}></span>
+              Browser Extension
+            </span>
             <span className="ext-chevron" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>▼</span>
           </div>
           {open && (
@@ -1048,12 +903,20 @@
         <div>
           <nav className="topbar">
             <div className="topbar-left">
-              {/* Çizimini buraya ekleyebilirsin */}
               <span className="wordmark">AI or Not AI</span>
             </div>
             <div className="seg">
               <button title="Instant result (Classification only)" className={`seg-btn ${mode === 'predict' ? 'on' : ''}`} onClick={() => { setMode('predict'); reset(); }}>Fast</button>
               <button title="Visual explanation with heatmaps (Slower)" className={`seg-btn ${mode === 'explain' ? 'on' : ''}`} onClick={() => { setMode('explain'); reset(); }}>GradCAM</button>
+            </div>
+            <div className="topbar-right">
+              {!keyOpen && !isDemo ? (
+                <div style={{ cursor: 'pointer' }} onClick={() => setKeyOpen(true)}>
+                  <span style={{ color: 'var(--real)', marginRight: '6px' }}>✓</span>API key saved
+                </div>
+              ) : (
+                <input type="password" placeholder="API Key" style={{ width: '140px', padding: '6px 10px', height: '28px' }} value={apiKey} onChange={e => setApiKey(e.target.value)} onBlur={saveKey} onKeyDown={e => e.key === 'Enter' && saveKey()} />
+              )}
             </div>
           </nav>
 
@@ -1065,70 +928,46 @@
           )}
 
           <main className="main">
-            {/* The Quote Banner */}
             {!result && !loading && (
               <div className="quote-banner">
-                {/* Sol tarafta duracak Logo */}
                 <img
                   src="/static/images.jpg"
                   alt="Shakespeare"
-                  style={{
-                    width: '120px',
-                    height: '120px',
-                    borderRadius: '50%',
-                    objectFit: 'cover'
-                  }}
+                  style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }}
                 />
-
-                {/* Sağ tarafta alt alta duracak Metin Bloğu */}
                 <div className="quote-content">
                   <div className="quote-text">"AI or Not AI, That's the Question."</div>
-                  <div className="quote-author" style={{ marginTop: '12px' }}>— THE MODERN BARD IN 2026</div>
+                  <div className="quote-author">— THE MODERN BARD IN 2026</div>
                 </div>
               </div>
             )}
 
-            <div className="key-section">
-              {!keyOpen && !isDemo ? (
-                <div className="key-collapsed">
-                  <span className="tick-icon">✓</span><span>API key saved</span>
-                  <button onClick={() => setKeyOpen(true)}>change</button>
-                </div>
-              ) : keyOpen ? (
-                <div className="key-row">
-                  <div className="key-field">
-                    <div className="label">API Key</div>
-                    <div className="key-wrap">
-                      <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveKey()} />
-                    </div>
-                  </div>
-                  <button className="btn-save" onClick={saveKey}>Save</button>
-                </div>
-              ) : null}
-            </div>
-
             {error && (
               <div className="err">
-                <span>{error}</span>
+                <span>A tragedy of errors: {error}</span>
                 <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
               </div>
             )}
 
             {showDrop && (
-              <>
+              <div className="drop-container">
                 <div className={`drop ${preview ? '' : 'empty'} ${over ? 'over' : ''}`}
                   onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
                   onDrop={e => { e.preventDefault(); setOver(false); runFiles([...e.dataTransfer.files].filter(f => f.type.startsWith('image/'))); }}
                   onClick={() => fileRef.current?.click()}
                 >
                   <input ref={fileRef} type="file" accept="image/jpeg,image/png" onChange={e => runFiles([...e.target.files])} onClick={e => e.stopPropagation()} />
-                  <div className="drop-primary">Drop image, click to browse, or Ctrl+V</div>
-                  <div className="drop-hint">JPEG / PNG · Large images resized automatically</div>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style={{ marginBottom: '12px', opacity: 0.7 }}>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                  <div className="drop-primary">Hark! Drop thy image here, or Ctrl+V</div>
+                  <div className="drop-hint">A blank canvas awaits · JPEG / PNG</div>
                 </div>
 
                 <div className="url-toggle">
-                  {!showUrl ? <button onClick={() => setShowUrl(true)}>Or analyze from URL</button> : (
-                    <div className="url-row">
+                  {!showUrl ? <button onClick={(e) => { e.stopPropagation(); setShowUrl(true); }}>Or summon from URL</button> : (
+                    <div className="url-row" onClick={e => e.stopPropagation()}>
                       <input type="url" placeholder="https://..." value={urlInput} onChange={e => setUrlInput(e.target.value)} />
                       <button className="btn-go" onClick={() => {/* URL Logic */ }}>Analyze</button>
                       <button className="btn-go" onClick={() => setShowUrl(false)}>✕</button>
@@ -1143,15 +982,14 @@
                   <div className="kb"><kbd>R</kbd> Reset</div>
                   <div className="kb"><kbd>Ctrl+V</kbd> Paste image</div>
                 </div>
-              </>
+              </div>
             )}
 
             {loading && (
               <div className="loader-wrap">
-                <svg className="quill-svg" viewBox="0 0 24 24">
-                  <path d="M19 3l-4 4-2.5-1.5L9 9c-1.5 1.5-2 4-2 4s2.5-.5 4-2l3.5-3.5L13 5l4-4 2 2zM5 19c2 0 4-1 6-3 0 0-3-1-4-3s-2-4-2-4-1 4-1 6c0 1.5.5 3 1 4z" />
-                </svg>
-                <div className="status-text">Seeking the truth... {elapsed}s</div>
+                <div className="loading-hourglass">⌛</div>
+                <div className="status-text">{mode === 'explain' ? "The plot thickens..." : "Consulting the muse..."}</div>
+                <div style={{ fontSize: '11px', color: 'var(--dim)', marginTop: '4px' }}>{elapsed}s</div>
               </div>
             )}
 
@@ -1178,11 +1016,12 @@
                 )}
 
                 <div className="actions">
-                  <button className="btn-reset" onClick={() => { reset(); fileRef.current?.click(); }}>Analyze another manuscript</button>
+                  <button className="btn-reset" onClick={() => { reset(); fileRef.current?.click(); }}>Exeunt (Analyze another)</button>
                 </div>
               </section>
             )}
 
+            <div className="fleuron-divider"></div>
             <ExtSection />
           </main>
         </div>
