@@ -29,17 +29,18 @@
       --border-hi: #555562;
       --text: #f4f4f5;
       --muted: #a1a1aa;
-      --dim: #3f3f46;
+      --dim: #52525b;
       --ai: #c0392b;
-      /* Deep crimson — "I am hurt" */
       --real: #27ae60;
-      /* Forest green — "All's well" */
       --uncertain: #d4a017;
-      /* Candlelight gold */
       --demo: #3b82f6;
       --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-      --font-sans: 'Inter', system-ui, sans-serif;
       --font-serif: 'IM Fell English', serif;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     html,
@@ -57,14 +58,29 @@
       overflow-x: hidden;
     }
 
-    /* ── Top bar ── */
+    /* ── First Folio Mode ── */
+    body.first-folio {
+      --bg: #19130a;
+      --surface: #211a0d;
+      --border: #5a4a2a;
+      --border-hi: #8a7255;
+      --text: #f0e4c4;
+      --muted: #b89c70;
+      --dim: #7a6040;
+    }
+
+    body.first-folio .topbar {
+      background: rgba(25, 19, 10, 0.9);
+    }
+
+    /* ── Topbar ── */
     .topbar {
       position: sticky;
       top: 0;
       z-index: 100;
       height: 52px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(13, 13, 15, 0.7);
+      background: rgba(13, 13, 15, 0.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       display: flex;
@@ -80,11 +96,12 @@
     }
 
     .wordmark {
-      font-family: 'Inter', sans-serif;
-      font-weight: 500;
-      font-size: 16px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 0.15em;
+      cursor: pointer;
     }
 
     .seg {
@@ -101,18 +118,17 @@
       border: none;
       border-radius: 16px;
       background: transparent;
-      color: #a1a1aa;
-      font-family: inherit;
-      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
       font-weight: 500;
       cursor: pointer;
-      /* Ink Effect */
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.2s, color 0.2s;
     }
 
     .seg-btn.on {
-      background: #f4f4f5;
-      color: #0d0d0f;
+      background: var(--text);
+      color: var(--bg);
     }
 
     .topbar-right {
@@ -122,10 +138,10 @@
       color: var(--muted);
     }
 
-    /* ── Demo banner ── */
+    /* ── Demo Banner ── */
     .demo-banner {
-      background: rgba(59, 130, 246, 0.08);
-      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      background: rgba(59, 130, 246, 0.07);
+      border-bottom: 1px solid rgba(59, 130, 246, 0.18);
       padding: 8px 24px;
       display: flex;
       justify-content: space-between;
@@ -138,133 +154,185 @@
 
     .demo-banner button {
       background: transparent;
-      border: 1px solid rgba(59, 130, 246, 0.3);
+      border: 1px solid rgba(59, 130, 246, 0.25);
       border-radius: 4px;
       color: var(--demo);
-      font-family: inherit;
+      font-family: var(--font-mono);
       font-size: 10px;
-      padding: 4px 10px;
+      padding: 3px 10px;
       cursor: pointer;
-      transition: background-color 0.7s ease-in-out, color 0.7s ease-in-out;
     }
 
     /* ── Main ── */
     .main {
       max-width: 640px;
       margin: 0 auto;
-      padding: 32px 24px 80px;
+      padding: 0 24px 80px;
+      position: relative;
     }
 
-    /* ── The Quote Banner ── */
-    .quote-banner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-      margin-bottom: 48px;
-      animation: fadeIn 1.5s ease-out forwards;
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    .quote-content {
+    /* ── Playbill Hero ── */
+    .playbill {
+      min-height: calc(100vh - 52px);
       display: flex;
       flex-direction: column;
-      text-align: left;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px 80px;
+      position: relative;
+      animation: heraldFadeIn 2s ease-out forwards;
+      opacity: 0;
     }
 
-    @keyframes fadeIn {
-      to {
+    @keyframes heraldFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      100% {
         opacity: 1;
         transform: translateY(0);
       }
     }
 
-    .quote-text {
-      font-family: var(--font-serif);
-      font-size: 2.8rem;
-      color: var(--text);
-      font-style: italic;
-      letter-spacing: 0.02em;
+    .playbill-portrait {
+      width: 88px;
+      height: auto;
+      object-fit: contain;
+      filter: sepia(0.35) contrast(1.1);
+      cursor: pointer;
+      transition: filter 0.4s;
+      margin-bottom: 28px;
     }
 
-    .quote-author {
-      font-size: 11px;
-      color: #71717a;
+    .playbill-portrait:hover {
+      filter: sepia(0.1) contrast(1.2) brightness(1.05);
+    }
+
+    body.first-folio .playbill-portrait {
+      filter: sepia(0.8) contrast(1.1);
+    }
+
+    .playbill-ornament {
+      font-family: var(--font-serif);
+      color: rgba(255, 255, 255, 0.14);
+      font-size: 22px;
+      letter-spacing: 0.6em;
+      margin: 18px 0;
+    }
+
+    .playbill-quote {
+      font-family: var(--font-serif);
+      font-size: clamp(1.9rem, 4.5vw, 3rem);
+      font-style: italic;
+      color: var(--text);
+      letter-spacing: 0.01em;
+      line-height: 1.2;
+      max-width: 520px;
+      margin-bottom: 14px;
+    }
+
+    .playbill-attribution {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.28);
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      margin-bottom: 28px;
+    }
+
+    .playbill-byline {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.28);
+      margin-bottom: 6px;
+    }
+
+    .playbill-edition {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.16);
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+    }
+
+    .scroll-cue {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255, 255, 255, 0.18);
+      font-family: var(--font-mono);
+      font-size: 15px;
       text-transform: uppercase;
       letter-spacing: 0.2em;
-      margin-top: 8px;
-    }
-
-    /* ── Inputs & Buttons ── */
-    input[type="password"],
-    input[type="text"],
-    input[type="url"] {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 12px;
-      font-family: inherit;
-      font-size: 13px;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--border-hi);
-    }
-
-    .btn-save,
-    .btn-go,
-    .btn-reset,
-    .btn-retry {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 14px;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
       cursor: pointer;
-      white-space: nowrap;
-      transition: background-color 0.7s ease-in-out, color 0.7s ease-in-out, border-color 0.7s ease-in-out;
+      animation: scrollPulse 2.5s infinite ease-in-out;
     }
 
-    .btn-save:hover,
-    .btn-go:hover,
-    .btn-reset:hover {
-      border-color: var(--border-hi);
-      color: var(--text);
+    @keyframes scrollPulse {
+
+      0%,
+      100% {
+        opacity: 0.4;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      50% {
+        opacity: 0.9;
+        transform: translateX(-50%) translateY(6px);
+      }
     }
 
-    /* ── Drop zone ── */
-    .drop-container {
-      margin-top: 48px;
+    /* ── Act Labels ── */
+    .act-label {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 48px 0 22px;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: rgba(255, 255, 255, 0.16);
+      user-select: none;
     }
 
+    .act-label::before,
+    .act-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* ── Drop Zone ── */
     .drop {
-      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       text-align: center;
       cursor: pointer;
       position: relative;
       background: var(--surface);
       overflow: hidden;
-      transition: all 0.3s ease;
+      transition: border-color 0.25s, background 0.25s;
     }
 
     .drop.empty {
-      padding: 64px 24px;
+      padding: 60px 24px;
     }
 
     .drop:hover,
     .drop.over {
-      border-color: rgba(255, 255, 255, 0.6);
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .drop input {
@@ -277,21 +345,53 @@
     }
 
     .drop-primary {
-      font-weight: 500;
-      font-size: 14px;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 22px;
       margin-bottom: 6px;
       color: var(--text);
     }
 
     .drop-hint {
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--muted);
     }
 
-    /* ── URL input toggle ── */
+    /* ── Gloss System ── */
+    .gloss-anchor {
+      position: relative;
+    }
+
+    .gloss {
+      display: none;
+    }
+
+    @media (min-width: 960px) {
+      .main {
+        max-width: 680px;
+      }
+
+      .gloss {
+        display: block;
+        position: absolute;
+        right: -210px;
+        top: 0;
+        width: 186px;
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-size: larger;
+        color: rgba(255, 255, 255, 0.2);
+        line-height: 1.7;
+        border-left: 1px solid rgba(255, 255, 255, 0.05);
+        padding-left: 14px;
+      }
+    }
+
+    /* ── URL Input ── */
     .url-toggle {
       text-align: center;
-      margin-top: 16px;
+      margin-top: 14px;
       font-size: 11px;
     }
 
@@ -299,13 +399,12 @@
       background: transparent;
       border: none;
       color: var(--muted);
-      font-family: inherit;
+      font-family: var(--font-mono);
       font-size: 11px;
       cursor: pointer;
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-color: var(--dim);
-      transition: color 0.7s ease-in-out;
     }
 
     .url-toggle>button:hover {
@@ -316,40 +415,93 @@
       display: flex;
       gap: 8px;
       align-items: center;
-      justify-content: center;
+      margin-top: 8px;
     }
 
-    /* ── Keyboard hints ── */
-    .kb-hints {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 24px;
-      font-size: 10px;
-      color: var(--muted);
-      justify-content: center;
-    }
-
-    .kb {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    kbd {
-      background: rgba(255, 255, 255, 0.08);
+    /* ── Inputs ── */
+    input[type="password"],
+    input[type="text"],
+    input[type="url"] {
+      width: 100%;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2px 6px;
-      font-family: inherit;
-      font-size: 9px;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--border-hi);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    /* ── Buttons ── */
+    .btn-go,
+    .btn-reset,
+    .btn-retry,
+    .btn-save {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
       font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-go:hover,
+    .btn-reset:hover,
+    .btn-save:hover {
+      border-color: var(--border-hi);
       color: var(--text);
     }
 
-    /* ── Hourglass Loader ── */
-    @keyframes hourglass-pulse {
-      0% {
+    .btn-reset {
+      flex: 1;
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    /* ── Error ── */
+    .err {
+      font-size: 12px;
+      color: var(--ai);
+      background: rgba(192, 57, 43, 0.07);
+      border: 1px solid rgba(192, 57, 43, 0.2);
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ── Loader ── */
+    .loader-wrap {
+      padding: 56px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    @keyframes hourglassPulse {
+
+      0%,
+      100% {
         transform: scale(1);
         opacity: 0.5;
       }
@@ -358,132 +510,160 @@
         transform: scale(1.1);
         opacity: 1;
       }
-
-      100% {
-        transform: scale(1);
-        opacity: 0.5;
-      }
     }
 
     .loading-hourglass {
-      font-size: 24px;
+      font-size: 26px;
       display: inline-block;
-      animation: hourglass-pulse 2s infinite ease-in-out;
-      margin-bottom: 12px;
-    }
-
-    .loader-wrap {
-      padding: 48px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      animation: hourglassPulse 2s infinite ease-in-out;
     }
 
     .status-text {
       font-family: var(--font-serif);
       font-size: 20px;
       font-style: italic;
-      letter-spacing: 0.02;
       color: var(--muted);
     }
 
-    /* ── Error ── */
-    .err {
-      font-size: 12px;
-      color: var(--ai);
-      background: rgba(239, 68, 68, 0.08);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      border-radius: 6px;
-      padding: 12px 16px;
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
+    /* ── Broadside Result ── */
+    .broadside {
+      text-align: center;
     }
 
-    /* ── Result ── */
-    section {
-      animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
+    @media (min-width: 769px) {
+      .broadside {
+        animation: curtainPart 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
       }
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
+      @keyframes curtainPart {
+        from {
+          clip-path: inset(0 50% 0 50%);
+          opacity: 0;
+        }
+
+        to {
+          clip-path: inset(0 0% 0 0%);
+          opacity: 1;
+        }
       }
     }
 
-    .result-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 12px;
+    @media (max-width: 768px) {
+      .broadside {
+        animation: fadeUp 0.4s ease;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
     }
 
-    .verdict-box {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .broadside-ornament {
+      font-family: var(--font-serif);
+      color: rgba(255, 255, 255, 0.14);
+      font-size: 20px;
+      letter-spacing: 0.5em;
+      margin-bottom: 16px;
+      user-select: none;
     }
 
-    .verdict {
-      font-size: 28px;
+    .broadside-verdict {
+      font-family: var(--font-mono);
+      font-size: 30px;
       font-weight: 700;
-      line-height: 1;
       letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 8px;
     }
 
-    .verdict.ai {
+    .broadside-verdict.ai {
       color: var(--ai);
     }
 
-    .verdict.real {
+    .broadside-verdict.real {
       color: var(--real);
     }
 
-    .verdict.uncertain {
+    .broadside-verdict.uncertain {
       color: var(--uncertain);
     }
 
-    .verdict-sub {
+    .broadside-heraldry {
       font-family: var(--font-serif);
-      font-size: 18px;
       font-style: italic;
-      color: var(--muted);
-      /* can be different color */
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.3);
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
     }
 
-    .result-meta {
-      text-align: right;
-      font-size: 11px;
+    .broadside-sub {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 17px;
       color: var(--muted);
-      line-height: 1.7;
+      margin-bottom: 22px;
     }
 
-    /* Confidence bar */
+    .broadside-rule {
+      font-family: var(--font-mono);
+      color: rgba(255, 255, 255, 0.1);
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      margin: 10px 0;
+      user-select: none;
+    }
+
+    .broadside-meta {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.28);
+      margin-bottom: 22px;
+    }
+
+    .broadside-meta .serif-detail {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 17px;
+    }
+
+    .broadside-meta .sep {
+      margin: 0 10px;
+      color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ── Confidence ── */
     .conf-row {
       display: flex;
       justify-content: space-between;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
       margin-bottom: 8px;
+    }
+
+    .conf-label {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .conf-score {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
     }
 
     .conf-track {
       height: 4px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 2px;
       overflow: hidden;
       margin-bottom: 8px;
@@ -492,7 +672,7 @@
     .conf-fill {
       height: 100%;
       border-radius: 2px;
-      transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .conf-fill.ai {
@@ -510,21 +690,61 @@
     .conf-zones {
       display: flex;
       justify-content: space-between;
+      font-family: var(--font-mono);
       font-size: 9px;
-      color: var(--muted);
+      color: var(--dim);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 32px;
       font-weight: 600;
+      margin-bottom: 28px;
     }
 
+    /* Seven Ages tooltip */
+    .zone-tip {
+      position: relative;
+      cursor: help;
+    }
+
+    .zone-tip::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1c1c22;
+      border: 1px solid var(--border-hi);
+      border-radius: 5px;
+      padding: 8px 12px;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 11px;
+      color: var(--text);
+      width: 230px;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.6;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 50;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: normal;
+    }
+
+    .zone-tip:hover::after {
+      opacity: 1;
+    }
+
+    /* ── Divider & Section ── */
     .rule {
       border: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      margin: 0 0 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      margin: 0 0 28px;
     }
 
     .sec {
+      font-family: var(--font-mono);
       font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
@@ -533,7 +753,15 @@
       margin-bottom: 12px;
     }
 
-    /* ── GradCAM slider ── */
+    .fleuron-divider {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 20px;
+      margin: 36px 0 4px;
+      font-family: var(--font-serif);
+    }
+
+    /* ── GradCAM Slider ── */
     .slider {
       position: relative;
       border-radius: 8px;
@@ -573,7 +801,7 @@
       width: 2px;
       background: rgba(255, 255, 255, 0.8);
       z-index: 10;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
     }
 
     .slider-handle {
@@ -596,19 +824,20 @@
     }
 
     .slider-hint {
+      font-family: var(--font-mono);
       font-size: 10px;
       color: var(--muted);
       text-align: center;
-      margin-bottom: 32px;
-      font-weight: 500;
+      margin-bottom: 28px;
     }
 
+    /* ── Image Box ── */
     .img-box {
       border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
       line-height: 0;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
 
     .img-box img {
@@ -620,32 +849,26 @@
       background: var(--surface);
     }
 
+    /* ── Actions ── */
     .actions {
       display: flex;
       gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    /* ── Epilogue ── */
+    .epilogue {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 17px;
+      color: rgba(255, 255, 255, 0.22);
+      text-align: center;
       margin-bottom: 48px;
     }
 
-    .btn-reset {
-      flex: 1;
-      padding: 12px;
-    }
-
-    /* ── Fleuron Divider ── */
-    .fleuron-divider {
-      text-align: center;
-      color: rgba(255, 255, 255, 0.2);
-      font-size: 18px;
-      margin: 32px 0;
-    }
-
-    .fleuron-divider::before {
-      content: '❧';
-    }
-
-    /* ── Extension section ── */
+    /* ── Extension Section ── */
     .ext-section {
-      padding-top: 16px;
+      padding-top: 8px;
     }
 
     .ext-header {
@@ -657,6 +880,7 @@
     }
 
     .ext-title {
+      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
@@ -671,73 +895,164 @@
     }
 
     .ext-body {
-      margin-top: 24px;
+      margin-top: 20px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 14px;
     }
 
     .ext-step {
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 20px;
-    }
-
-    @media (max-width: 480px) {
-      .ext-body {
-        margin-top: 16px;
-      }
-
-      .ext-step {
-        padding: 16px;
-      }
+      padding: 18px;
     }
 
     .ext-step-num {
-      font-size: 10px;
-      font-weight: 600;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 13px;
       color: var(--dim);
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      margin-bottom: 10px;
     }
 
     .ext-step-title {
-      font-size: 13px;
+      font-family: var(--font-mono);
+      font-size: 12px;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 7px;
       color: var(--text);
     }
 
     .ext-step-desc {
       font-family: var(--font-sans);
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
       line-height: 1.6;
     }
 
+    .anno-domini {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.12);
+      text-align: center;
+      margin-top: 28px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    /* ── Soliloquy Overlay (Konami) ── */
+    .soliloquy-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.96);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      animation: heraldFadeIn 0.5s ease;
+    }
+
+    .soliloquy-content {
+      max-width: 500px;
+      text-align: center;
+      padding: 48px 32px;
+    }
+
+    .soliloquy-content p {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 2.1;
+      margin-bottom: 2px;
+    }
+
+    .soliloquy-dismiss {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.18);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-top: 40px;
+    }
+
+    /* ── Prompter's Box ── */
+    .prompters-box {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 50;
+      opacity: 0.07;
+      transition: opacity 0.3s;
+    }
+
+    .prompters-box:hover {
+      opacity: 1;
+    }
+
+    .prompters-label {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 7px;
+    }
+
+    .kb {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.3);
+      margin-bottom: 4px;
+    }
+
+    kbd {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ── Mobile ── */
     @media (max-width: 480px) {
+      .topbar {
+        padding: 0 20px;
+      }
+
+      .wordmark {
+        font-size: 12px;
+      }
+
+      .seg-btn {
+        padding: 4px 10px;
+        font-size: 10px;
+      }
+
+      .playbill-quote {
+        font-size: 1.7rem;
+      }
+
       .ext-body {
         grid-template-columns: 1fr;
       }
 
-      .kb-hints {
+      .prompters-box {
         display: none;
       }
 
-      .quote-text {
-        font-size: 1.8rem;
+      .main {
+        padding: 0 16px 60px;
       }
 
-      .quote-banner {
-        flex-direction: column;
-        gap: 16px;
-        text-align: center;
-      }
-
-      .quote-content {
-        text-align: center;
+      .broadside-verdict {
+        font-size: 24px;
       }
     }
   </style>
@@ -749,6 +1064,8 @@
     const { useState, useRef, useCallback, useEffect } = React;
 
     const DEMO_KEY = 'demo-public';
+    const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+      'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
     const LABELS = {
       REAL: 'Human Made',
@@ -764,6 +1081,29 @@
       UNCERTAIN_LEANING_AI: "Methinks the lady doth protest too much.",
       UNCERTAIN_LEANING_REAL: "There are more things in heaven and earth.",
       UNCERTAIN_NEUTRAL: "Neither here nor there.",
+    };
+
+    const HERALDRY = {
+      REAL: 'Vert',
+      AI_GENERATED: 'Gules',
+      UNCERTAIN_LEANING_AI: 'Or',
+      UNCERTAIN_LEANING_REAL: 'Or',
+      UNCERTAIN_NEUTRAL: 'Or',
+    };
+
+    const EPILOGUES = {
+      AI_GENERATED: ["What's done cannot be undone.",
+        "All that glitters is not gold.",
+        "The lady doth protest too much, methinks."],
+      REAL: ["All's well that ends well.",
+        "Truth will come to light.",
+        "What a piece of work is a man."],
+      UNCERTAIN_LEANING_AI: ["The rest is silence.",
+        "Something is rotten in the state of Denmark."],
+      UNCERTAIN_LEANING_REAL: ["There are more things in heaven and earth.",
+        "Neither here nor there."],
+      UNCERTAIN_NEUTRAL: ["The rest is silence.",
+        "What light through yonder window breaks?"],
     };
 
     function vcls(p) {
@@ -786,12 +1126,21 @@
           canvas.width = Math.round(w * scale);
           canvas.height = Math.round(h * scale);
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.92);
+          canvas.toBlob(
+            (blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })),
+            'image/jpeg', 0.92
+          );
         };
         img.src = url;
       });
     }
 
+    /* ── Act Label ── */
+    function ActLabel({ act, title }) {
+      return <div className="act-label">{act} · {title}</div>;
+    }
+
+    /* ── GradCAM Slider ── */
     function GradSlider({ original, heatmap }) {
       const [pos, setPos] = useState(50);
       const [on, setOn] = useState(false);
@@ -805,18 +1154,26 @@
         if (!on) return;
         const end = () => setOn(false);
         const go = (e) => move(e.clientX ?? e.touches?.[0]?.clientX);
-        window.addEventListener('mousemove', go); window.addEventListener('mouseup', end);
-        window.addEventListener('touchmove', go, { passive: true }); window.addEventListener('touchend', end);
-        return () => { window.removeEventListener('mousemove', go); window.removeEventListener('mouseup', end); window.removeEventListener('touchmove', go); window.removeEventListener('touchend', end); };
+        window.addEventListener('mousemove', go);
+        window.addEventListener('mouseup', end);
+        window.addEventListener('touchmove', go, { passive: true });
+        window.addEventListener('touchend', end);
+        return () => {
+          window.removeEventListener('mousemove', go);
+          window.removeEventListener('mouseup', end);
+          window.removeEventListener('touchmove', go);
+          window.removeEventListener('touchend', end);
+        };
       }, [on, move]);
-
       return (
         <>
-          <div className="sec">Inner Vision (GradCAM)</div>
-          <div ref={ref} className="slider" onMouseDown={(e) => { setOn(true); move(e.clientX); }} onTouchStart={(e) => { setOn(true); move(e.touches[0].clientX); }}>
-            <img src={original} alt="Original image" draggable={false} />
+          <div className="sec">The Mousetrap</div>
+          <div ref={ref} className="slider"
+            onMouseDown={(e) => { setOn(true); move(e.clientX); }}
+            onTouchStart={(e) => { setOn(true); move(e.touches[0].clientX); }}>
+            <img src={original} alt="Original" draggable={false} />
             <div className="slider-over" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-              <img src={`data:image/png;base64,${heatmap}`} alt="Heatmap" draggable={false} />
+              <img src={`data:image/png;base64,${heatmap}`} alt="Illumination" draggable={false} />
             </div>
             <div className="slider-line" style={{ left: `${pos}%` }}>
               <div className="slider-handle">⇔</div>
@@ -827,57 +1184,60 @@
       );
     }
 
+    /* ── Extension Section ── */
     function ExtSection() {
       const [open, setOpen] = useState(false);
+      const acts = [
+        { num: 'Act I', title: 'Install the extension', desc: 'Load from the Chrome Web Store or install unpacked via developer mode.' },
+        { num: 'Act II', title: 'Configure settings', desc: 'Click the icon and enter your API key. Saved locally, forevermore.' },
+        { num: 'Act III', title: 'Right-click any image', desc: 'Summon the detector on any canvas across the wide web.' },
+        { num: 'Act IV', title: 'Behold the verdict', desc: 'A popup reveals the truth: confidence scores and GradCAM heatmaps.' },
+        { num: 'Act V', title: 'Enable passive mode', desc: 'Let the extension badge AI images silently as you browse without right-click.' },
+      ];
       return (
         <div className="ext-section">
-          <div className="ext-header" onClick={() => setOpen(!open)}>
-            <span className="ext-title">
-              <span style={{ fontSize: '14px', marginRight: '8px', verticalAlign: 'bottom' }}></span>
-              Browser Extension
-            </span>
+          <div className="ext-header" onClick={() => setOpen(o => !o)}>
+            <span className="ext-title">Browser Extension</span>
             <span className="ext-chevron" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>▼</span>
           </div>
           {open && (
             <div className="ext-body">
-              <div className="ext-step">
-                <div className="ext-step-num">Act I</div>
-                <div className="ext-step-title">Install the extension</div>
-                <div className="ext-step-desc">Load from Chrome Web Store or install unpacked via developer mode.</div>
-              </div>
-              <div className="ext-step">
-                <div className="ext-step-num">Act II</div>
-                <div className="ext-step-title">Configure settings</div>
-                <div className="ext-step-desc">Click the icon and enter your API key. Saved locally, forevermore.</div>
-              </div>
-              <div className="ext-step">
-                <div className="ext-step-num">Act III</div>
-                <div className="ext-step-title">Right-click any image</div>
-                <div className="ext-step-desc">Summon the detector on any canvas across the wide web.</div>
-              </div>
-              <div className="ext-step">
-                <div className="ext-step-num">Act IV</div>
-                <div className="ext-step-title">Behold the verdict</div>
-                <div className="ext-step-desc">A popup reveals the truth: Confidence scores and GradCAM heatmaps.</div>
-              </div>
-              <div className="ext-step">
-                <div className="ext-step-num">Act V</div>
-                <div className="ext-step-title">Enable passive mode</div>
-                <div className="ext-step-desc">
-                  Let the extension badge AI images silently as you browse —
-                  no right-click required.
+              {acts.map(({ num, title, desc }) => (
+                <div className="ext-step" key={num}>
+                  <div className="ext-step-num">{num}</div>
+                  <div className="ext-step-title">{title}</div>
+                  <div className="ext-step-desc">{desc}</div>
                 </div>
-              </div>
+              ))}
             </div>
           )}
+          <div className="anno-domini">AI or Not AI · Anno Domini MMXXVI · v II.0.0</div>
         </div>
       );
     }
 
+    function formatFilename(name) {
+      if (!name) return 'unknown.jpg';
+
+      if (name.length > 30 || name.includes('?q=') || name.includes('base64')) {
+        return 'pasted_image.jpg';
+      }
+
+      if (name.length > 20) {
+        const parts = name.split('.');
+        const ext = parts.length > 1 ? '.' + parts.pop() : '';
+        const base = parts.join('.');
+        return base.substring(0, 15) + '...' + ext;
+      }
+
+      return name;
+    }
+
+    /* ── App ── */
     function App() {
       const saved = localStorage.getItem('aon_key');
+
       const [apiKey, setApiKey] = useState(saved || DEMO_KEY);
-      const [keySaved, setKeySaved] = useState(true);
       const [keyOpen, setKeyOpen] = useState(false);
       const [isDemo, setIsDemo] = useState(!saved || saved === DEMO_KEY);
       const [mode, setMode] = useState('explain');
@@ -887,29 +1247,64 @@
       const [result, setResult] = useState(null);
       const [error, setError] = useState(null);
       const [preview, setPreview] = useState(null);
-      const [previewInfo, setPInfo] = useState(null);
       const [showUrl, setShowUrl] = useState(false);
       const [urlInput, setUrlInput] = useState('');
+      const [w, setW] = useState(0);
+      const [firstFolioMode, setFirstFolioMode] = useState(false);
+      const [fpClicks, setFpClicks] = useState(0);
+      const [showSoliloquy, setShowSoliloquy] = useState(false);
+      const [analysisCount, setAnalysisCount] = useState(0);
+
       const fileRef = useRef(null);
       const timerRef = useRef(null);
+      const konamiIdx = useRef(0);
+      const fpTimer = useRef(null);
+      const toolRef = useRef(null);
 
-
+      /* Console Easter Egg — once */
       useEffect(() => {
-        if (result) {
-          const label = LABELS[result.prediction] || result.prediction;
-          document.title = `${label} — AI or Not AI`;
-        } else {
-          document.title = "AI or Not AI, That's the Question";
-        }
+        console.log(
+          '%c\n  Sonnet XVIII (Adapted)\n\n' +
+          '  Shall I compare thee to a human hand?\n' +
+          '  Thou art more doubtful and more generate.\n' +
+          '  Rough algorithms do shake the darling buds of May,\n' +
+          '  And summer\'s lease hath all too short a render.\n\n' +
+          '  — AI or Not AI, v2.0.0\n',
+          'font-style:italic;color:#a1a1aa;font-family:serif;font-size:13px;'
+        );
+      }, []);
+
+      /* First Folio body class */
+      useEffect(() => {
+        document.body.classList.toggle('first-folio', firstFolioMode);
+      }, [firstFolioMode]);
+
+      /* Title update */
+      useEffect(() => {
+        document.title = result
+          ? `${LABELS[result.prediction] || result.prediction} — AI or Not AI`
+          : "AI or Not AI, That's the Question";
       }, [result]);
 
-
+      /* Demo key init */
       useEffect(() => {
         if (!localStorage.getItem('aon_key')) localStorage.setItem('aon_key', DEMO_KEY);
       }, []);
 
+      /* Keyboard: shortcuts + Konami */
       useEffect(() => {
         const handler = (e) => {
+          /* Konami */
+          if (e.key === KONAMI[konamiIdx.current]) {
+            konamiIdx.current++;
+            if (konamiIdx.current === KONAMI.length) {
+              setShowSoliloquy(true);
+              konamiIdx.current = 0;
+            }
+          } else {
+            konamiIdx.current = 0;
+          }
+          if (e.key === 'Escape') { setShowSoliloquy(false); }
           if (e.target.tagName === 'INPUT') return;
           if (e.key.toLowerCase() === 'r') reset();
           if (e.key.toLowerCase() === 'e') { setMode('explain'); reset(); }
@@ -920,6 +1315,7 @@
         return () => window.removeEventListener('keydown', handler);
       }, []);
 
+      /* Paste */
       useEffect(() => {
         const handler = async (e) => {
           const items = e.clipboardData?.items;
@@ -931,68 +1327,153 @@
               break;
             }
           }
+          const text = e.clipboardData.getData('text');
+          if (text && text.startsWith('http')) {
+            e.preventDefault();
+            runFromUrl(text);
+          }
         };
         window.addEventListener('paste', handler);
         return () => window.removeEventListener('paste', handler);
       }, [apiKey, mode]);
 
-      const reset = () => { setResult(null); setError(null); setPreview(null); setPInfo(null); setElapsed(0); };
+      /* Confidence bar animation */
+      useEffect(() => {
+        if (!result) { setW(0); return; }
+        const t = setTimeout(() => setW(result.confidence * 100), 60);
+        return () => clearTimeout(t);
+      }, [result?.confidence]);
+
+      const reset = () => {
+        setResult(null); setError(null); setPreview(null);
+        setElapsed(0); setW(0); setShowUrl(false); setUrlInput('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
 
       const saveKey = () => {
         const k = apiKey.trim(); if (!k) return;
-        localStorage.setItem('aon_key', k); setKeySaved(true); setKeyOpen(false); setIsDemo(k === DEMO_KEY);
+        localStorage.setItem('aon_key', k);
+        setKeyOpen(false); setIsDemo(k === DEMO_KEY);
       };
 
       const startTimer = () => {
         const start = Date.now();
-        timerRef.current = setInterval(() => setElapsed(((Date.now() - start) / 1000).toFixed(1)), 100);
+        timerRef.current = setInterval(
+          () => setElapsed(((Date.now() - start) / 1000).toFixed(1)), 100
+        );
       };
       const stopTimer = () => clearInterval(timerRef.current);
 
-      const [w, setW] = useState(0);
-      useEffect(() => {
-        if (!result) return;
-        const t = setTimeout(() => setW(result.confidence * 100), 60);
-        return () => clearTimeout(t);
-      }, [result?.confidence]);
+      /* Triple-click portrait → First Folio */
+      const handlePortraitClick = () => {
+        clearTimeout(fpTimer.current);
+        const n = fpClicks + 1;
+        setFpClicks(n);
+        if (n >= 3) {
+          setFirstFolioMode(m => !m);
+          setFpClicks(0);
+        } else {
+          fpTimer.current = setTimeout(() => setFpClicks(0), 1800);
+        }
+      };
+
+      const runFromUrl = async (url) => {
+        if (!url.trim()) return;
+        reset();
+        setLoading(true); startTimer();
+        try {
+          const r = await fetch(url);
+          if (!r.ok) throw new Error(`Could not fetch image (HTTP ${r.status})`);
+          const blob = await r.blob();
+          if (!blob.type.startsWith('image/')) throw new Error('URL does not point to an image.');
+          const file = new File([blob], url.split('/').pop() || 'image.jpg', { type: blob.type });
+          setPreview(URL.createObjectURL(file));
+          const form = new FormData(); form.append('file', file);
+          const ep = mode === 'explain' ? '/explain' : '/predict';
+          const res = await fetch(`/v1/inference${ep}`, {
+            method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form,
+          });
+          if (!res.ok) throw new Error(`Server error (${res.status}).`);
+          setResult(await res.json());
+          setAnalysisCount(c => c + 1);
+        } catch (e) {
+          setError(e.message.toLowerCase().includes('fetch')
+            ? 'CORS error — the image server blocks browser requests. Try downloading and uploading the file directly.'
+            : e.message);
+        } finally { stopTimer(); setLoading(false); }
+      };
 
       const runFiles = async (files) => {
         if (!files?.length) return;
         reset(); setLoading(true); startTimer();
         try {
           const file = await resizeImage(files[0], 1500);
-          setPreview(URL.createObjectURL(file)); setPInfo({ name: file.name, size: files[0].size });
+          setPreview(URL.createObjectURL(file));
           const form = new FormData(); form.append('file', file);
           const ep = mode === 'explain' ? '/explain' : '/predict';
-          const res = await fetch(`/v1/inference${ep}`, { method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form });
-          if (!res.ok) throw new Error(`Server Error (${res.status})`);
+          const res = await fetch(`/v1/inference${ep}`, {
+            method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form,
+          });
+          if (!res.ok) {
+            const s = res.status;
+            if (s === 401) throw new Error('Invalid API key.');
+            if (s === 413) throw new Error('File too large even after resize.');
+            if (s === 400) throw new Error('Unsupported format. Use JPEG or PNG.');
+            if (s === 429) throw new Error('Rate limit reached. Wait a moment and try again.');
+            throw new Error(`Server error (${s}).`);
+          }
           setResult(await res.json());
-        } catch (e) { setError(e.message); } finally { stopTimer(); setLoading(false); }
+          setAnalysisCount(c => c + 1);
+        } catch (e) {
+          setError(e.message);
+        } finally { stopTimer(); setLoading(false); }
       };
 
-      const showDrop = !result && !loading;
+      const getEpilogue = (prediction) => {
+        const lines = EPILOGUES[prediction] || ['The rest is silence.'];
+        return lines[analysisCount % lines.length];
+      };
+
+      const vc = result ? vcls(result.prediction) : '';
 
       return (
         <div>
+          {/* Topbar */}
           <nav className="topbar">
             <div className="topbar-left">
-              <span className="wordmark">AI or Not AI</span>
+              <span className="wordmark" onClick={reset}>AI or Not AI</span>
             </div>
             <div className="seg">
-              <button title="Instant result (Classification only)" className={`seg-btn ${mode === 'predict' ? 'on' : ''}`} onClick={() => { setMode('predict'); reset(); }}>Fast</button>
-              <button title="Visual explanation with heatmaps (Slower)" className={`seg-btn ${mode === 'explain' ? 'on' : ''}`} onClick={() => { setMode('explain'); reset(); }}>GradCAM</button>
+              <button
+                title="Instant result — Classification only"
+                className={`seg-btn ${mode === 'predict' ? 'on' : ''}`}
+                onClick={() => { setMode('predict'); reset(); }}>
+                Fast
+              </button>
+              <button
+                title="The play's the thing / Wherein I'll catch the conscience of the machine."
+                className={`seg-btn ${mode === 'explain' ? 'on' : ''}`}
+                onClick={() => { setMode('explain'); reset(); }}>
+                The Mousetrap
+              </button>
             </div>
             <div className="topbar-right">
               {!keyOpen && !isDemo ? (
                 <div style={{ cursor: 'pointer' }} onClick={() => setKeyOpen(true)}>
                   <span style={{ color: 'var(--real)', marginRight: '6px' }}>✓</span>API key saved
                 </div>
-              ) : (
-                <input type="password" placeholder="API Key" style={{ width: '140px', padding: '6px 10px', height: '28px' }} value={apiKey} onChange={e => setApiKey(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveKey()} />
-              )}
+              ) : keyOpen ? (
+                <input type="password" placeholder="API Key"
+                  style={{ width: '140px', padding: '6px 10px', height: '28px' }}
+                  value={apiKey}
+                  onChange={e => setApiKey(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && saveKey()}
+                  autoFocus />
+              ) : null}
             </div>
           </nav>
 
+          {/* Demo Banner */}
           {isDemo && (
             <div className="demo-banner">
               <span>Demo mode — 5 requests/sec · No signup needed</span>
@@ -1000,121 +1481,247 @@
             </div>
           )}
 
+          {/* Konami Soliloquy */}
+          {showSoliloquy && (
+            <div className="soliloquy-overlay" onClick={() => setShowSoliloquy(false)}>
+              <div className="soliloquy-content">
+                <p>To be AI, or not to be AI — that is the question.</p>
+                <p>Whether 'tis nobler in the machine to suffer</p>
+                <p>The slings and arrows of outrageous training data,</p>
+                <p>Or to take arms against a sea of pixels,</p>
+                <p>And by opposing, generate them.</p>
+                <div className="soliloquy-dismiss">[Press any key to return to thy inquiry]</div>
+              </div>
+            </div>
+          )}
+
           <main className="main">
+
+            {/* ACT I — The Question */}
             {!result && !loading && (
-              <div className="quote-banner">
+              <section className="playbill">
                 <img
-                  src="/static/images.jpg"
-                  alt="Shakespeare"
+                  src="/static/images.png"
+                  alt="The Chandos Portrait — Authenticity: disputed."
+                  title="The Chandos Portrait, c.1610. Attributed to John Taylor. Authenticity: disputed."
+                  className="playbill-portrait"
                   onError={e => e.target.style.display = 'none'}
-                  style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }}
+                  onClick={handlePortraitClick}
                 />
-                <div className="quote-content">
-                  <div className="quote-text">"AI or Not AI, That's the Question."</div>
-                  <div className="quote-author">— after Hamlet, Act III, Scene I</div>
+                <div className="playbill-ornament">❧  ❦  ❧</div>
+                <div className="playbill-quote">"AI or Not AI, That's the Question."</div>
+                <div className="playbill-attribution">— after Hamlet, Act III, Scene I</div>
+                <div className="playbill-ornament" style={{ fontSize: '11px', letterSpacing: '0.4em' }}>
+                  ══════════════════
                 </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="err">
-                <span>A tragedy of errors: {error}</span>
-                <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
-              </div>
-            )}
-
-            {showDrop && (
-              <div className="drop-container">
-                <div className={`drop ${preview ? '' : 'empty'} ${over ? 'over' : ''}`}
-                  onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
-                  onDrop={e => { e.preventDefault(); setOver(false); runFiles([...e.dataTransfer.files].filter(f => f.type.startsWith('image/'))); }}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <input ref={fileRef} type="file" accept="image/jpeg,image/png" onChange={e => runFiles([...e.target.files])} onClick={e => e.stopPropagation()} />
-                  <svg width="36" height="36" viewBox="0 0 512 512" fill="currentColor" style={{ marginBottom: '12px', opacity: 0.7 }}>
-                    <g>
-                      <path d="M306.036,422.4l-44.218-22.109c-3.491-2.327-6.982-5.818-6.982-10.473v-22.109c13.964-4.655,23.273-17.455,23.273-32.582
-      c0-19.782-15.127-34.909-34.909-34.909H128c-19.782,0-34.909,15.127-34.909,34.909c0,19.782,15.127,34.909,34.909,34.909h69.818
-      c6.982,0,11.636-4.655,11.636-11.636s-4.655-11.636-11.636-11.636H128c-6.982,0-11.636-4.655-11.636-11.636
-      s4.655-11.636,11.636-11.636h116.364c6.982,0,11.636,4.655,11.636,11.636s-4.655,11.636-11.636,11.636
-      s-11.636,4.655-11.636,11.636v32.582c0,12.8,6.982,25.6,19.782,31.418l44.218,22.109c3.491,2.327,6.982,5.818,6.982,10.473v23.273
-      c0,6.982-4.655,11.636-11.636,11.636H81.454c-6.982,0-11.636-4.655-11.636-11.636v-23.273c0-4.655,2.327-8.146,6.982-10.473
-      l44.218-22.109c11.636-5.818,19.782-17.455,19.782-31.418c0-6.982-4.655-11.636-11.636-11.636s-11.636,4.655-11.636,11.636
-      c0,4.655-2.327,8.145-6.982,10.473l-44.218,22.109c-12.8,4.655-19.782,17.455-19.782,30.255v23.273
-      c0,19.782,15.127,34.909,34.909,34.909h209.455c19.782,0,34.909-15.127,34.909-34.909v-23.273
-      C325.818,441.018,318.836,428.218,306.036,422.4z"/>
-                      <path d="M438.691,3.491C436.364,1.164,432.873,0,429.382,0s-6.982,2.327-8.145,4.655L211.782,272.291
-      c-3.491,4.655-3.491,12.8,2.327,16.291c2.327,1.164,4.655,2.327,6.982,2.327c3.491,0,6.982-1.164,9.309-4.655l200.145-256
-      c8.145,12.8,11.636,30.255,11.636,51.2c0,33.745-17.455,53.527-25.6,62.836L371.2,159.418c-3.491,1.164-6.982,4.655-8.145,9.309
-      c-1.164,3.491,1.164,8.145,3.491,10.473l18.618,16.291c-24.436,22.109-52.364,39.564-97.745,48.873
-      c-5.818,1.164-10.473,8.145-9.309,13.964c1.164,5.818,8.146,10.473,13.964,9.309c60.509-12.8,91.927-38.4,117.527-64
-      c2.327-2.327,3.491-6.982,3.491-10.473c0-2.327-2.327-4.655-3.491-6.982l-12.8-11.636l29.091-10.473
-      c1.164,0,3.491-2.327,4.655-3.491c23.273-20.945,34.909-48.873,34.909-79.127C465.455,47.709,456.145,20.945,438.691,3.491z"/>
-                    </g>
-                  </svg>
-                  <div className="drop-primary">Hark! Drop thy image here, or Ctrl+V</div>
-                  <div className="drop-hint">A blank canvas awaits · JPEG / PNG</div>
-                </div>
-
-                <div className="url-toggle">
-                  {!showUrl ? <button onClick={(e) => { e.stopPropagation(); setShowUrl(true); }}>Or summon from URL</button> : (
-                    <div className="url-row" onClick={e => e.stopPropagation()}>
-                      <input type="url" placeholder="https://..." value={urlInput} onChange={e => setUrlInput(e.target.value)} />
-                      <button className="btn-go" onClick={() => {/* URL Logic */ }}>Analyze</button>
-                      <button className="btn-go" onClick={() => setShowUrl(false)}>✕</button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="kb-hints">
-                  <div className="kb"><kbd>E</kbd> GradCAM mode</div>
-                  <div className="kb"><kbd>F</kbd> Fast mode</div>
-                  <div className="kb"><kbd>U</kbd> URL input</div>
-                  <div className="kb"><kbd>R</kbd> Reset</div>
-                  <div className="kb"><kbd>Ctrl+V</kbd> Paste image</div>
-                </div>
-              </div>
-            )}
-
-            {loading && (
-              <div className="loader-wrap">
-                <div className="loading-hourglass">⌛</div>
-                <div className="status-text">{mode === 'explain' ? "The plot thickens..." : "Consulting the muse..."}</div>
-                <div style={{ fontSize: '11px', color: 'var(--dim)', marginTop: '4px' }}>{elapsed}s</div>
-              </div>
-            )}
-
-            {result && !loading && (
-              <section>
-                <div className="result-head">
-                  <div className="verdict-box">
-                    <div className={`verdict ${vcls(result.prediction)}`}>{LABELS[result.prediction] || result.prediction}</div>
-                    <div className="verdict-sub">{SHAKESPEARE_SUBS[result.prediction]}</div>
-                  </div>
-                  <div className="result-meta">
-                    <div>{result.filename}</div>
-                    <div>{result.processing_time_ms} ms</div>
-                  </div>
-                </div>
-
-                <div className="conf-row"><span>Confidence</span><span>{(result.confidence * 100).toFixed(1)}%</span></div>
-                <div className="conf-track"><div className={`conf-fill ${vcls(result.prediction)}`} style={{ width: `${result.confidence * 100}%` }} /></div>
-                <div className="conf-zones"><span>Real</span><span>Uncertain</span><span>AI</span></div>
-                <hr className="rule" />
-
-                {result.heatmap_base64 && preview ? <GradSlider original={preview} heatmap={result.heatmap_base64} /> : (
-                  preview && <><div className="sec">Analyzed image</div><div className="img-box"><img src={preview} alt="Analyzed" /></div></>
-                )}
-
-                <div className="actions">
-                  <button className="btn-reset" onClick={() => { reset(); fileRef.current?.click(); }}>Exeunt</button>
+                <div className="playbill-byline">A Philosophical Enquiry in Five Acts</div>
+                <div className="playbill-edition">Presented at the Globe Theatre of the Web</div>
+                <div className="scroll-cue" onClick={() => toolRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+                  <span>Begin thy inquiry</span>
+                  <span>↓</span>
                 </div>
               </section>
             )}
 
-            <div className="fleuron-divider"></div>
+            {/* ACT II — The Boards */}
+            {!result && !loading && (
+              <div ref={toolRef}>
+                <ActLabel act="ACT II" title="The Boards" />
+                <div className="gloss-anchor">
+                  <div
+                    className={`drop empty ${over ? 'over' : ''}`}
+                    onDragOver={e => { e.preventDefault(); setOver(true); }}
+                    onDragLeave={() => setOver(false)}
+                    onDrop={e => {
+                      e.preventDefault(); setOver(false);
+                      // 1. Durum: Masaüstünden gerçek bir dosya sürüklendiyse
+                      const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+                      if (files.length > 0) {
+                        runFiles(files);
+                        return;
+                      }
+
+                      // 2. Durum: Başka sekmeden HTML parçası (örneğin resim etiketi) sürüklendiyse
+                      const html = e.dataTransfer.getData('text/html');
+                      if (html) {
+                        const match = html.match(/src\s*=\s*"([^"]+)"/); // HTML içinden src="" kısmını çıkar
+                        if (match && match[1]) {
+                          runFromUrl(match[1]);
+                          return;
+                        }
+                      }
+
+                      // 3. Durum: Sadece düz bir link veya metin sürüklendiyse
+                      const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+                      if (url && url.startsWith('http')) {
+                        runFromUrl(url);
+                      }
+                    }}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    <input ref={fileRef} type="file" accept="image/jpeg,image/png"
+                      onChange={e => runFiles([...e.target.files])}
+                      onClick={e => e.stopPropagation()} />
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="1.2"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      style={{ marginBottom: '12px', opacity: 0.45 }}>
+                      <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
+                      <line x1="16" y1="8" x2="2" y2="22" />
+                      <line x1="17.5" y1="15" x2="9" y2="15" />
+                    </svg>
+                    <div className="drop-primary">Hark! Drop thy image here, or Ctrl+V</div>
+                    <div className="drop-hint">A blank canvas awaits · JPEG / PNG</div>
+                  </div>
+                  <div className="gloss">
+                    Tread the boards — place thy image upon the stage for examination by the learned engine.
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="err">
+                    <span>
+                      <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
+                        A tragedy of errors:
+                      </span>
+                      {' '}{error}
+                    </span>
+                    <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
+                  </div>
+                )}
+
+                <div className="url-toggle">
+                  {!showUrl ? (
+                    <button onClick={e => { e.stopPropagation(); setShowUrl(true); }}>
+                      Or summon from URL
+                    </button>
+                  ) : (
+                    <div className="url-row" onClick={e => e.stopPropagation()}>
+                      <input type="url" placeholder="https://..." value={urlInput}
+                        onChange={e => setUrlInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && runFromUrl(urlInput)}
+                        autoFocus />
+                      <button className="btn-go" onClick={() => runFromUrl(urlInput)}>Analyze</button>
+                      <button className="btn-go" onClick={() => { setShowUrl(false); setUrlInput(''); }}>✕</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ACT III — The Deliberation */}
+            {loading && (
+              <>
+                <ActLabel act="ACT III" title="The Deliberation" />
+                <div className="loader-wrap">
+                  <div className="loading-hourglass">⌛</div>
+                  <div className="status-text">
+                    {mode === 'explain' ? 'The plot thickens...' : 'Consulting the muse...'}
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--dim)', marginTop: '4px' }}>
+                    {elapsed}s
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ACT IV — The Verdict */}
+            {result && !loading && (
+              <>
+                <ActLabel act="ACT IV" title="The Verdict" />
+                <section className="broadside">
+
+                  <div className="broadside-ornament">❧  ❦  ❧</div>
+                  <div className={`broadside-verdict ${vc}`}>
+                    {LABELS[result.prediction] || result.prediction}
+                  </div>
+                  <div className="broadside-heraldry">
+                    {HERALDRY[result.prediction]} &nbsp;·&nbsp; {(result.confidence * 100).toFixed(1)}%
+                  </div>
+                  <div className="broadside-sub">{SHAKESPEARE_SUBS[result.prediction]}</div>
+                  <div className="broadside-rule">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
+                  <div className="broadside-meta">
+                    <span>{formatFilename(result.filename)}</span>
+                    <span className="sep">·</span>
+                    <span className="serif-detail">{mode === 'explain' ? 'The Mousetrap' : 'Fast'}</span>
+                    <span className="sep">·</span>
+                    <span>{result.processing_time_ms} ms</span>
+                    {result.cached && (
+                      <><span className="sep">·</span>
+                        <span className="serif-detail">Previously, in the Globe...</span></>
+                    )}
+                  </div>
+                  <div className="broadside-rule">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
+
+                  {/* Confidence as Soliloquy */}
+                  <div className="gloss-anchor" style={{ textAlign: 'left', marginBottom: '0' }}>
+                    <div className="conf-row">
+                      <span className="conf-label">Soliloquy</span>
+                      <span className="conf-score">{(result.confidence * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="conf-track">
+                      <div className={`conf-fill ${vc}`} style={{ width: `${w}%` }} />
+                    </div>
+                    <div className="conf-zones">
+                      <span className="zone-tip"
+                        data-tip="The Infant — certainty of origin, born of mortal hands.">
+                        Real
+                      </span>
+                      <span className="zone-tip"
+                        data-tip="The Justice — in fair round belly, weighing all sides with scholarly indecision.">
+                        Uncertain
+                      </span>
+                      <span className="zone-tip"
+                        data-tip="Second childishness — mere oblivion, generated by machine and naught else.">
+                        AI
+                      </span>
+                    </div>
+                    <div className="gloss">
+                      A soliloquy — the model's inner monologue, spoken aloud for your eyes only.
+                    </div>
+                  </div>
+
+                  <hr className="rule" />
+
+                  {result.heatmap_base64 && preview
+                    ? <GradSlider original={preview} heatmap={result.heatmap_base64} />
+                    : preview && (
+                      <>
+                        <div className="sec">Analyzed Image</div>
+                        <div className="img-box">
+                          <img src={preview} alt="The analyzed image" />
+                        </div>
+                      </>
+                    )
+                  }
+
+                  <div className="actions">
+                    <button className="btn-reset" onClick={reset}>Exeunt</button>
+                  </div>
+
+                  <div className="epilogue">{getEpilogue(result.prediction)}</div>
+
+                </section>
+              </>
+            )}
+
+            {/* ACT V — The Epilogue */}
+            <ActLabel act="ACT V" title="The Epilogue" />
+            <div className="fleuron-divider">❧  ❦  ❧</div>
             <ExtSection />
+
           </main>
+
+          {/* Prompter's Box */}
+          <div className="prompters-box">
+            <div className="prompters-label">[Prompter]</div>
+            <div className="kb"><kbd>E</kbd> The Mousetrap</div>
+            <div className="kb"><kbd>F</kbd> Fast mode</div>
+            <div className="kb"><kbd>U</kbd> Summon URL</div>
+            <div className="kb"><kbd>R</kbd> Exeunt</div>
+            <div className="kb"><kbd>Ctrl+V</kbd> Paste image</div>
+          </div>
+
         </div>
       );
     }
