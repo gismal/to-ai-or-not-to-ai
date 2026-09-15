@@ -100,12 +100,21 @@ async def health_check(
     status_code=status.HTTP_200_OK,
     summary="Classify image origin",
     responses={
-        200: {"description": "Successful inference"},
-        400: {"description": "Unsupported image format or bad request"},
-        401: {"description": "Invalid or missing API key"},
-        413: {"description": "File exceeds size limit"},
-        429: {"description": "Rate limit exceeded (5 requests/second)"},
-        500: {"description": "Model inference failure"},
+        200: {
+            "description": "Truth will come to light. — The Merchant of Venice, II.ii"
+        },
+        400: {"description": "The mirror is cracked; these pixels yield no truth."},
+        401: {"description": "All is not well; I doubt some foul play. — Hamlet, I.ii"},
+        413: {
+            "description": "What a piece of work is a man... yet what is this quintessence of dust? — Hamlet, II.ii"
+        },
+        429: {"description": "Brevity is the soul of wit. — Hamlet, II.ii"},
+        500: {
+            "description": "Something is rotten in the state of Denmark. — Hamlet, I.iv"
+        },
+        503: {
+            "description": "The course of true inference never did run smooth. — adapted, A Midsummer Night's Dream"
+        },
     },
     description="Accepts an image file, validates the format and executes ONNX inference",
 )

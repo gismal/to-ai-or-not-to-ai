@@ -1,14 +1,29 @@
+# Python
 venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Proje & Test
 .env
 .pytest_cache/
-logs/
-*.logs
-*.pyc
-models/*.pt
-!models/metadata.json
+test_raporu.html
 heatmap.png
 .DS_Store
-__pycache__/
-test_raporu.html
-best_checkpoint.pt
+
+# Loglar & MLflow
+logs/
+*.logs
+mlruns/
+mlflow.db
+
+# Modeller ve Veriler
+data/
 *.pt
+best_checkpoint.pt
+models/*.pt
+models/*.onnx
+models/*.onnx.data
+models/*.pkl
+models/future_plans
+!models/metadata.json

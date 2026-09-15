@@ -29,5 +29,8 @@ class PredictionLog(Base):
     predicted_label = Column(SQLEnum(PredictionLabel), nullable=False)  # type: ignore
     processing_time_ms = Column(Float, nullable=True)
     client_source = Column(String, default="API_v1")
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     is_deleted = Column(Boolean, default=False)
