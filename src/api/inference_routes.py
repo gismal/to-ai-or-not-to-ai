@@ -6,7 +6,7 @@ Inference domain: predict, predict-batch, explain, health.
 import asyncio
 import io
 from pathlib import PurePosixPath
-
+from typing import Any
 import magic
 from fastapi import (
     APIRouter,
@@ -129,12 +129,25 @@ async def predict_image(
     content_bytes, safe_filename = await _read_and_validate(request, file)
     result = await service.predict(content_bytes, safe_filename)
 
+    res_obj: Any = result
+    confidence = (
+        res_obj["confidence"] if isinstance(result, dict) else res_obj.confidence
+    )
+    prediction = (
+        res_obj["prediction"] if isinstance(result, dict) else res_obj.prediction
+    )
+    processing_time = (
+        res_obj["processing_time_ms"]
+        if isinstance(result, dict)
+        else res_obj.processing_time_ms
+    )
+
     background_tasks.add_task(
         log_repo.create_log,
         filename=safe_filename,
-        confidence=result.confidence,
-        predicted_label=result.prediction,
-        processing_time_ms=result.processing_time_ms,
+        confidence=confidence,
+        predicted_label=prediction,
+        processing_time_ms=processing_time,
     )
     return result
 

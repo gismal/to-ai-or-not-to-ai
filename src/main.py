@@ -159,7 +159,7 @@ async def health_check(request: Request):
 @app.exception_handler(InvalidImageFormatError)
 async def invalid_image_handler(request: Request, exc: InvalidImageFormatError):
     """Handles unsupported file format errors globally"""
-    return JSONResponse(status_code=400, content={"detail: {exc!s}"})
+    return JSONResponse(status_code=400, content={"detail": f"{exc!s}"})
 
 
 @app.exception_handler(ModelInferenceError)
@@ -179,7 +179,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "details": "Invalid request data submitted",
-            "errors": exc.errors(include_url=False),  # type: ignore
+            "errors": exc.errors(),
         },
     )
 
