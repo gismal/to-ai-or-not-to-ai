@@ -7,6 +7,7 @@ import asyncio
 import io
 from pathlib import PurePosixPath
 from typing import Any
+
 import magic
 from fastapi import (
     APIRouter,
