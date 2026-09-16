@@ -1,3 +1,4 @@
+import asyncio
 import subprocess
 import uuid
 from contextlib import asynccontextmanager
@@ -47,8 +48,13 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting up API, loading ONNX model")
     try:
-        result = subprocess.run(
-            ["alembic", "upgrade", "head"], capture_output=True, text=True, cwd="/app"
+        result = await asyncio.to_thread(
+            subprocess.run,
+            ["alembic", "upgrade", "head"],
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            check=False,
         )
         if result.returncode == 0:
             logger.info("Database migrations applied.")
@@ -86,7 +92,7 @@ async def lifespan(app: FastAPI):
         predictor = ONNXPredictor()
         app.state.inference_service = InferenceService(
             predictor=predictor,
-            cache=app.state.cache_service,
+            cache=app.state.cache_service,  # type: ignore
             threshold=settings.MODEL_THRESHOLD,
             gray_area_margin=settings.GRAY_AREA_MARGIN,
         )
@@ -153,14 +159,14 @@ async def health_check(request: Request):
 @app.exception_handler(InvalidImageFormatError)
 async def invalid_image_handler(request: Request, exc: InvalidImageFormatError):
     """Handles unsupported file format errors globally"""
-    return JSONResponse(status_code=400, content={"detail": str(exc)})
+    return JSONResponse(status_code=400, content={"detail: {exc!s}"})
 
 
 @app.exception_handler(ModelInferenceError)
 async def model_error_handler(request: Request, exc: ModelInferenceError):
     """Handles model inference errors"""
     logger.error(f"Model Inference Error: {exc}")
-    return JSONResponse(status_code=500, content={"detail": f"Model Error: {str(exc)}"})
+    return JSONResponse(status_code=500, content={"detail": f"Model Error: {exc!s}"})
 
 
 @app.exception_handler(RequestValidationError)
@@ -173,7 +179,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "details": "Invalid request data submitted",
-            "errors": exc.errors(include_url=False),
+            "errors": exc.errors(include_url=False),  # type: ignore
         },
     )
 

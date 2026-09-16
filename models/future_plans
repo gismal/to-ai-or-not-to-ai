@@ -1,0 +1,116 @@
+Honest answer: **not critical right now**. Ship what you have first.
+
+Here's why — EfficientNet-B0 would give you better accuracy on the harder cases (blurry photos, varied scenes), but the gains come from the architecture having more capacity, not from magic. Your current retrain with the category-balanced dataset is almost certainly already a meaningful improvement over the 3-class CIFAKE-only model. The dataset quality improvement matters more than the architecture choice at this stage.
+
+The question to ask is: does your current model fail on real-world test images? Upload a few selfies and landscape photos after deployment. If accuracy looks good, you're done. If you're still seeing obvious mistakes, then retrain with EfficientNet-B0.
+
+---
+
+## If you decide to retrain with EfficientNet-B0
+
+Four files change. Nothing else.
+
+**`scripts/train.py` — change `build_model`:**
+
+```python
+def build_model(num_classes: int, freeze_backbone: bool = True) -> nn.Module:
+    # ❌ Old
+    # model = models.mobilenet_v3_small(weights="DEFAULT")
+    # if freeze_backbone:
+    #     for param in model.features.parameters():
+    #         param.requires_grad = False
+    # last_layer = model.classifier[-1]
+    # model.classifier[-1] = nn.Linear(last_layer.in_features, num_classes)
+
+    # ✅ New
+    model = models.efficientnet_b0(weights="DEFAULT")
+    if freeze_backbone:
+        for param in model.features.parameters():
+            param.requires_grad = False
+    in_features = model.classifier[1].in_features   # ← [1] not [-1]
+    model.classifier[1] = nn.Linear(in_features, num_classes)
+    return model
+```
+
+Key difference: `classifier[1]` not `classifier[-1]`. EfficientNet's classifier head is structured differently from MobileNetV3.
+
+---
+
+**`scripts/train.py` — change `unfreeze_backbone`:**
+
+```python
+def unfreeze_backbone(model: nn.Module, lr: float = 1e-5) -> optim.Optimizer:
+    # Same code, different assertion check
+    for param in model.features.parameters():
+        param.requires_grad = True
+    return optim.Adam(model.parameters(), lr=lr)
+```
+
+This one is actually identical — both architectures use `model.features` for the backbone.
+
+---
+
+**`src/services/explainability_service.py` — change `_load`:**
+
+```python
+def _load(self) -> None:
+    # ❌ Old
+    # self.model = models.mobilenet_v3_small(weights=None)
+    # in_features = self.model.classifier[-1].in_features
+    # self.model.classifier[-1] = nn.Linear(in_features, self.num_classes)
+
+    # ✅ New
+    self.model = models.efficientnet_b0(weights=None)
+    in_features = self.model.classifier[1].in_features
+    self.model.classifier[1] = nn.Linear(in_features, self.num_classes)
+
+    checkpoint = torch.load(str(self.model_path), map_location="cpu")
+    self.model.load_state_dict(checkpoint["model_state_dict"])
+    self.model.eval()
+
+    # ← GradCAM target layer also changes for EfficientNet
+    self.target_layers = [self.model.features[-1]]   # same line, still works
+```
+
+---
+
+**`src/inference.py` — warmup validation stays identical:**
+
+```python
+# No changes needed here — ONNXPredictor loads whatever ONNX file
+# is in models/model_v1.onnx, doesn't care about architecture
+```
+
+---
+
+**`metadata.json` — update base_model field after retraining:**
+
+```json
+{
+  "base_model": "EfficientNet_B0"
+}
+```
+
+---
+
+## What you gain vs cost
+
+| | MobileNetV3-Small (current) | EfficientNet-B0 |
+|---|---|---|
+| Parameters | 2.5M | 5.3M |
+| Inference speed | ~80ms CPU | ~130ms CPU |
+| ONNX size | ~6MB | ~16MB |
+| Accuracy on hard cases | baseline | +2-4% F1 expected |
+| Extra GPU time in Kaggle | — | +20-30 min |
+
+The inference speed hit from 80ms to 130ms is real but acceptable — your `/predict` endpoint is well within user tolerance at 130ms, and `/explain` (GradCAM) already takes 300-500ms so EfficientNet barely changes the experience for that endpoint.
+
+---
+
+## My recommendation
+
+```
+Deploy now → test on real-world images → measure failures → decide
+```
+
+If you're seeing obvious mistakes after deployment, retrain with EfficientNet-B0 — the four changes above take 10 minutes to apply, then kick off another Kaggle run with the same dataset you already built. The dataset is already good. The architecture is the only remaining lever.

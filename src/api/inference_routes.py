@@ -59,7 +59,7 @@ router = APIRouter(
 )
 async def health_check(
     request: Request,
-    session: AsyncSession = Depends(get_db_session),  # noqa: B008
+    session: AsyncSession = Depends(get_db_session),
 ):
     inference_service = request.app.state.inference_service
     is_model_loaded = (
@@ -72,7 +72,7 @@ async def health_check(
         db_ok = True
     except SQLAlchemyError as db_exc:
         logger.error(f"Database health check failed: {db_exc}", exc_info=True)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Database failed: {e}", exc_info=True)
 
     redis_ok = (
@@ -122,9 +122,9 @@ async def health_check(
 async def predict_image(
     request: Request,
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),  # noqa: B008
-    service: InferenceService = Depends(get_inference_service),  # noqa: B008
-    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),  # noqa: B008
+    file: UploadFile = File(...),
+    service: InferenceService = Depends(get_inference_service),
+    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
 ):
     content_bytes, safe_filename = await _read_and_validate(request, file)
     result = await service.predict(content_bytes, safe_filename)
@@ -151,9 +151,9 @@ async def predict_image(
 async def predict_batch(
     request: Request,
     background_tasks: BackgroundTasks,
-    files: list[UploadFile] = File(...),  # noqa: B008
-    service: InferenceService = Depends(get_inference_service),  # noqa: B008
-    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),  # noqa: B008
+    files: list[UploadFile] = File(...),
+    service: InferenceService = Depends(get_inference_service),
+    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
 ):
     if len(files) > settings.MAX_BATCH_SIZE:
         files = files[: settings.MAX_BATCH_SIZE]
@@ -180,7 +180,7 @@ async def predict_batch(
         except InvalidImageFormatError as exc:
             logger.warning(f"Batch item format failed ({f.filename}): {exc}")
             return {"filename": f.filename, "error": str(exc), "status": "FAILED"}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # Unexpected server errors
             logger.error(
                 f"Batch item failed unexpectedly ({f.filename}): {exc}", exc_info=True
@@ -221,9 +221,9 @@ async def predict_batch(
 )
 async def explain_image(
     request: Request,
-    file: UploadFile = File(...),  # noqa: B008
-    service: InferenceService = Depends(get_inference_service),  # noqa: B008
-    explainer: ExplainabilityService = Depends(get_explainability_service),  # noqa: B008
+    file: UploadFile = File(...),
+    service: InferenceService = Depends(get_inference_service),
+    explainer: ExplainabilityService = Depends(get_explainability_service),
 ):
     content_bytes, safe_filename = await _read_and_validate(request, file)
     return await explainer.explain(

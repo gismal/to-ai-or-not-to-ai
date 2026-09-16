@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
+from typing import ClassVar
 from urllib.parse import urlparse
 
 from arq import Retry, cron
@@ -78,9 +79,8 @@ _parsed = urlparse(settings.REDIS_URL)
 
 
 class WorkerSettings:
-    functions = [retrain_model]
-
-    cron_jobs = [
+    functions: ClassVar[list] = [retrain_model]
+    cron_jobs: ClassVar[list] = [
         cron(
             check_drift_scheduled,
             hour=2,

@@ -1,17 +1,13 @@
 import os
 
 import pytest
-
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.core.enums import FeedbackLabel, PredictionLabel
 from src.infra.database import Base
 from src.repositories.feedback_repo import FeedbackRepository
-from src.repositories.prediction_log_repository import (
-    PredictionLogRepository,
-)
+from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.schemas.feedback import FeedbackCreateRequest
-
 
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["API_KEY"] = "test_gizli_anahtar_123"
