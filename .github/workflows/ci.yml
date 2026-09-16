@@ -42,6 +42,7 @@ jobs:
         env:
             API_KEY: "mock-api-key-for-testing"
             DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+            REDIS_URL: "redis://localhost:6379/0"
         run: PYTHONPATH=. python -m pytest -v --tb=short
 
       - name: Upload Coverage Report
