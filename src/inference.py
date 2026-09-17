@@ -128,10 +128,14 @@ class ONNXPredictor(BaseMLEngine):
             )
 
         try:
-            outputs = self._session.run(None, {self._input_name: input_data})  # type: ignore
-            preds = np.asarray(outputs[0])
+            outputs = self._session.run(None, {self._input_name: input_data})
+            preds = np.asanyarray(outputs[0])
+            logits = preds[0]
 
-            confidence_score = float(preds[0][0])
+            exp = np.exp(logits - logits.max())
+            probs = exp / exp.sum()
+            confidence_score = float(probs[0])
+
             return InferenceResult(
                 image=filename,
                 confidence=round(confidence_score, 4),

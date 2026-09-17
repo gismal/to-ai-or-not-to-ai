@@ -35,9 +35,9 @@ class APIKey(Base):
     tier = Column(SQLEnum(APIKeyTier), default=APIKeyTier.PUBLIC, nullable=False)  # type: ignore
     is_active = Column(Boolean, default=True, nullable=False)
     rate_limit = Column(Integer, default=60)  # requests per minute
-    last_used_at = Column(DateTime, nullable=True)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )

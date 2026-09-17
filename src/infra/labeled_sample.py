@@ -49,7 +49,7 @@ class LabeledSample(Base):
     labeled_by = Column(String, default="admin", nullable=False)
     added_to_training = Column(Boolean, default=False, nullable=False)
     created_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         index=True,
     )

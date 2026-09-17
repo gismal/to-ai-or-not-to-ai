@@ -6,9 +6,9 @@ Clean, production-ready transfer learning with MobileNetV3-Small
 import copy
 import json
 import os
+from contextlib import nullcontext
 from datetime import datetime, timezone
 
-import mlflow
 import torch
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch import nn, optim
@@ -19,6 +19,49 @@ from tqdm import tqdm
 from scripts.train_config import TrainConfig
 from src.config import settings
 from src.logger import logger
+
+try:
+    import mlflow
+
+    _MLFLOW_AVAILABLE = True
+except ImportError:
+    _MLFLOW_AVAILABLE = False
+
+
+class _NoMlFlow:
+    """
+    Duck Typing for mlflow because it was throwing unbounded error
+    """
+
+    @staticmethod
+    def set_tracking_uri(*a, **kw):
+        pass
+
+    @staticmethod
+    def set_experiment(*a, **kw):
+        pass
+
+    @staticmethod
+    def log_params(*a, **kw):
+        pass
+
+    @staticmethod
+    def log_metrics(*a, **kw):
+        pass
+
+    @staticmethod
+    def log_artifact(*a, **kw):
+        pass
+
+    @staticmethod
+    def start_run(*a, **kw):
+        return nullcontext()
+
+
+if not _MLFLOW_AVAILABLE:
+    mlflow = _NoMlFlow()  # type: ignore[assignment]
+    logger.warning("mlflow not installed. training without experiment tracking")
+
 
 # -- Data ---------------
 
@@ -261,7 +304,7 @@ def export_model(
         (dummy_input,),
         config.onnx_path,
         export_params=True,
-        opset_version=18,
+        opset_version=12,
         do_constant_folding=True,
         input_names=["input"],
         output_names=["output"],
@@ -284,7 +327,22 @@ def export_model(
 
 
 # -- Entry Point -------
+# -- Entry Point -------
 def main() -> None:
+    """Executes the MLOps training pipeline.
+
+    This function orchestrates the entire training process:
+    1. Configures the environment and random seeds.
+    2. Sets up MLflow tracking (if available).
+    3. Loads the training and validation datasets.
+    4. Trains the model in two phases (frozen backbone, then fine-tuning).
+    5. Evaluates the model and logs metrics.
+    6. Exports the best model to ONNX format along with metadata.
+
+    Raises:
+        FileNotFoundError: If the specified dataset directories are not found.
+        Exception: If any unexpected error occurs during the training pipeline execution.
+    """
     logger.info("MLOps Training Pipeline")
     config = TrainConfig()
 
@@ -325,35 +383,28 @@ def main() -> None:
             logger.info("Phase 1: Training classifier head (frozen backbone)...")
             best_metrics = trainer.run(train_loader, val_loader)
 
-            # Phase 2: fine tuning
-            logger.info("Phase 2: fine-tuning full network...")
+            # Phase 2: Fine-tuning full network
+            logger.info("Phase 2: Fine-tuning full network...")
             optimizer = unfreeze_backbone(model, lr=1e-5)
 
-            # update the trainer params for Phase 2
             trainer.optimizer = optimizer
             trainer.scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5)
             trainer.early_stopping = EarlyStopping(patience=3)
             trainer.config.epochs = 5
 
-            # Reset best_loss for Phase 2 to ensure it saves a new model if it improves
-            trainer._best_val_loss = float("inf")
-
-            # Phase 2
             best_metrics = trainer.run(train_loader, val_loader)
-
-            # log final metrics
-            mlflow.log_metrics({k: round(v, 4) for k, v in best_metrics.items()})
 
             export_model(model, config, best_metrics, classes)
 
+            mlflow.log_metrics({k: round(v, 4) for k, v in best_metrics.items()})
             mlflow.log_artifact(str(config.onnx_path), artifact_path="models")
             mlflow.log_artifact(str(config.checkpoint_path), artifact_path="models")
             mlflow.log_artifact(str(config.metadata_path), artifact_path="models")
 
-            logger.info("Pipeline complete.")
-            logger.info(
-                f"Best metrics: { {k: round(v, 4) for k, v in best_metrics.items()} }"
-            )
+        logger.info("Pipeline complete.")
+        logger.info(
+            f"Best metrics: { {k: round(v, 4) for k, v in best_metrics.items()} }"
+        )
 
     except FileNotFoundError as e:
         logger.warning(f"Aborted: {e}. Prepare the dataset and retry.")

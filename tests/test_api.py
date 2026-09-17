@@ -239,3 +239,19 @@ def test_explain_endpoint(client, auth_headers):
     assert "heatmap_base64" in data
 
     client.app.dependency_overrides.pop(get_explainability_service, None)
+
+
+@pytest.mark.asyncio
+async def test_cache_hit_on_second_request(client, auth_headers):
+    img_byte_arr = io.BytesIO()
+    Image.new("RGB", (224, 224), color="green").save(img_byte_arr, format="PNG")
+    img_data = img_byte_arr.getvalue()
+
+    files1 = {"file": ("test.png", img_data, "image/png")}
+    r1 = client.post("/v1/inference/predict", files=files1, headers=auth_headers)
+
+    files2 = {"file": ("test.png", img_data, "image/png")}
+    r2 = client.post("/v1/inference/predict", files=files2, headers=auth_headers)
+    assert r1.status_code == 200
+    assert r2.status_code == 200
+    assert r2.json()["cached"] is True

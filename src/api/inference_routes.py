@@ -48,11 +48,13 @@ router = APIRouter(
     dependencies=[Depends(verify_api_key)],
 )
 
+health_router = APIRouter(tags=["System"])
+
 
 # ── Health ────────────────────────────────────────────────────────────────────
 
 
-@router.get(
+@health_router.get(
     "/health",
     dependencies=[],
     status_code=status.HTTP_200_OK,

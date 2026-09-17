@@ -55,7 +55,7 @@ class TaskResultRepository:
                 logger.warning(f"TaskResult {record_id} not found for update")
                 return
             record.status = status  # type: ignore
-            record.completed_at = datetime.now(timezone.utc)  # type: ignore
+            record.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
             record.error = error  # type: ignore
             await self.session.commit()
 

@@ -40,5 +40,7 @@ class FeedbackItem(Base):
     # soft deletion to not to delete something pyhsically and entirely
     is_deleted = Column(Boolean, default=False)
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
     )

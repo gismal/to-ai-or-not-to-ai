@@ -11,6 +11,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from PIL import Image
 
+from src.core.enums import PredictionLabel
 from src.inference import _preprocess
 from src.services.inference_service import InferenceService
 from src.utils import generate_phash
@@ -136,3 +137,16 @@ def test_decide_class_property(service, confidence):
         assert result.value == "REAL"
     else:
         assert "UNCERTAIN" in result.value
+
+
+@given(st.floats(min_value=0.0, max_value=1.0))
+@settings(max_examples=500)
+def test_decide_class_covers_all_values(confidence):
+    service = InferenceService(
+        predictor=MagicMock(),
+        cache=AsyncMock(),
+        threshold=0.75,
+        gray_area_margin=0.35,
+    )
+    label = service._decide_class(confidence)
+    assert label in list(PredictionLabel)

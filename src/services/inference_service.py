@@ -1,6 +1,5 @@
 import asyncio
 import io
-import math
 import time
 
 from src.core.enums import InferenceStatus, PredictionLabel
@@ -119,8 +118,7 @@ class InferenceService:
             raise ModelInferenceError(str(result.error))
 
         # -- 3. Classify ------------------------
-        raw_score = float(result.confidence)
-        safe_confidence = 1.0 / (1.0 + math.exp(-raw_score))
+        safe_confidence = float(result.confidence)
 
         prediction = self._decide_class(safe_confidence)
         PREDICTION_COUNTER.labels(label=prediction.value).inc()

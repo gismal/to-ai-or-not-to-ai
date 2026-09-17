@@ -16,6 +16,7 @@ from slowapi.errors import RateLimitExceeded
 
 from src.api.admin_routes import admin_router
 from src.api.feedback_routes import feedback_router
+from src.api.inference_routes import health_router
 from src.api.inference_routes import router as inference_router
 from src.config import settings
 from src.core.exceptions import (
@@ -119,6 +120,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="To AI or Not to AI", version="1.0.0", lifespan=lifespan)
 app.include_router(inference_router)
+app.include_router(health_router)
 app.include_router(feedback_router)
 app.include_router(admin_router)
 

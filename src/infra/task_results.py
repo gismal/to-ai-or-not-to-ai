@@ -26,6 +26,12 @@ class TaskResult(Base):
     status = Column(SQLEnum(TaskStatus), nullable=False, default=TaskStatus.RUNNING)  # type: ignore
     error = Column(Text, nullable=True)  # populated on failure
     started_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        index=True,
     )
-    completed_at = Column(DateTime, nullable=True)  # populated on finish
+    completed_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        index=True,
+    )  # populated on finish

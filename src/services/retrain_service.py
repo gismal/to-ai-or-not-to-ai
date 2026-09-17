@@ -32,7 +32,9 @@ class RetrainService:
         Returns:
             dict with status, error_rate, and optional job_id
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
+        cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(
+            days=lookback_days
+        )
 
         total_with_feedback = await self.session.scalar(
             select(func.count(PredictionLog.id))

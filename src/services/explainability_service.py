@@ -59,9 +59,11 @@ class ExplainabilityService(BaseMLEngine):
         super().__init__(checkpoint_path)
 
     def _load(self) -> None:
-        """Load PyTorch checkppoint and configure GradCAM target layers"""
-        assert self.model is not None, "Model has not uploaded yet"
+        """Load PyTorch checkpoint and configure GradCAM target layers"""
         self.model = models.mobilenet_v3_small(weights=None)
+
+        assert self.model is not None, "Model is not initialized."
+
         in_features = self.model.classifier[-1].in_features
         self.model.classifier[-1] = nn.Linear(in_features, self.num_classes)  # type: ignore
 
@@ -71,6 +73,8 @@ class ExplainabilityService(BaseMLEngine):
 
         # last conv block
         self.target_layers = [self.model.features[-1]]  # type: ignore
+
+        assert self.model is not None, "Model failed to load"
 
     # ── Private ───────────────────────────────────────────────────────────────
 
