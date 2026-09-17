@@ -53,12 +53,12 @@ def auth_headers():
 
 
 def test_health_check_without_api_key(client):
-    response = client.get("/v1/inference/health")
+    response = client.get("/v1/health")
     assert response.status_code == 401
 
 
 def test_health_check_success(client, auth_headers):
-    response = client.get("/v1/inference/health", headers=auth_headers)
+    response = client.get("/v1/health", headers=auth_headers)
     assert response.status_code == 200
 
 
