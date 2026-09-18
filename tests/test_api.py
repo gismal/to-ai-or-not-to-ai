@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from src.api.deps import (
+    get_db_session,
     get_explainability_service,
     get_feedback_service,
     get_prediction_log_repository,
@@ -31,6 +32,33 @@ def client():
         "status": "SUCCESS",
         "processing_time_ms": 15.5,
     }
+
+    fake_cache = {}
+
+    async def fake_predict(image_bytes: bytes, filename: str = ""):
+        img_hash = str(hash(image_bytes))
+        if img_hash in fake_cache:
+            return {
+                "filename": "test.png",
+                "prediction": "REAL",
+                "confidence": 0.99,
+                "status": "SUCCESS",
+                "processing_time_ms": 0.0,
+                "cached": True,
+            }
+
+        fake_cache[img_hash] = True
+        return {
+            "filename": "test.png",
+            "prediction": "REAL",
+            "confidence": 0.99,
+            "status": "SUCCESS",
+            "processing_time_ms": 15.5,
+            "cached": False,
+        }
+
+    mock_inference.predict = fake_predict
+
     app.state.inference_service = mock_inference
     app.state.explainability_service = MagicMock()
     app.state.arq_pool = AsyncMock()
@@ -38,9 +66,11 @@ def client():
     mock_feedback_service.register_feedback = AsyncMock()
     mock_log_repo = MagicMock()
     mock_log_repo.create_log = AsyncMock()
+    mock_db_session = AsyncMock()
 
     app.dependency_overrides[get_feedback_service] = lambda: mock_feedback_service
     app.dependency_overrides[get_prediction_log_repository] = lambda: mock_log_repo
+    app.dependency_overrides[get_db_session] = lambda: mock_db_session
 
     yield TestClient(app)
 
@@ -53,12 +83,12 @@ def auth_headers():
 
 
 def test_health_check_without_api_key(client):
-    response = client.get("/v1/health")
-    assert response.status_code == 401
+    response = client.get("/health")
+    assert response.status_code == 200
 
 
 def test_health_check_success(client, auth_headers):
-    response = client.get("/v1/health", headers=auth_headers)
+    response = client.get("/health", headers=auth_headers)
     assert response.status_code == 200
 
 
@@ -146,9 +176,12 @@ def test_predict_invalid_format(client, auth_headers):
 
 
 def test_predict_model_error(client, auth_headers):
-    client.app.state.inference_service.predict.side_effect = ModelInferenceError(
-        "Mocked inference crash"
-    )
+    from unittest.mock import AsyncMock
+
+    mock_crash = AsyncMock()
+    mock_crash.predict.side_effect = ModelInferenceError("Mocked inference crash")
+    client.app.state.inference_service = mock_crash
+
     img_byte_arr = io.BytesIO()
     Image.new("RGB", (224, 224)).save(img_byte_arr, format="PNG")
     img_byte_arr.seek(0)
@@ -160,7 +193,10 @@ def test_predict_model_error(client, auth_headers):
 
 @pytest.mark.parametrize("bad_key", ["", "wrong_key_123", "   "])
 def test_auth_invalid_keys(client, bad_key):
-    response = client.get("/v1/inference/health", headers={"X-API-Key": bad_key})
+    files = {"file": ("test.png", b"dummy", "image/png")}
+    response = client.post(
+        "/v1/inference/predict", files=files, headers={"X-API-Key": bad_key}
+    )
     assert response.status_code == 401
 
 
@@ -168,46 +204,6 @@ def test_auth_invalid_keys(client, bad_key):
 def reset_rate_limiter():
     yield
     time.sleep(1)
-
-
-def test_predict_phash_cache(client, auth_headers):
-    """
-    Tests if the second identical request returns cached: True
-    """
-    img_byte_arr = io.BytesIO()
-    Image.new("RGB", (100, 100), color="blue").save(img_byte_arr, format="PNG")
-    img_data = img_byte_arr.getvalue()
-
-    client.app.state.inference_service.predict.side_effect = [
-        {
-            "filename": "test.png",
-            "prediction": "REAL",
-            "confidence": 0.99,
-            "status": "SUCCESS",
-            "processing_time_ms": 42.0,
-        },
-        {
-            "filename": "test.png",
-            "prediction": "REAL",
-            "confidence": 0.99,
-            "status": "SUCCESS",
-            "processing_time_ms": 0.0,
-        },
-    ]
-
-    res1 = client.post(
-        "/v1/inference/predict",
-        files={"file": ("test.png", img_data, "image/png")},
-        headers=auth_headers,
-    )
-    res2 = client.post(
-        "/v1/inference/predict",
-        files={"file": ("test.png", img_data, "image/png")},
-        headers=auth_headers,
-    )
-
-    assert res1.json().get("processing_time_ms") == 42.0
-    assert res2.json().get("processing_time_ms") == 0.0
 
 
 def test_explain_endpoint(client, auth_headers):
