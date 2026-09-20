@@ -76,6 +76,7 @@ async def check_drift_scheduled(ctx: dict) -> dict:
 # -- Worker config -----------------------------------------------------
 
 _parsed = urlparse(settings.REDIS_URL)
+_is_ssl = _parsed.scheme == "rediss"
 
 
 class WorkerSettings:
@@ -92,9 +93,13 @@ class WorkerSettings:
     redis_settings = RedisSettings(
         host=_parsed.hostname or "redis",
         port=_parsed.port or 6379,
+        username=_parsed.username,
+        password=_parsed.password,
         database=int(_parsed.path.lstrip("/"))
         if _parsed.path and _parsed.path != "/"
         else 0,
+        ssl=_is_ssl,
+        ssl_cert_reqs="none" if _is_ssl else "required",
     )
     max_tries = 3
     job_timeout = 4200
