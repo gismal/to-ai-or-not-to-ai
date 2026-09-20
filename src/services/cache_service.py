@@ -53,7 +53,7 @@ class CacheService:
             result["prediction"] = PredictionLabel(
                 result["prediction"]
             )  # restoring string value from enum
-            logger.debug(f"Cache hit: {key}")
+            logger.info(f"Cache hit: {key}")
             return result
 
         except Exception as e:
@@ -78,7 +78,7 @@ class CacheService:
                 payload["prediction"] = payload["prediction"].value
 
             await self._redis.setex(key, self.CACHE_TTL, json.dumps(payload))
-            logger.debug(f"Cache set: {key} (TTL: {self.CACHE_TTL}s)")
+            logger.info(f"Cache set: {key} (TTL: {self.CACHE_TTL}s)")
 
         except Exception as e:
             logger.warning(f"Cache write failed for {key}: {e}")

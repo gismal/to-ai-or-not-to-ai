@@ -49,7 +49,7 @@ class PredictionLogRepository(AbstractPredictionLogRepository):
             self.session.add(log)
             await self.session.flush()
             await self.session.refresh(log)
-            logger.debug(f"Prediction logged: {filename} -> {predicted_label.value}")
+            logger.info(f"Prediction logged: {filename} -> {predicted_label.value}")
             return log
 
         except SQLAlchemyError as e:

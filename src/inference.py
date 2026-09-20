@@ -76,7 +76,7 @@ class ONNXPredictor(BaseMLEngine):
         """
         Loads ONNX session, configure providers, warm up, validate output
         """
-        session_options = ort.SessionOptions
+        session_options = ort.SessionOptions()
         session_options.graph_optimization_level = (
             ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         )
@@ -90,7 +90,9 @@ class ONNXPredictor(BaseMLEngine):
 
         logger.info(f"Using providers: {providers}")
 
-        self._session = ort.InferenceSession(str(self.model_path), providers=providers)
+        self._session = ort.InferenceSession(
+            str(self.model_path), sess_options=session_options, providers=providers
+        )
         self._input_name = self._session.get_inputs()[0].name
 
         logger.info("Warming up ONNX session")
@@ -112,13 +114,17 @@ class ONNXPredictor(BaseMLEngine):
         Executes the full inference pipeline on a given image
 
         Args:
-            - image_path (str | Path): The path to the image file to be analyzed
+        - image_source (str | Path | io.BytesIO): Image as a file path or byte stream
+        - filename (str): Label for this image in the result
 
         Returns:
             - InferenceResult: A structured data containing prediction outcomes, confidence scores and status flags
+
         """
-        assert self._session is not None, "Model session is not loaded!"
-        assert self._input_name is not None, "Model input name is not loaded!"
+        if self._session is None or self._input_name is None:
+            raise RuntimeError(
+                "ONNXPredictor is not loaded. Call _load() before predict()"
+            )
 
         _, input_data, error = _preprocess(image_source)
 
@@ -129,7 +135,7 @@ class ONNXPredictor(BaseMLEngine):
 
         try:
             outputs = self._session.run(None, {self._input_name: input_data})
-            preds = np.asanyarray(outputs[0])
+            preds = np.asarray(outputs[0])
             logits = preds[0]
 
             exp = np.exp(logits - logits.max())
@@ -160,8 +166,10 @@ class ONNXPredictor(BaseMLEngine):
         Returns:
             - list[InferenceResult]: A list containing the prediction outcomes, confidence scores and status flags
         """
-        assert self._session is not None, "Model session is not loaded!"
-        assert self._input_name is not None, "Model input name is not loaded!"
+        if self._session is None or self._input_name is None:
+            raise RuntimeError(
+                "ONNXPredictor is not loaded — call _load() before predict()"
+            )
 
         # OOM GUARD
         original_count = len(image_paths)
@@ -190,15 +198,19 @@ class ONNXPredictor(BaseMLEngine):
         try:
             batch_data = np.stack([t.squeeze(0) for t in valid_tensor], axis=0)
             outputs = self._session.run(None, {self._input_name: batch_data})  # type: ignore
-            preds = np.asarray(outputs[0])
 
-            for path_str, out in zip(valid_paths, preds):
-                conf = float(out[0]) if np.ndim(out) > 0 else float(out)
+            batch_logits = np.asarray(outputs[0])
+
+            for path_str, logits in zip(valid_paths, batch_logits):
+                exp = np.exp(logits - np.max(logits))
+                probs = exp / np.sum(exp)
+                confidence_score = float(probs[0])
+
                 results.append(
                     InferenceResult(
                         image=path_str,
-                        confidence=round(conf, 4),
-                        detected=conf >= self.threshold,
+                        confidence=round(confidence_score, 4),
+                        detected=confidence_score >= self.threshold,
                     )
                 )
         except Exception as e:

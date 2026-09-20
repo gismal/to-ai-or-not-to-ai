@@ -1,10 +1,9 @@
 > *"That's the question."* — Shakespeare (probably would have asked this in 2026)
 ### [🔗 Live API Demo](#) | [🔗 Chrome Extension](#) | [📊 Grafana Dashboard](#)
+ 
+ Have you ever wondered if a photo is real or AI generated in big 2026? Would you not spot throughly why it is real or fake exacly? Not just a yes or no, it explains you how confident it is. If it is unsure, it admits right away.
 
-A production-grade MLOps microservice that looks at an image and tells you whether a human or an AI made it. Not just a yes or no, it tells you **how confident** it is, and when it genuinely isn't sure, it admits it.
-
-Built as a solo end-to-end project to learn what "production-ready" actually means beyond Jupyter notebooks.
-
+A solo end-to-end project to deep dive in "production ready" level ML, MLOps and microservices.
 ---
 
 ## What Does It Actually Do?
@@ -15,11 +14,11 @@ You send it an image. It sends back one of these:
 |---|---|
 | `REAL` | Confidently human-made |
 | `AI_GENERATED` | Confidently machine-made |
-| `UNCERTAIN_LEANING_AI` | Probably AI, but hedging |
-| `UNCERTAIN_LEANING_REAL` | Probably real, but hedging |
-| `UNCERTAIN_NEUTRAL` | Genuinely no idea — flagged for review |
+| `UNCERTAIN_LEANING_AI` | Probably AI, but ambigous |
+| `UNCERTAIN_LEANING_REAL` | Probably real, but ambigous |
+| `UNCERTAIN_NEUTRAL` | Genuinely no idea. Flagged for review |
 
-That last category is intentional. Most detectors give you a binary answer even when the model is basically guessing. Last one doesn't. Predictions that fall in the confidence gray zone get flagged as `UNCERTAIN` rather than quietly misfiring. That distinction matters a lot when false positives have real consequences.
+Uncertain category is intentional. Personally I don't like AI models would whistle in the wind in an uncertain situation. Most detectors give you a binary answer even when the model is basically guessing. Last one doesn't. Predictions that fall in the confidence gray zone get flagged as `UNCERTAIN` rather than quietly misfiring. That distinction matters a lot when false positives have real consequences.
 
 ---
 
@@ -334,15 +333,14 @@ This is an active project. On the roadmap:
 ---
 
 ## Why I Built This
+ 
+I just want to challenge myself beyond notebook projects. I focused on to understand what actually happens between "the model works locally" and "the model serves real traffic reliably."
+My hands got dirty: dependency injection, session management, async task queues, database migrations, structured logging with request tracing, Docker networking, and what happens when the model starts drifting.
 
-Most ML portfolio projects are a model in a notebook with a Flask endpoint bolted on. I wanted to understand what actually happens between "the model works locally" and "the model serves real traffic reliably."
-
-The answer turns out to involve a lot of things notebooks never teach: dependency injection, session management, async task queues, database migrations, structured logging with request tracing, Docker networking, and what happens when the model starts drifting because the world changed.
-
-This project is my attempt to build all of that from scratch, make every mistake, and document what I learned.
+I took my sweet time to build all of that from scratch, make every mistake, and document what I learned.
 
 ---
 
 ## License
 
-MIT — use it, break it, learn from it.
+MIT. Use it, break it, learn from it.

@@ -22,8 +22,8 @@ data/
 *.pt
 best_checkpoint.pt
 models/*.pt
-models/*.onnx
-models/*.onnx.data
 models/*.pkl
-models/future_plans
 !models/metadata.json
+!models/model_v1.onnx
+!models/model_v1.onnx.data
+future_plans.txt
