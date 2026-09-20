@@ -1,0 +1,23 @@
+# Training dependencies — Kaggle/local only, NOT in production container
+
+# ── Experiment Tracking ───────────────────────────────────────────────────────
+mlflow==3.14.0
+mlflow-skinny==3.14.0
+mlflow-tracing==3.14.0
+
+# ── ML Training ───────────────────────────────────────────────────────────────
+scikit-learn==1.9.0
+scipy==1.17.1
+joblib==1.5.3
+
+# ── Data ──────────────────────────────────────────────────────────────────────
+pandas==2.3.3
+pyarrow==24.0.0
+
+# ── ONNX Export ───────────────────────────────────────────────────────────────
+onnx==1.21.0
+onnxscript==0.7.0
+onnx-ir==0.2.1
+
+# ── Visualization ─────────────────────────────────────────────────────────────
+matplotlib==3.11.0

@@ -1,0 +1,36 @@
+from datetime import datetime, timezone
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    String,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
+)
+
+from src.core.enums import PredictionLabel
+from src.infra.database import Base
+
+
+class PredictionLog(Base):
+    """
+    Stores every prediction made by the model for complete MLOps obervability
+    """
+
+    __tablename__ = "prediction_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, index=True, nullable=False)
+    confidence = Column(Float, nullable=False)
+    predicted_label = Column(SQLEnum(PredictionLabel), nullable=False)  # type: ignore
+    processing_time_ms = Column(Float, nullable=True)
+    client_source = Column(String, default="API_v1")
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    is_deleted = Column(Boolean, default=False)
