@@ -3,9 +3,11 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>AI or Not — Result</title>
+    <title>AI or Not AI — Verdict</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
     <style>
         *,
@@ -17,36 +19,57 @@
         }
 
         :root {
-            --bg: #0A0A0F;
-            --surface: #1A1A24;
-            --border: #2A2A3A;
-            --text: #F0F0F0;
-            --muted: #8888A0;
-            --ai: #6C63FF;
-            --real: #22D3A5;
-            --uncertain: #FF9F43;
-            --danger: #FF6B6B;
-        }
-
-        html,
-        body {
-            height: 100%;
+            --bg: #0d0d0f;
+            --surface: #131316;
+            --border: #2a2a32;
+            --border-hi: #555562;
+            --text: #f4f4f5;
+            --muted: #a1a1aa;
+            --dim: #52525b;
+            --ai: #c0392b;
+            --real: #27ae60;
+            --uncertain: #d4a017;
+            --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+            --font-serif: 'IM Fell English', serif;
         }
 
         body {
+            width: 460px;
             background: var(--bg);
             color: var(--text);
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
-            padding: 20px;
+            overflow-x: hidden;
         }
 
-        h1,
-        h2,
-        h3,
-        .mono {
-            font-family: 'Space Grotesk', sans-serif;
+        /* ── Topbar ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(13, 13, 15, 0.95);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .wordmark {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+
+        .mode-tag {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 11px;
+            color: var(--muted);
         }
 
         /* ── Loading ── */
@@ -56,23 +79,33 @@
             align-items: center;
             justify-content: center;
             min-height: 300px;
-            gap: 16px;
-            color: var(--muted);
+            gap: 14px;
         }
 
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid var(--border);
-            border-top-color: var(--ai);
-            border-radius: 50%;
-            animation: spin .8s linear infinite;
-        }
+        @keyframes hourglassPulse {
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
             }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .loading-hourglass {
+            font-size: 32px;
+            animation: hourglassPulse 2s infinite ease-in-out;
+        }
+
+        .status-text {
+            font-family: var(--font-serif);
+            font-size: 17px;
+            font-style: italic;
+            color: var(--muted);
         }
 
         /* ── Error ── */
@@ -82,302 +115,375 @@
             align-items: center;
             justify-content: center;
             min-height: 300px;
-            gap: 12px;
+            gap: 14px;
+            padding: 28px;
             text-align: center;
         }
 
-        .error-icon {
-            font-size: 2rem;
-        }
-
-        .error-msg {
-            background: rgba(255, 107, 107, 0.1);
-            border: 1px solid var(--danger);
-            border-radius: 10px;
+        .err-msg {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 13px;
+            color: var(--ai);
+            background: rgba(192, 57, 43, 0.07);
+            border: 1px solid rgba(192, 57, 43, 0.2);
+            border-radius: 6px;
             padding: 12px 16px;
-            color: var(--danger);
-            font-size: 0.85rem;
-            line-height: 1.5;
-            max-width: 340px;
+            line-height: 1.6;
         }
 
-        /* ── Results ── */
-        #view-results {
+        /* ── Result ── */
+        #view-result {
             display: none;
-            flex-direction: column;
-            gap: 16px;
-            animation: fadeUp .3s ease;
         }
 
-        @keyframes fadeUp {
+        @keyframes curtainPart {
             from {
+                clip-path: inset(0 50% 0 50%);
                 opacity: 0;
-                transform: translateY(10px);
             }
 
             to {
+                clip-path: inset(0 0% 0 0%);
                 opacity: 1;
-                transform: translateY(0);
             }
         }
 
-        /* Header */
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+        .broadside {
+            text-align: center;
+            padding: 20px 20px 0;
+            animation: curtainPart 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
-        .verdict-label {
-            font-size: 1.4rem;
+        .broadside-ornament {
+            font-family: var(--font-serif);
+            color: rgba(255, 255, 255, 0.14);
+            font-size: 17px;
+            letter-spacing: 0.5em;
+            margin-bottom: 14px;
+            user-select: none;
+        }
+
+        .broadside-verdict {
+            font-family: var(--font-mono);
+            font-size: 26px;
             font-weight: 700;
-            letter-spacing: -.02em;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            margin-bottom: 7px;
         }
 
-        .verdict-label.ai {
+        .broadside-verdict.ai {
             color: var(--ai);
         }
 
-        .verdict-label.real {
+        .broadside-verdict.real {
             color: var(--real);
         }
 
-        .verdict-label.uncertain {
+        .broadside-verdict.uncertain {
             color: var(--uncertain);
         }
 
-        .filename {
-            font-size: 0.75rem;
-            color: var(--muted);
-            text-align: right;
-            max-width: 160px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .broadside-heraldry {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 10px;
+            letter-spacing: 0.06em;
         }
 
-        .timing {
-            font-size: 0.72rem;
+        .broadside-sub {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 15px;
             color: var(--muted);
-            text-align: right;
-            margin-top: 2px;
+            margin-bottom: 18px;
         }
 
-        /* Confidence bar */
+        .broadside-rule {
+            font-family: var(--font-mono);
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 9px;
+            letter-spacing: 0.4em;
+            margin: 8px 0;
+            user-select: none;
+        }
+
+        .broadside-meta {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.28);
+            margin-bottom: 18px;
+        }
+
+        .broadside-meta .sep {
+            margin: 0 8px;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .serif-detail {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        /* ── Confidence / Soliloquy ── */
+        .conf-section {
+            text-align: left;
+            padding: 0 20px;
+            margin-bottom: 14px;
+        }
+
         .conf-row {
             display: flex;
             justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--muted);
             margin-bottom: 6px;
         }
 
-        .conf-row .score {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem;
+        .conf-label {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .conf-score {
+            font-family: var(--font-mono);
+            font-size: 11px;
             font-weight: 600;
             color: var(--text);
         }
 
-        .bar-track {
-            height: 7px;
-            background: var(--border);
-            border-radius: 99px;
+        .conf-track {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
             overflow: hidden;
+            margin-bottom: 6px;
         }
 
-        .bar-fill {
+        .conf-fill {
             height: 100%;
-            border-radius: 99px;
-            width: 0%;
-            transition: width .9s cubic-bezier(.16, 1, .3, 1);
+            border-radius: 2px;
+            width: 0;
+            transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .bar-fill.ai {
+        .conf-fill.ai {
             background: var(--ai);
         }
 
-        .bar-fill.real {
+        .conf-fill.real {
             background: var(--real);
         }
 
-        .bar-fill.uncertain {
+        .conf-fill.uncertain {
             background: var(--uncertain);
         }
 
-        .zone-labels {
+        .conf-zones {
             display: flex;
             justify-content: space-between;
-            font-size: 0.67rem;
+            font-family: var(--font-mono);
+            font-size: 8px;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        /* ── Rule / Sec ── */
+        .rule {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            margin: 0 20px 16px;
+        }
+
+        .sec {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
             color: var(--muted);
-            margin-top: 5px;
+            margin-bottom: 8px;
         }
 
-        .zone-labels .mid {
-            color: var(--uncertain);
+        /* ── Images: side-by-side ── */
+        .images-wrap {
+            padding: 0 20px;
+            margin-bottom: 14px;
         }
 
-        /* Images */
-        .images-row {
+        .images-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
         }
 
         .img-box {
-            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 6px;
             overflow: hidden;
+            line-height: 0;
         }
 
-        .img-box .img-label {
-            font-size: 0.7rem;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 600;
-            color: var(--muted);
-            letter-spacing: .04em;
+        .img-box-label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 8px;
             text-transform: uppercase;
-            padding: 7px 10px 4px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            padding: 5px 8px 3px;
+            line-height: 1;
         }
 
         .img-box img {
             display: block;
             width: 100%;
-            height: 140px;
+            height: 130px;
             object-fit: cover;
         }
 
-        /* Single image (no heatmap) */
-        .image-single {
-            background: var(--surface);
+        /* Single image (Fast mode, no heatmap) */
+        .img-single {
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 6px;
             overflow: hidden;
+            line-height: 0;
         }
 
-        .image-single img {
+        .img-single img {
             display: block;
             width: 100%;
             max-height: 200px;
             object-fit: contain;
+            background: var(--surface);
         }
 
-        /* Actions */
+        /* ── Epilogue ── */
+        .epilogue {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.2);
+            text-align: center;
+            padding: 0 20px 14px;
+        }
+
+        /* ── Actions ── */
         .actions {
             display: flex;
-            flex-direction: column;
             gap: 8px;
+            padding: 10px 20px 18px;
         }
 
         .btn-primary {
-            width: 100%;
-            padding: 10px;
-            background: var(--ai);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.85rem;
+            flex: 1;
+            padding: 9px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--muted);
+            font-family: var(--font-mono);
+            font-size: 10px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity .15s;
             text-decoration: none;
             text-align: center;
             display: block;
+            transition: border-color 0.2s, color 0.2s;
+            letter-spacing: 0.04em;
         }
 
         .btn-primary:hover {
-            opacity: .85;
-        }
-
-        .btn-secondary {
-            width: 100%;
-            padding: 9px;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--muted);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: border-color .15s;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--ai);
+            border-color: var(--border-hi);
             color: var(--text);
         }
 
-        .cached-tag {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 99px;
-            font-size: 0.7rem;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 600;
-            background: rgba(108, 99, 255, .15);
-            color: var(--ai);
-            border: 1px solid var(--ai);
-            margin-left: 8px;
+        .btn-close {
+            padding: 9px 14px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            color: var(--dim);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .btn-close:hover {
+            color: var(--muted);
         }
     </style>
 </head>
 
 <body>
 
+    <div class="topbar">
+        <span class="wordmark">AI or Not AI</span>
+        <span class="mode-tag" id="modeTag"></span>
+    </div>
+
     <!-- Loading -->
     <div id="view-loading">
-        <div class="spinner"></div>
-        <p id="loading-msg">Fetching image…</p>
+        <div class="loading-hourglass">⌛</div>
+        <div class="status-text" id="loadingText">The plot thickens...</div>
     </div>
 
     <!-- Error -->
     <div id="view-error">
-        <div class="error-icon">⚠️</div>
-        <div class="error-msg" id="error-msg"></div>
-        <button class="btn-secondary" onclick="window.close()">Close</button>
+        <div style="font-size:1.4rem; opacity:0.4;">⚠</div>
+        <div class="err-msg" id="errMsg">A tragedy of errors occurred.</div>
+        <button class="btn-close" onclick="window.close()">Close</button>
     </div>
 
-    <!-- Results -->
-    <div id="view-results">
-        <div class="result-header">
-            <div>
-                <div class="verdict-label" id="verdict-label">—</div>
-                <span id="cached-tag" style="display:none" class="cached-tag">⚡ cached</span>
-            </div>
-            <div>
-                <div class="filename" id="filename"></div>
-                <div class="timing" id="timing"></div>
-            </div>
+    <!-- Result -->
+    <div id="view-result">
+
+        <div class="broadside">
+            <div class="broadside-ornament">❧ ❦ ❧</div>
+            <div class="broadside-verdict" id="verdict"></div>
+            <div class="broadside-heraldry" id="heraldry"></div>
+            <div class="broadside-sub" id="verdictSub"></div>
+            <div class="broadside-rule">─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
+            <div class="broadside-meta" id="meta"></div>
+            <div class="broadside-rule">─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
         </div>
 
-        <!-- Confidence bar -->
-        <div>
+        <!-- Soliloquy / Confidence -->
+        <div class="conf-section">
             <div class="conf-row">
-                <span>Confidence</span>
-                <span class="score" id="conf-score"></span>
+                <span class="conf-label">Soliloquy</span>
+                <span class="conf-score" id="confScore"></span>
             </div>
-            <div class="bar-track">
-                <div class="bar-fill" id="bar-fill"></div>
+            <div class="conf-track">
+                <div class="conf-fill" id="confFill"></div>
             </div>
-            <div class="zone-labels">
-                <span>← REAL</span>
-                <span class="mid">UNCERTAIN</span>
-                <span>AI →</span>
+            <div class="conf-zones">
+                <span>Real</span>
+                <span>Uncertain</span>
+                <span>AI</span>
             </div>
         </div>
 
-        <!-- Image(s) -->
-        <div id="images-container"></div>
+        <hr class="rule" />
 
-        <!-- Actions -->
+        <!-- Images injected by results.js -->
+        <div id="imagesArea"></div>
+
+        <div class="epilogue" id="epilogue"></div>
+
         <div class="actions">
-            <a class="btn-primary" id="btn-playground" href="#" target="_blank">
-                Open full analysis in playground →
+            <a class="btn-primary" id="btnPlayground" href="#" target="_blank">
+                Open full analysis →
             </a>
-            <button class="btn-secondary" onclick="window.close()">Close</button>
+            <button class="btn-close" onclick="window.close()">Close</button>
         </div>
+
     </div>
 
     <script src="results.js"></script>

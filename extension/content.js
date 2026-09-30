@@ -1,75 +1,82 @@
-const CONFIG = {
-    MIN_IMAGE_PX: 150,   // ignore icons and avatars
-    MAX_PER_PAGE: 5,     // max images analyzed per page load
-    REQUEST_DELAY: 2000,  // ms between API calls (rate limit safety)
+// ── Config ──
+const MIN_PX = 150;   // ignore images smaller than this
+const MAX_PER_PAGE = 6;     // max images to badge per page load
+const DELAY_MS = 2500;  // gap between API calls (rate limit safety)
+
+// Labels for the badge — kept short to fit the pill
+const BADGE_LABELS = {
+    REAL: 'Human Made',
+    AI_GENERATED: 'AI Generated',
+    UNCERTAIN_LEANING_AI: 'Uncertain',
+    UNCERTAIN_LEANING_REAL: 'Uncertain',
+    UNCERTAIN_NEUTRAL: 'Uncertain',
+};
+
+const COLORS = {
+    REAL: '#27ae60',
+    AI_GENERATED: '#c0392b',
+    UNCERTAIN_LEANING_AI: '#d4a017',
+    UNCERTAIN_LEANING_REAL: '#d4a017',
+    UNCERTAIN_NEUTRAL: '#d4a017',
 };
 
 const analyzed = new Set();
 const queue = [];
 let running = false;
 
-
-// ── Badge rendering ───────────────────────────────────────────────────────────
-
-function createBadge(label, confidence) {
-    const isAI = label.includes("AI_GENERATED");
-    const isUncertain = label.includes("UNCERTAIN");
-
-    const color = isAI ? "#6C63FF" : isUncertain ? "#FF9F43" : "#22D3A5";
-    const icon = isAI ? "🤖" : isUncertain ? "❓" : "✓";
+// ── Badge element ──
+function createBadge(prediction, confidence) {
+    const badge = document.createElement('div');
+    const color = COLORS[prediction] || '#d4a017';
+    const label = BADGE_LABELS[prediction] || prediction;
     const pct = (confidence * 100).toFixed(0);
 
-    const badge = document.createElement("div");
-    badge.dataset.aiDetector = "badge";
-    badge.title = `AI Detector: ${label.replace(/_/g, " ")} (${(confidence * 100).toFixed(1)}%)`;
-    badge.style.cssText = [
-        "position: absolute",
-        "top: 8px",
-        "right: 8px",
-        "z-index: 2147483647",
-        `background: ${color}`,
-        "color: white",
-        "padding: 3px 9px",
-        "border-radius: 99px",
-        "font-size: 11px",
-        "font-family: -apple-system, BlinkMacSystemFont, sans-serif",
-        "font-weight: 700",
-        "letter-spacing: 0.02em",
-        "box-shadow: 0 2px 8px rgba(0,0,0,0.35)",
-        "pointer-events: none",
-        "line-height: 1.6",
-        "white-space: nowrap",
-        "opacity: 0",
-        "transition: opacity 0.3s ease",
-    ].join(";");
+    badge.dataset.aonBadge = 'true';
+    badge.textContent = `${label} · ${pct}%`;
 
-    badge.textContent = `${icon} ${pct}%`;
+    // Inline styles — content scripts can't rely on page CSS
+    Object.assign(badge.style, {
+        position: 'absolute',
+        top: '8px',
+        right: '8px',
+        zIndex: '2147483647',
+        background: color,
+        color: '#fff',
+        padding: '3px 9px',
+        borderRadius: '99px',
+        fontFamily: 'ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace',
+        fontSize: '10px',
+        fontWeight: '700',
+        letterSpacing: '0.04em',
+        lineHeight: '1.4',
+        pointerEvents: 'none',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
+        opacity: '0',
+        transition: 'opacity 0.35s ease',
+        whiteSpace: 'nowrap',
+    });
 
-    // Fade in
+    // Fade in after paint
     requestAnimationFrame(() => {
-        badge.style.opacity = "0.92";
+        requestAnimationFrame(() => { badge.style.opacity = '0.93'; });
     });
 
     return badge;
 }
 
-function attachBadge(img, label, confidence) {
+function attachBadge(img, prediction, confidence) {
     // Skip if already badged
-    if (img.parentElement?.querySelector("[data-ai-detector='badge']")) return;
-
-    // Ensure parent is positioned so absolute child renders correctly
     const parent = img.parentElement;
-    if (parent && getComputedStyle(parent).position === "static") {
-        parent.style.position = "relative";
-    }
+    if (!parent || parent.querySelector('[data-aon-badge]')) return;
 
-    const badge = createBadge(label, confidence);
-    parent.appendChild(badge);
+    // Badge needs a positioned ancestor
+    const pos = getComputedStyle(parent).position;
+    if (pos === 'static') parent.style.position = 'relative';
+
+    parent.appendChild(createBadge(prediction, confidence));
 }
 
-
-// ── Single image analysis ─────────────────────────────────────────────────────
-
+// ── Single image analysis ──
 async function analyzeImage(img, apiKey, apiUrl) {
     const src = img.currentSrc || img.src;
     if (!src || analyzed.has(src)) return;
@@ -80,13 +87,15 @@ async function analyzeImage(img, apiKey, apiUrl) {
         if (!imgRes.ok) return;
 
         const blob = await imgRes.blob();
-        const formData = new FormData();
-        formData.append("file", blob, "image.jpg");
+        if (!blob.type.startsWith('image/')) return;
+
+        const form = new FormData();
+        form.append('file', blob, 'image.jpg');
 
         const res = await fetch(`${apiUrl}/v1/inference/predict`, {
-            method: "POST",
-            headers: { "X-API-Key": apiKey },
-            body: formData,
+            method: 'POST',
+            headers: { 'X-API-Key': apiKey },
+            body: form,
         });
 
         if (!res.ok) return;
@@ -95,13 +104,11 @@ async function analyzeImage(img, apiKey, apiUrl) {
         attachBadge(img, data.prediction, data.confidence);
 
     } catch {
-        // Silently fail — badge mode should be invisible when blocked by CORS or network
+        // Silent fail — passive mode should never disrupt the page
     }
 }
 
-
-// ── Queue processor ───────────────────────────────────────────────────────────
-
+// ── Queue processor ──
 async function processQueue(apiKey, apiUrl) {
     if (running) return;
     running = true;
@@ -109,59 +116,63 @@ async function processQueue(apiKey, apiUrl) {
     while (queue.length > 0) {
         const img = queue.shift();
         await analyzeImage(img, apiKey, apiUrl);
-        await new Promise((r) => setTimeout(r, CONFIG.REQUEST_DELAY));
+        await sleep(DELAY_MS);
     }
 
     running = false;
 }
 
-function enqueue(img, apiKey, apiUrl) {
-    if (queue.length >= CONFIG.MAX_PER_PAGE) return;
-    queue.push(img);
-    processQueue(apiKey, apiUrl);
+// ── Filter ──
+function qualifies(img) {
+    const src = img.currentSrc || img.src;
+    if (!src || src.startsWith('data:')) return false;
+    if (analyzed.has(src)) return false;
+    const { width, height } = img.getBoundingClientRect();
+    return width >= MIN_PX && height >= MIN_PX;
 }
 
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ── Image filtering ───────────────────────────────────────────────────────────
-
-function isQualifying(img) {
-    if (!img.src && !img.currentSrc) return false;
-    if (img.src.startsWith("data:")) return false;  // inline data URIs — skip
-    if (analyzed.has(img.currentSrc || img.src)) return false;
-
-    const rect = img.getBoundingClientRect();
-    return rect.width >= CONFIG.MIN_IMAGE_PX && rect.height >= CONFIG.MIN_IMAGE_PX;
-}
-
-
-// ── Initialisation ────────────────────────────────────────────────────────────
-
+// ── Init ──
 async function init() {
     const { passiveBadge, apiKey, apiUrl } =
-        await chrome.storage.sync.get(["passiveBadge", "apiKey", "apiUrl"]);
+        await chrome.storage.sync.get(['passiveBadge', 'apiKey', 'apiUrl']);
 
-    if (!passiveBadge || !apiKey) return;
+    if (!passiveBadge || !apiKey || !apiUrl) return;
 
-    const base = (apiUrl || "http://localhost:8000").replace(/\/$/, "");
+    try {
+        const apiHost = new URL(apiUrl).hostname;
+        if (window.location.hostname === apiHost) return;
+    } catch {
+        // keep on silenty 
+    }
 
-    // Scan images already in the DOM
-    const existing = Array.from(document.querySelectorAll("img"))
-        .filter(isQualifying)
-        .slice(0, CONFIG.MAX_PER_PAGE);
+    const base = apiUrl.replace(/\/$/, '');
 
-    existing.forEach((img) => enqueue(img, apiKey, base));
+    // Badge images already on the page
+    const existing = Array.from(document.querySelectorAll('img'))
+        .filter(qualifies)
+        .slice(0, MAX_PER_PAGE);
 
-    // Watch for images added after page load (infinite scroll, SPAs, etc.)
-    const observer = new MutationObserver((mutations) => {
+    existing.forEach(img => queue.push(img));
+    processQueue(apiKey, base);
+
+    // Watch for dynamically added images
+    const observer = new MutationObserver(mutations => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
-                if (node.nodeName === "IMG" && isQualifying(node)) {
-                    enqueue(node, apiKey, base);
+                if (node.nodeName === 'IMG' && qualifies(node)) {
+                    if (queue.length < MAX_PER_PAGE) {
+                        queue.push(node);
+                        processQueue(apiKey, base);
+                    }
                 }
-                // Also check children of added nodes
                 if (node.querySelectorAll) {
-                    node.querySelectorAll("img").forEach((img) => {
-                        if (isQualifying(img)) enqueue(img, apiKey, base);
+                    node.querySelectorAll('img').forEach(img => {
+                        if (qualifies(img) && queue.length < MAX_PER_PAGE) {
+                            queue.push(img);
+                            processQueue(apiKey, base);
+                        }
                     });
                 }
             }
@@ -171,10 +182,9 @@ async function init() {
     observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Wait for DOM to be ready
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+// Wait for DOM if needed
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
 }
-

@@ -1,8 +1,13 @@
 {
     "manifest_version": 3,
-    "name": "AI or Not — Image Detector",
+    "name": "AI or Not AI",
     "version": "1.1.0",
-    "description": "Right-click any image to detect if it was made by AI or a human.",
+    "description": "Right-click any image to detect if it was made by AI or a human. Built by the Bard of the Machine Age.",
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
     "permissions": [
         "contextMenus",
         "storage"
@@ -15,7 +20,12 @@
     },
     "action": {
         "default_popup": "popup.html",
-        "default_title": "AI or Not — Settings"
+        "default_title": "AI or Not AI",
+        "default_icon": {
+            "16": "icon16.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
     },
     "content_scripts": [
         {
@@ -25,8 +35,7 @@
             "js": [
                 "content.js"
             ],
-            "run_at": "document_idle",
-            "all_frames": false
+            "run_at": "document_idle"
         }
     ]
 }

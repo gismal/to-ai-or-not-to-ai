@@ -1,53 +1,78 @@
-/**
- * popup.js — Settings popup
- * Loads saved settings from chrome.storage.sync on open.
- * Saves and tests the connection on button click.
- */
+const $ = (id) => document.getElementById(id);
+let currentMode = 'explain';
 
-const get = id => document.getElementById(id);
+// Load saved settings
+chrome.storage.sync.get(
+    ['apiUrl', 'apiKey', 'mode', 'passiveBadge'],
+    ({ apiUrl, apiKey, mode, passiveBadge }) => {
+        $('apiUrl').value = apiUrl || '';
+        $('apiKey').value = apiKey || '';
+        $('passiveBadge').checked = passiveBadge || false;
+        setMode(mode || 'explain');
 
-// ── Load saved settings ──────────────────────────────────────────────────────
+        if (apiKey && apiUrl) pingApi(apiUrl, apiKey);
+    }
+);
 
-chrome.storage.sync.get(['apiUrl', 'apiKey', 'mode', 'passiveBadge'], ({ apiUrl, apiKey, mode, passiveBadge }) => {
-    get('apiUrl').value = apiUrl || 'http://localhost:8000';
-    get('apiKey').value = apiKey || '';
-    get('mode').value = mode || 'explain';
-    get('passiveBadge').checked = passiveBadge || false;
-});
+// ── Mode toggle ──
+function setMode(m) {
+    currentMode = m;
+    $('modeFast').classList.toggle('on', m === 'predict');
+    $('modeExplain').classList.toggle('on', m === 'explain');
+}
 
-// ── Save + test ──────────────────────────────────────────────────────────────
+$('modeFast').addEventListener('click', () => setMode('predict'));
+$('modeExplain').addEventListener('click', () => setMode('explain'));
 
-get('save').addEventListener('click', async () => {
-    const apiUrl = get('apiUrl').value.trim().replace(/\/$/, '');
-    const apiKey = get('apiKey').value.trim();
-    const mode = get('mode').value;
+// ── Save ──
+$('save').addEventListener('click', async () => {
+    const apiUrl = $('apiUrl').value.trim().replace(/\/$/, '');
+    const apiKey = $('apiKey').value.trim();
 
     if (!apiUrl) { showStatus('Enter an API URL.', 'err'); return; }
     if (!apiKey) { showStatus('Enter an API key.', 'err'); return; }
 
-    // Save before testing so the values are persisted even if the test fails
-    await chrome.storage.sync.set({ apiUrl, apiKey, mode, passiveBadge: get('passiveBadge').checked });
-    showStatus('Saved. Testing connection…', '');
+    await chrome.storage.sync.set({
+        apiUrl,
+        apiKey,
+        mode: currentMode,
+        passiveBadge: $('passiveBadge').checked,
+    });
 
+    showStatus('Saved. Testing connection...', '');
+    await pingApi(apiUrl, apiKey);
+});
+
+// ── Ping ──
+async function pingApi(apiUrl, apiKey) {
     try {
         const res = await fetch(`${apiUrl}/v1/inference/health`, {
             headers: { 'X-API-Key': apiKey },
         });
-
-        if (res.ok) showStatus('✓ Connected and ready', 'ok');
-        else if (res.status === 401) showStatus('✗ Invalid API key', 'err');
-        else if (res.status === 503) showStatus('⚠ API is degraded — check Docker logs', 'err');
-        else showStatus(`✗ Server returned HTTP ${res.status}`, 'err');
-
+        if (res.ok) {
+            showStatus('Connected and ready.', 'ok');
+            setDot('ok');
+        } else if (res.status === 401) {
+            showStatus('Invalid API key.', 'err');
+            setDot('err');
+        } else {
+            showStatus(`Server returned ${res.status}.`, 'err');
+            setDot('err');
+        }
     } catch {
-        showStatus('✗ Could not reach the API — is Docker running?', 'err');
+        showStatus('Could not reach the API.', 'err');
+        setDot('err');
     }
-});
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
+}
 
 function showStatus(msg, type) {
-    const el = get('status');
+    const el = $('status');
     el.textContent = msg;
     el.className = `status ${type}`;
+}
+
+function setDot(state) {
+    const dot = $('connDot');
+    dot.className = `conn-dot ${state}`;
+    dot.title = state === 'ok' ? 'API connected' : 'API unreachable';
 }

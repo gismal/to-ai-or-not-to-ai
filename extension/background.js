@@ -61,7 +61,7 @@ async function runAnalysis(imageUrl) {
         // Load user settings
         const {
             apiKey = '',
-            apiUrl = 'http://localhost:8000',
+            apiUrl = 'https://to-ai-or-not-to-ai.onrender.com',
             mode = 'explain',
         } = await chrome.storage.sync.get(['apiKey', 'apiUrl', 'mode']);
 
