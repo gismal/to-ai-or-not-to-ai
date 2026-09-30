@@ -1,3 +1,7 @@
+"""
+The inference pipeline
+"""
+
 import concurrent.futures
 import io
 from dataclasses import dataclass
@@ -12,6 +16,7 @@ from src.core.enums import InferenceStatus
 from src.logger import logger
 from src.services.base_engine import BaseMLEngine
 
+# global mean and standart deviation values for further calculations
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 _STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
@@ -25,7 +30,7 @@ class InferenceResult:
         - image (str): The absolute or relative path to the processed image
         - confidence (float): The model's confidence score, ranging from 0.0 to 1.0
         - detected (bool): True if the confidence score meets or exceeds the threshold
-        - status (InferenceStatus): Operational status 'SUCCESS' or FAIL
+        - status (InferenceStatus): Inference status 'SUCCESS' or 'FAIL'
         - error (str | None): Exception message if an error occurred, otherwise None
     """
 
@@ -37,6 +42,10 @@ class InferenceResult:
 
 
 def _preprocess(image_source):
+    """
+    Preprocess the images for healthier inference
+    """
+
     try:
         with Image.open(image_source) as img:
             img = img.convert("RGB").resize((224, 224))
@@ -52,7 +61,10 @@ def _preprocess(image_source):
 
 class ONNXPredictor(BaseMLEngine):
     """
-    This class handles the initialization of the ONNX runtime session, preprocessing of input images (resizing, normalization, tensor formatting) and the execution of the model
+    This class handles:
+        the initialization of the ONNX runtime session,
+        preprocessing of input images (resizing, normalization, tensor formatting)
+        the execution of the model
     to generate predictions
     """
 
@@ -76,7 +88,10 @@ class ONNXPredictor(BaseMLEngine):
         """
         Loads ONNX session, configure providers, warm up, validate output
         """
+
+        # session settings
         session_options = ort.SessionOptions()
+        # ORT enables all to maximize model execution speed
         session_options.graph_optimization_level = (
             ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         )
@@ -95,11 +110,18 @@ class ONNXPredictor(BaseMLEngine):
         )
         self._input_name = self._session.get_inputs()[0].name
 
+        # warming up the session, no latency in the first user request
         logger.info("Warming up ONNX session")
+        # preparing the dummy inference
         dummy = np.zeros((1, 3, 224, 224), dtype=np.float32)
         output = self._session.run(None, {self._input_name: dummy})  # type: ignore
+        # prediction matrix
         preds = np.asarray(output[0])
 
+        # sanity check
+        # shape control since we have only 2 outputs
+        # because of that predictions shape[1] should be 2
+        # if no raise a ValueError
         if preds.shape[1] != 2:
             raise ValueError(
                 f"Unexpected model output: {preds.shape}. "
@@ -121,6 +143,7 @@ class ONNXPredictor(BaseMLEngine):
             - InferenceResult: A structured data containing prediction outcomes, confidence scores and status flags
 
         """
+        # first, check the session
         if self._session is None or self._input_name is None:
             raise RuntimeError(
                 "ONNXPredictor is not loaded. Call _load() before predict()"
@@ -134,10 +157,13 @@ class ONNXPredictor(BaseMLEngine):
             )
 
         try:
+            # run the session with the preprocessed inputs that we've provided
             outputs = self._session.run(None, {self._input_name: input_data})
             preds = np.asarray(outputs[0])
+            # taking the raw scores
             logits = preds[0]
 
+            # applying softmax to bring the scores in the range between 0 to 1
             exp = np.exp(logits - logits.max())
             probs = exp / exp.sum()
             confidence_score = float(probs[0])
@@ -156,12 +182,12 @@ class ONNXPredictor(BaseMLEngine):
         self, image_paths: list[str | Path], max_workers: int = 4, max_batch: int = 32
     ) -> list[InferenceResult]:
         """
-        Batch Inference  using Process for max I/O performance
-        Process multiple images simultaneously for higher throughput
+        Batch Inference using multi-threading for preprocessing and vectorized batch execution
+        for higher throughput
 
         Args:
-            - image_path list(str | Path): The path to the image file to be analyzed
-            - max_workers (int): Maximum concurrent threads for I/O operations.
+            - image_path list(str | Path): list of paths to the image files to be analyzed
+            - max_workers (int): Maximum concurrent threads for parallel image preprocessing
             - max_batch (int): Maximum allowable images per batch to prevent OOM.
         Returns:
             - list[InferenceResult]: A list containing the prediction outcomes, confidence scores and status flags
@@ -171,7 +197,7 @@ class ONNXPredictor(BaseMLEngine):
                 "ONNXPredictor is not loaded — call _load() before predict()"
             )
 
-        # OOM GUARD
+        # OOM Guard: Prevent memory overload by capping batch size
         original_count = len(image_paths)
         if original_count > max_batch:
             image_paths = image_paths[:max_batch]
@@ -179,7 +205,8 @@ class ONNXPredictor(BaseMLEngine):
 
         results, valid_batch = [], []
 
-        # ThreadPoolExecutor against CPU bottleneck
+        # Preprocess images in parallel to avoid CPU bottleneck
+        # I choose ThreadPoolExecutor because it's lightweight. It has no pickling costs, no overhead
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             for path_str, tensor, error in executor.map(_preprocess, image_paths):
                 if error:
@@ -196,11 +223,14 @@ class ONNXPredictor(BaseMLEngine):
 
         valid_paths, valid_tensor = zip(*valid_batch)
         try:
+            # Stacking individual tensors into a single batch matrix.
+            # Thanks to this model will process them as a whole not each by one
             batch_data = np.stack([t.squeeze(0) for t in valid_tensor], axis=0)
             outputs = self._session.run(None, {self._input_name: batch_data})  # type: ignore
 
             batch_logits = np.asarray(outputs[0])
 
+            # Softmax loop to get overall confidence score
             for path_str, logits in zip(valid_paths, batch_logits):
                 exp = np.exp(logits - np.max(logits))
                 probs = exp / np.sum(exp)
