@@ -19,8 +19,8 @@ class FeedbackService:
                 model_prediction=payload.model_prediction,
                 confidence=payload.confidence,
                 user_correction=payload.user_correction,
-                client_source=payload.client_source,
                 error_type=error_type,
+                client_source=payload.client_source,
             )
         except Exception as e:
             logger.error(f"Failed to save feedback: {e}", exc_info=True)
