@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     API_KEY: SecretStr
     DEMO_API_KEY: str = "demo-public"
 
+    # Demo limit
+    DEMO_RATE_LIMIT_PER_MIN: int = 30
+
     # Model
     MODEL_THRESHOLD: float = 0.75
     GRAY_AREA_MARGIN: float = 0.35

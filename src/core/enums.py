@@ -38,6 +38,7 @@ class FeedbackLabel(str, Enum):
 
     REAL = "REAL"
     AI_GENERATED = "AI_GENERATED"
+    UNKNOWN = "UNKNOWN"  # User is unsure
 
 
 class ErrorType(str, Enum):
@@ -49,3 +50,4 @@ class ErrorType(str, Enum):
     FALSE_NEGATIVE = "FALSE_NEGATIVE"  # Model marks as REAL but image is AI
     UNCERTAIN_FAIL = "UNCERTAIN_FAIL"  # Model is indecisive
     CORRECT = "CORRECT"  # User confirms the model was rigth
+    UNKNOWN = "UNKNOWN"  # Unknown ones will kept apart from the drift detection

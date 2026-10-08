@@ -5,10 +5,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI or Not AI, That's the Question</title>
+  <meta name="description" content="An AI image detector that admits when it isn't sure." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AI or Not AI, That's the Question" />
+  <meta property="og:description" content="Five verdicts, a GradCAM heatmap, and an honest uncertainty zone." />
+  <meta property="og:image" content="https://YOUR-RENDER-URL.onrender.com/static/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/static/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -19,7 +26,7 @@
     *::after {
       box-sizing: border-box;
       margin: 0;
-      padding: 0;
+      padding: 0
     }
 
     :root {
@@ -29,36 +36,31 @@
       --border-hi: #555562;
       --text: #f4f4f5;
       --muted: #a1a1aa;
-      --dim: #52525b;
+      --dim: #7a7a85;
       --ai: #c0392b;
       --real: #27ae60;
       --uncertain: #d4a017;
-      --demo: #3b82f6;
       --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-      --font-serif: 'IM Fell English', serif;
-      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-serif: 'IM Fell English', serif
     }
 
     html {
-      scroll-behavior: smooth;
+      scroll-behavior: smooth
     }
 
     html,
     body {
-      height: 100%;
+      height: 100%
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.5;
+      font: 13px/1.5 var(--font-mono);
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      overflow-x: hidden
     }
 
-    /* ── First Folio Mode ── */
     body.first-folio {
       --bg: #19130a;
       --surface: #211a0d;
@@ -66,112 +68,173 @@
       --border-hi: #8a7255;
       --text: #f0e4c4;
       --muted: #b89c70;
-      --dim: #7a6040;
+      --dim: #a08560
     }
 
     body.first-folio .topbar {
-      background: rgba(25, 19, 10, 0.9);
+      background: rgba(25, 19, 10, .9)
     }
 
-    /* ── Topbar ── */
+    button {
+      font-family: inherit
+    }
+
+    /* Topbar */
     .topbar {
       position: sticky;
       top: 0;
       z-index: 100;
       height: 52px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(13, 13, 15, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(13, 13, 15, .85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 40px;
-    }
-
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
+      padding: 0 40px
     }
 
     .wordmark {
-      font-family: var(--font-mono);
-      font-weight: 600;
-      font-size: 14px;
+      background: none;
+      border: 0;
+      color: inherit;
+      font: 600 14px var(--font-mono);
       text-transform: uppercase;
-      letter-spacing: 0.15em;
-      cursor: pointer;
+      letter-spacing: .15em;
+      cursor: pointer
     }
 
     .seg {
       display: flex;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
       border-radius: 20px;
       padding: 4px;
-      gap: 2px;
+      gap: 2px
     }
 
     .seg-btn {
       padding: 4px 16px;
-      border: none;
+      border: 0;
       border-radius: 16px;
       background: transparent;
       color: var(--muted);
-      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s, color 0.2s;
+      transition: background-color .2s, color .2s
     }
 
     .seg-btn.on {
       background: var(--text);
-      color: var(--bg);
+      color: var(--bg)
     }
 
     .topbar-right {
+      position: relative;
       display: flex;
-      align-items: center;
-      font-size: 11px;
-      color: var(--muted);
+      align-items: center
     }
 
-    /* ── Demo Banner ── */
-    .demo-banner {
-      background: rgba(59, 130, 246, 0.07);
-      border-bottom: 1px solid rgba(59, 130, 246, 0.18);
-      padding: 8px 24px;
+    .access-chip {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-size: 11px;
-      color: var(--demo);
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .demo-banner button {
+      gap: 8px;
       background: transparent;
-      border: 1px solid rgba(59, 130, 246, 0.25);
-      border-radius: 4px;
-      color: var(--demo);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      padding: 3px 10px;
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 16px;
+      padding: 4px 12px;
+      color: var(--muted);
+      font-size: 11px;
       cursor: pointer;
+      transition: border-color .2s, color .2s
     }
 
-    /* ── Main ── */
+    .access-chip:hover {
+      border-color: var(--border-hi);
+      color: var(--text)
+    }
+
+    .access-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--dim)
+    }
+
+    .access-dot.own {
+      background: var(--real)
+    }
+
+    .access-pop {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 14px);
+      width: 270px;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      padding: 14px;
+      z-index: 120
+    }
+
+    .access-note {
+      font: italic 14px/1.5 var(--font-serif);
+      color: var(--muted);
+      margin-bottom: 12px
+    }
+
+    .access-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px
+    }
+
+    .link-btn {
+      background: none;
+      border: 0;
+      color: var(--muted);
+      font: italic 13px var(--font-serif);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px
+    }
+
+    .link-btn:hover {
+      color: var(--text)
+    }
+
+    /* Layout */
     .main {
       max-width: 640px;
       margin: 0 auto;
       padding: 0 24px 80px;
-      position: relative;
+      position: relative
     }
 
-    /* ── Playbill Hero ── */
+    .act-label {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 48px 0 22px;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: .25em;
+      color: rgba(255, 255, 255, .16);
+      user-select: none
+    }
+
+    .act-label::before,
+    .act-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, .05)
+    }
+
+    /* Hero */
     .playbill {
       min-height: calc(100vh - 52px);
       display: flex;
@@ -181,82 +244,86 @@
       text-align: center;
       padding: 60px 24px 80px;
       position: relative;
-      animation: heraldFadeIn 2s ease-out forwards;
       opacity: 0;
+      animation: fadeIn 2s ease-out forwards
     }
 
-    @keyframes heraldFadeIn {
-      0% {
+    .playbill.compact {
+      min-height: 0;
+      padding: 40px 24px 0;
+      animation-duration: .4s
+    }
+
+    .playbill.compact .scroll-cue,
+    .playbill.compact .playbill-byline,
+    .playbill.compact .playbill-edition {
+      display: none
+    }
+
+    @keyframes fadeIn {
+      from {
         opacity: 0;
-        transform: translateY(12px);
+        transform: translateY(12px)
       }
 
-      100% {
+      to {
         opacity: 1;
-        transform: translateY(0);
+        transform: none
       }
     }
 
     .playbill-portrait {
       width: 88px;
       height: auto;
-      object-fit: contain;
-      filter: sepia(0.35) contrast(1.1);
+      filter: sepia(.35) contrast(1.1);
       cursor: pointer;
-      transition: filter 0.4s;
-      margin-bottom: 28px;
+      transition: filter .4s;
+      margin-bottom: 28px
     }
 
     .playbill-portrait:hover {
-      filter: sepia(0.1) contrast(1.2) brightness(1.05);
+      filter: sepia(.1) contrast(1.2) brightness(1.05)
     }
 
     body.first-folio .playbill-portrait {
-      filter: sepia(0.8) contrast(1.1);
+      filter: sepia(.8) contrast(1.1)
     }
 
-    .playbill-ornament {
+    .ornament {
       font-family: var(--font-serif);
-      color: rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, .14);
       font-size: 22px;
-      letter-spacing: 0.6em;
+      letter-spacing: .6em;
       margin: 18px 0;
+      user-select: none
     }
 
     .playbill-quote {
-      font-family: var(--font-serif);
-      font-size: clamp(1.9rem, 4.5vw, 3rem);
-      font-style: italic;
-      color: var(--text);
-      letter-spacing: 0.01em;
-      line-height: 1.2;
+      font: italic 400 clamp(1.9rem, 4.5vw, 3rem)/1.2 var(--font-serif);
+      letter-spacing: .01em;
       max-width: 520px;
-      margin-bottom: 14px;
+      margin-bottom: 14px
     }
 
     .playbill-attribution {
-      font-family: var(--font-mono);
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.28);
+      color: rgba(255, 255, 255, .4);
       text-transform: uppercase;
-      letter-spacing: 0.25em;
-      margin-bottom: 28px;
+      letter-spacing: .25em;
+      margin-bottom: 28px
     }
 
     .playbill-byline {
-      font-family: var(--font-serif);
-      font-size: 16px;
-      font-style: italic;
-      color: rgba(255, 255, 255, 0.28);
-      margin-bottom: 6px;
+      font: italic 16px var(--font-serif);
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: 6px
     }
 
     .playbill-edition {
-      font-family: var(--font-mono);
       font-size: 10px;
-      color: rgba(255, 255, 255, 0.16);
+      color: rgba(255, 255, 255, .3);
       text-transform: uppercase;
-      letter-spacing: 0.3em;
+      letter-spacing: .3em
     }
 
     .scroll-cue {
@@ -268,71 +335,49 @@
       flex-direction: column;
       align-items: center;
       gap: 6px;
-      color: rgba(255, 255, 255, 0.18);
-      font-family: var(--font-mono);
+      background: none;
+      border: 0;
+      color: rgba(255, 255, 255, .3);
       font-size: 15px;
       text-transform: uppercase;
-      letter-spacing: 0.2em;
+      letter-spacing: .2em;
       cursor: pointer;
-      animation: scrollPulse 2.5s infinite ease-in-out;
+      animation: scrollPulse 2.5s infinite ease-in-out
     }
 
     @keyframes scrollPulse {
 
       0%,
       100% {
-        opacity: 0.4;
-        transform: translateX(-50%) translateY(0);
+        opacity: .5;
+        transform: translateX(-50%)
       }
 
       50% {
-        opacity: 0.9;
-        transform: translateX(-50%) translateY(6px);
+        opacity: 1;
+        transform: translateX(-50%) translateY(6px)
       }
     }
 
-    /* ── Act Labels ── */
-    .act-label {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin: 48px 0 22px;
-      font-family: var(--font-mono);
-      font-size: 15px;
-      text-transform: uppercase;
-      letter-spacing: 0.25em;
-      color: rgba(255, 255, 255, 0.16);
-      user-select: none;
-    }
-
-    .act-label::before,
-    .act-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    /* ── Drop Zone ── */
+    /* Drop zone */
     .drop {
-      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border: 1px dashed rgba(255, 255, 255, .12);
       border-radius: 8px;
       text-align: center;
-      cursor: pointer;
       position: relative;
       background: var(--surface);
       overflow: hidden;
-      transition: border-color 0.25s, background 0.25s;
+      transition: border-color .25s, background .25s
     }
 
     .drop.empty {
-      padding: 60px 24px;
+      padding: 60px 24px
     }
 
     .drop:hover,
     .drop.over {
-      border-color: rgba(255, 255, 255, 0.5);
-      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, .5);
+      background: rgba(255, 255, 255, .03)
     }
 
     .drop input {
@@ -341,35 +386,30 @@
       opacity: 0;
       cursor: pointer;
       width: 100%;
-      height: 100%;
+      height: 100%
     }
 
     .drop-primary {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 22px;
-      margin-bottom: 6px;
-      color: var(--text);
+      font: italic 22px var(--font-serif);
+      margin-bottom: 6px
     }
 
     .drop-hint {
-      font-family: var(--font-mono);
       font-size: 11px;
-      color: var(--muted);
+      color: var(--muted)
     }
 
-    /* ── Gloss System ── */
     .gloss-anchor {
-      position: relative;
+      position: relative
     }
 
     .gloss {
-      display: none;
+      display: none
     }
 
-    @media (min-width: 960px) {
+    @media (min-width:960px) {
       .main {
-        max-width: 680px;
+        max-width: 680px
       }
 
       .gloss {
@@ -378,331 +418,308 @@
         right: -210px;
         top: 0;
         width: 186px;
-        font-family: var(--font-serif);
-        font-style: italic;
-        font-size: larger;
-        color: rgba(255, 255, 255, 0.2);
+        font: italic larger var(--font-serif);
+        color: rgba(255, 255, 255, .35);
         line-height: 1.7;
-        border-left: 1px solid rgba(255, 255, 255, 0.05);
-        padding-left: 14px;
+        border-left: 1px solid rgba(255, 255, 255, .05);
+        padding-left: 14px
       }
     }
 
-    /* ── URL Input ── */
+    /* URL, inputs, buttons */
     .url-toggle {
       text-align: center;
       margin-top: 14px;
-      font-size: 11px;
+      font-size: 11px
     }
 
     .url-toggle>button {
       background: transparent;
-      border: none;
+      border: 0;
       color: var(--muted);
-      font-family: var(--font-mono);
       font-size: 11px;
       cursor: pointer;
       text-decoration: underline;
       text-underline-offset: 3px;
-      text-decoration-color: var(--dim);
+      text-decoration-color: var(--dim)
     }
 
     .url-toggle>button:hover {
-      color: var(--text);
+      color: var(--text)
     }
 
     .url-row {
       display: flex;
       gap: 8px;
       align-items: center;
-      margin-top: 8px;
+      margin-top: 8px
     }
 
-    /* ── Inputs ── */
-    input[type="password"],
-    input[type="text"],
-    input[type="url"] {
+    input[type=password],
+    input[type=url] {
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px 12px;
-      font-family: var(--font-mono);
-      font-size: 13px;
+      font: 13px var(--font-mono);
       color: var(--text);
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color .2s
     }
 
     input:focus {
-      border-color: var(--border-hi);
+      border-color: var(--border-hi)
     }
 
     input::placeholder {
-      color: var(--muted);
+      color: var(--muted)
     }
 
-    /* ── Buttons ── */
     .btn-go,
     .btn-reset,
-    .btn-retry,
-    .btn-save {
+    .btn-retry {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px 14px;
-      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 600;
       color: var(--muted);
       cursor: pointer;
       white-space: nowrap;
-      transition: border-color 0.2s, color 0.2s;
+      transition: border-color .2s, color .2s
     }
 
     .btn-go:hover,
     .btn-reset:hover,
-    .btn-save:hover {
+    .btn-retry:hover {
       border-color: var(--border-hi);
-      color: var(--text);
+      color: var(--text)
     }
 
     .btn-reset {
       flex: 1;
       padding: 12px;
-      font-size: 12px;
+      font-size: 12px
     }
 
-    /* ── Error ── */
+    /* Error + loader */
     .err {
       font-size: 12px;
-      color: var(--ai);
-      background: rgba(192, 57, 43, 0.07);
-      border: 1px solid rgba(192, 57, 43, 0.2);
+      color: #e0584a;
+      background: rgba(192, 57, 43, .07);
+      border: 1px solid rgba(192, 57, 43, .25);
       border-radius: 6px;
       padding: 12px 16px;
       margin-top: 16px;
-      margin-bottom: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 12px
     }
 
-    /* ── Loader ── */
+    .err-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0
+    }
+
     .loader-wrap {
       padding: 56px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-    }
-
-    @keyframes hourglassPulse {
-
-      0%,
-      100% {
-        transform: scale(1);
-        opacity: 0.5;
-      }
-
-      50% {
-        transform: scale(1.1);
-        opacity: 1;
-      }
+      gap: 12px
     }
 
     .loading-hourglass {
       font-size: 26px;
-      display: inline-block;
-      animation: hourglassPulse 2s infinite ease-in-out;
+      animation: hourglass 2s infinite ease-in-out
+    }
+
+    @keyframes hourglass {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: .5
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 1
+      }
     }
 
     .status-text {
-      font-family: var(--font-serif);
-      font-size: 20px;
-      font-style: italic;
-      color: var(--muted);
+      font: italic 20px var(--font-serif);
+      color: var(--muted)
     }
 
-    /* ── Broadside Result ── */
+    .elapsed {
+      font-size: 11px;
+      color: var(--dim)
+    }
+
+    /* Verdict */
     .broadside {
-      text-align: center;
+      text-align: center
     }
 
-    @media (min-width: 769px) {
+    @media (min-width:769px) {
       .broadside {
-        animation: curtainPart 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation: curtain .7s cubic-bezier(.16, 1, .3, 1) both
       }
 
-      @keyframes curtainPart {
+      @keyframes curtain {
         from {
           clip-path: inset(0 50% 0 50%);
-          opacity: 0;
+          opacity: 0
         }
 
         to {
-          clip-path: inset(0 0% 0 0%);
-          opacity: 1;
+          clip-path: inset(0);
+          opacity: 1
         }
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width:768px) {
       .broadside {
-        animation: fadeUp 0.4s ease;
+        animation: fadeUp .4s ease
       }
 
       @keyframes fadeUp {
         from {
           opacity: 0;
-          transform: translateY(8px);
+          transform: translateY(8px)
         }
 
         to {
           opacity: 1;
-          transform: translateY(0);
+          transform: none
         }
       }
     }
 
     .broadside-ornament {
       font-family: var(--font-serif);
-      color: rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, .14);
       font-size: 20px;
-      letter-spacing: 0.5em;
+      letter-spacing: .5em;
       margin-bottom: 16px;
-      user-select: none;
+      user-select: none
     }
 
     .broadside-verdict {
-      font-family: var(--font-mono);
       font-size: 30px;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -.02em;
       line-height: 1;
-      margin-bottom: 8px;
+      margin-bottom: 8px
     }
 
     .broadside-verdict.ai {
-      color: var(--ai);
+      color: var(--ai)
     }
 
     .broadside-verdict.real {
-      color: var(--real);
+      color: var(--real)
     }
 
     .broadside-verdict.uncertain {
-      color: var(--uncertain);
+      color: var(--uncertain)
     }
 
     .broadside-heraldry {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 15px;
-      color: rgba(255, 255, 255, 0.3);
-      letter-spacing: 0.08em;
-      margin-bottom: 14px;
+      font: italic 15px var(--font-serif);
+      color: rgba(255, 255, 255, .45);
+      letter-spacing: .08em;
+      margin-bottom: 14px
     }
 
     .broadside-sub {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 17px;
+      font: italic 17px var(--font-serif);
       color: var(--muted);
-      margin-bottom: 22px;
+      margin-bottom: 22px
     }
 
     .broadside-rule {
-      font-family: var(--font-mono);
-      color: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, .12);
       font-size: 10px;
-      letter-spacing: 0.4em;
+      letter-spacing: .4em;
       margin: 10px 0;
-      user-select: none;
+      user-select: none
     }
 
     .broadside-meta {
-      font-family: var(--font-mono);
       font-size: 13px;
-      color: rgba(255, 255, 255, 0.28);
-      margin-bottom: 22px;
+      color: rgba(255, 255, 255, .45);
+      margin-bottom: 22px
     }
 
-    .broadside-meta .serif-detail {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 17px;
+    .serif-detail {
+      font: italic 17px var(--font-serif)
     }
 
-    .broadside-meta .sep {
+    .sep {
       margin: 0 10px;
-      color: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, .2)
     }
 
-    /* ── Confidence ── */
+    .conf {
+      text-align: left
+    }
+
     .conf-row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 10px
     }
 
     .conf-label {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 12px;
-      color: var(--muted);
+      font: italic 12px var(--font-serif);
+      color: var(--muted)
     }
 
     .conf-score {
-      font-family: var(--font-mono);
       font-size: 12px;
-      font-weight: 600;
-      color: var(--text);
+      font-weight: 600
     }
 
     .conf-track {
+      position: relative;
       height: 4px;
-      background: rgba(255, 255, 255, 0.08);
       border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, rgba(39, 174, 96, .55), rgba(212, 160, 23, .55) 55%, rgba(192, 57, 43, .55))
     }
 
-    .conf-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .conf-fill.ai {
-      background: var(--ai);
-    }
-
-    .conf-fill.real {
-      background: var(--real);
-    }
-
-    .conf-fill.uncertain {
-      background: var(--uncertain);
+    .conf-marker {
+      position: absolute;
+      top: -4px;
+      width: 2px;
+      height: 12px;
+      background: var(--text);
+      transform: translateX(-50%);
+      transition: left 1.4s cubic-bezier(.16, 1, .3, 1)
     }
 
     .conf-zones {
       display: flex;
       justify-content: space-between;
-      font-family: var(--font-mono);
       font-size: 9px;
       color: var(--dim);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: .1em;
       font-weight: 600;
-      margin-bottom: 28px;
+      margin-bottom: 28px
     }
 
-    /* Seven Ages tooltip */
     .zone-tip {
       position: relative;
-      cursor: help;
+      cursor: help
     }
 
     .zone-tip::after {
@@ -715,83 +732,77 @@
       border: 1px solid var(--border-hi);
       border-radius: 5px;
       padding: 8px 12px;
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 11px;
+      font: italic 400 11px/1.6 var(--font-serif);
       color: var(--text);
       width: 230px;
       text-align: center;
       white-space: normal;
-      line-height: 1.6;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.15s;
+      transition: opacity .15s;
       z-index: 50;
       text-transform: none;
-      letter-spacing: 0;
-      font-weight: normal;
+      letter-spacing: 0
     }
 
-    .zone-tip:hover::after {
-      opacity: 1;
+    .zone-tip:hover::after,
+    .zone-tip:focus-visible::after {
+      opacity: 1
     }
 
-    /* ── Divider & Section ── */
     .rule {
-      border: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.07);
-      margin: 0 0 28px;
+      border: 0;
+      border-top: 1px solid rgba(255, 255, 255, .07);
+      margin: 0 0 28px
     }
 
     .sec {
-      font-family: var(--font-mono);
       font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: .1em;
       color: var(--muted);
-      margin-bottom: 12px;
+      margin-bottom: 12px
     }
 
-    .fleuron-divider {
+    .fleuron {
       text-align: center;
-      color: rgba(255, 255, 255, 0.15);
-      font-size: 20px;
-      margin: 36px 0 4px;
-      font-family: var(--font-serif);
+      color: rgba(255, 255, 255, .2);
+      font: 20px var(--font-serif);
+      margin: 36px 0 4px
     }
 
-    /* ── GradCAM Slider ── */
+    /* Slider + images */
     .slider {
       position: relative;
       border-radius: 8px;
       overflow: hidden;
       cursor: col-resize;
       user-select: none;
+      touch-action: pan-y;
       border: 1px solid var(--border);
       line-height: 0;
-      margin-bottom: 12px;
+      margin-bottom: 12px
     }
 
     .slider img {
       display: block;
       width: 100%;
-      height: auto;
+      height: auto
     }
 
     .slider-over {
       position: absolute;
       inset: 0;
-      overflow: hidden;
+      overflow: hidden
     }
 
     .slider-over img {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: cover
     }
 
     .slider-line {
@@ -799,14 +810,15 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, .8);
       z-index: 10;
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 6px rgba(0, 0, 0, .4)
     }
 
     .slider-handle {
       position: absolute;
       top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
       width: 32px;
       height: 32px;
@@ -818,241 +830,299 @@
       font-size: 12px;
       color: #000;
       font-weight: 700;
-      z-index: 11;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      pointer-events: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .5);
+      pointer-events: none
     }
 
     .slider-hint {
-      font-family: var(--font-mono);
       font-size: 10px;
       color: var(--muted);
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 28px
     }
 
-    /* ── Image Box ── */
     .img-box {
       border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
       line-height: 0;
-      margin-bottom: 28px;
+      margin-bottom: 28px
     }
 
     .img-box img {
       display: block;
       width: 100%;
-      height: auto;
       max-height: 400px;
       object-fit: contain;
-      background: var(--surface);
+      background: var(--surface)
     }
 
-    /* ── Actions ── */
+    /* Epilogue + feedback */
     .actions {
       display: flex;
       gap: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 24px
     }
 
-    /* ── Epilogue ── */
     .epilogue {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 17px;
-      color: rgba(255, 255, 255, 0.22);
+      font: italic 17px var(--font-serif);
+      color: rgba(255, 255, 255, .4);
       text-align: center;
-      margin-bottom: 48px;
+      margin-bottom: 12px
     }
 
-    /* ── Extension Section ── */
-    .ext-section {
-      padding-top: 8px;
+    .feedback-line,
+    .feedback-noted {
+      margin-bottom: 28px;
+      text-align: center
     }
 
+    .feedback-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, .35);
+      text-transform: uppercase;
+      letter-spacing: .08em
+    }
+
+    .feedback-btn {
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      min-width: 44px;
+      min-height: 44px;
+      color: rgba(255, 255, 255, .35);
+      border-radius: 4px;
+      transition: color .2s
+    }
+
+    .feedback-btn:hover {
+      color: var(--text)
+    }
+
+    .feedback-btn.up:hover {
+      color: var(--real)
+    }
+
+    .feedback-btn.down:hover {
+      color: var(--ai)
+    }
+
+    .feedback-noted {
+      font: italic 12px var(--font-serif);
+      color: rgba(255, 255, 255, .4)
+    }
+
+    /* Extension section */
     .ext-header {
       display: flex;
+      width: 100%;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
       padding: 8px 0;
-    }
-
-    .ext-title {
-      font-family: var(--font-mono);
+      background: none;
+      border: 0;
+      color: var(--muted);
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
+      letter-spacing: .1em
     }
 
     .ext-chevron {
       font-size: 10px;
-      color: var(--muted);
-      transition: transform 0.2s;
+      transition: transform .2s
     }
 
     .ext-body {
       margin-top: 20px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 14px
     }
 
     .ext-step {
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(255, 255, 255, .02);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 18px;
+      padding: 18px
     }
 
     .ext-step-num {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 13px;
+      font: italic 13px var(--font-serif);
       color: var(--dim);
-      margin-bottom: 10px;
+      margin-bottom: 10px
     }
 
     .ext-step-title {
-      font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 600;
-      margin-bottom: 7px;
-      color: var(--text);
+      margin-bottom: 7px
     }
 
     .ext-step-desc {
-      font-family: var(--font-sans);
       font-size: 12px;
       color: var(--muted);
-      line-height: 1.6;
+      line-height: 1.7
     }
 
     .anno-domini {
-      font-family: var(--font-mono);
       font-size: 9px;
-      color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, .25);
       text-align: center;
       margin-top: 28px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
+      letter-spacing: .2em;
+      text-transform: uppercase
     }
 
-    /* ── Soliloquy Overlay (Konami) ── */
+    /* Overlays */
     .soliloquy-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.96);
+      background: rgba(0, 0, 0, .96);
       z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      animation: heraldFadeIn 0.5s ease;
+      animation: fadeIn .5s ease
     }
 
     .soliloquy-content {
       max-width: 500px;
       text-align: center;
-      padding: 48px 32px;
+      padding: 48px 32px
     }
 
     .soliloquy-content p {
-      font-family: var(--font-serif);
-      font-size: 18px;
-      font-style: italic;
-      color: rgba(255, 255, 255, 0.65);
-      line-height: 2.1;
-      margin-bottom: 2px;
+      font: italic 18px/2.1 var(--font-serif);
+      color: rgba(255, 255, 255, .65)
     }
 
     .soliloquy-dismiss {
-      font-family: var(--font-mono);
       font-size: 9px;
-      color: rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, .3);
       text-transform: uppercase;
-      letter-spacing: 0.2em;
-      margin-top: 40px;
+      letter-spacing: .2em;
+      margin-top: 40px
     }
 
-    /* ── Prompter's Box ── */
     .prompters-box {
       position: fixed;
       bottom: 24px;
       left: 24px;
       z-index: 50;
-      opacity: 0.07;
-      transition: opacity 0.3s;
+      opacity: .07;
+      transition: opacity .3s
     }
 
-    .prompters-box:hover {
-      opacity: 1;
+    .prompters-box:hover,
+    .prompters-box:focus-within {
+      opacity: 1
     }
 
     .prompters-label {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 9px;
-      color: rgba(255, 255, 255, 0.35);
-      margin-bottom: 7px;
+      font: italic 9px var(--font-serif);
+      color: rgba(255, 255, 255, .35);
+      margin-bottom: 7px
     }
 
     .kb {
       display: flex;
       align-items: center;
       gap: 7px;
-      font-family: var(--font-mono);
       font-size: 10px;
-      color: rgba(255, 255, 255, 0.3);
-      margin-bottom: 4px;
+      color: rgba(255, 255, 255, .3);
+      margin-bottom: 4px
     }
 
     kbd {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .1);
       border-radius: 3px;
       padding: 1px 5px;
-      font-family: var(--font-mono);
-      font-size: 9px;
-      color: rgba(255, 255, 255, 0.3);
+      font: 9px var(--font-mono);
+      color: rgba(255, 255, 255, .3)
     }
 
-    /* ── Mobile ── */
-    @media (max-width: 480px) {
+    /* Focus + motion */
+    button:focus-visible,
+    input:focus-visible,
+    .slider:focus-visible,
+    .zone-tip:focus-visible {
+      outline: 1px solid var(--text);
+      outline-offset: 3px
+    }
+
+    .drop:focus-within {
+      border-color: rgba(255, 255, 255, .5);
+      outline: 1px solid var(--border-hi);
+      outline-offset: 3px
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important
+      }
+
+      .playbill {
+        opacity: 1
+      }
+    }
+
+    /* Mobile */
+    @media (max-width:480px) {
       .topbar {
-        padding: 0 20px;
+        padding: 0 16px;
+        gap: 8px
       }
 
       .wordmark {
-        font-size: 12px;
+        font-size: 12px
       }
 
       .seg-btn {
         padding: 4px 10px;
-        font-size: 10px;
+        font-size: 10px
       }
 
       .playbill-quote {
-        font-size: 1.7rem;
+        font-size: 1.7rem
       }
 
       .ext-body {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr
       }
 
       .prompters-box {
-        display: none;
+        display: none
       }
 
       .main {
-        padding: 0 16px 60px;
+        padding: 0 16px 60px
       }
 
       .broadside-verdict {
-        font-size: 24px;
+        font-size: 24px
+      }
+
+      .access-pop {
+        width: 240px
+      }
+
+      .err {
+        flex-direction: column;
+        align-items: flex-start
       }
     }
   </style>
@@ -1061,148 +1131,328 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useRef, useCallback, useEffect } = React;
+    const { useState, useRef, useEffect } = React;
 
-    const DEMO_KEY = 'demo-public';
-    const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
-      'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    /* ── Config ── */
+    const DEMO_KEY = 'demo-public';      // must equal DEMO_API_KEY on the server
+    const KEY_STORE = 'aon_key';
+    const MAX_PX = 1500;
+    const UPLOAD_TYPES = ['image/jpeg', 'image/png'];
+    const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
     const LABELS = {
-      REAL: 'Human Made',
-      AI_GENERATED: 'AI Generated',
-      UNCERTAIN_LEANING_AI: 'Uncertain — Leaning AI',
-      UNCERTAIN_LEANING_REAL: 'Uncertain — Leaning Real',
+      REAL: 'Human Made', AI_GENERATED: 'AI Generated',
+      UNCERTAIN_LEANING_AI: 'Uncertain - Leaning AI', UNCERTAIN_LEANING_REAL: 'Uncertain - Leaning Real',
       UNCERTAIN_NEUTRAL: 'Uncertain',
     };
-
-    const SHAKESPEARE_SUBS = {
-      REAL: "Born of mortal hands.",
-      AI_GENERATED: "A machine's cold forgery.",
-      UNCERTAIN_LEANING_AI: "Methinks the lady doth protest too much.",
-      UNCERTAIN_LEANING_REAL: "There are more things in heaven and earth.",
-      UNCERTAIN_NEUTRAL: "Neither here nor there.",
+    const SUBS = {
+      REAL: 'Born of mortal hands.', AI_GENERATED: "A machine's cold forgery.",
+      UNCERTAIN_LEANING_AI: 'Methinks the lady doth protest too much.',
+      UNCERTAIN_LEANING_REAL: 'There are more things in heaven and earth.',
+      UNCERTAIN_NEUTRAL: 'Neither here nor there.',
     };
-
-    const HERALDRY = {
-      REAL: 'Vert',
-      AI_GENERATED: 'Gules',
-      UNCERTAIN_LEANING_AI: 'Or',
-      UNCERTAIN_LEANING_REAL: 'Or',
-      UNCERTAIN_NEUTRAL: 'Or',
-    };
-
+    const HERALDRY = { REAL: 'Vert', AI_GENERATED: 'Gules', UNCERTAIN_LEANING_AI: 'Or', UNCERTAIN_LEANING_REAL: 'Or', UNCERTAIN_NEUTRAL: 'Or' };
     const EPILOGUES = {
-      AI_GENERATED: ["What's done cannot be undone.",
-        "All that glitters is not gold.",
-        "The lady doth protest too much, methinks."],
-      REAL: ["All's well that ends well.",
-        "Truth will come to light.",
-        "What a piece of work is a man."],
-      UNCERTAIN_LEANING_AI: ["The rest is silence.",
-        "Something is rotten in the state of Denmark."],
-      UNCERTAIN_LEANING_REAL: ["There are more things in heaven and earth.",
-        "Neither here nor there."],
-      UNCERTAIN_NEUTRAL: ["The rest is silence.",
-        "What light through yonder window breaks?"],
+      AI_GENERATED: ["What's done cannot be undone.", 'All that glitters is not gold.', 'The lady doth protest too much, methinks.'],
+      REAL: ["All's well that ends well.", 'Truth will come to light.', 'What a piece of work is a man.'],
+      UNCERTAIN_LEANING_AI: ['The rest is silence.', 'Something is rotten in the state of Denmark.'],
+      UNCERTAIN_LEANING_REAL: ['There are more things in heaven and earth.', 'Neither here nor there.'],
+      UNCERTAIN_NEUTRAL: ['The rest is silence.', 'What light through yonder window breaks?'],
     };
+    const EXT_ACTS = [
+      ['Act I', 'Install the extension', 'Load from the Chrome Web Store or install unpacked via developer mode.'],
+      ['Act II', 'Ready from the first moment', 'The public demo is built in. For higher limits, add your own server or key under "Use your own server or key" in the popup.'],
+      ['Act III', 'Right-click any image', 'Summon the detector on any canvas across the wide web.'],
+      ['Act IV', 'Behold the verdict', 'A popup reveals the truth: confidence scores and GradCAM heatmaps.'],
+      ['Act V', 'Enable passive mode', 'Let the extension badge AI images silently as you browse, without a right-click.'],
+    ];
 
-    function vcls(p) {
-      if (!p) return '';
-      if (p === 'REAL') return 'real';
-      if (p === 'AI_GENERATED') return 'ai';
-      return 'uncertain';
+    /* ── Helpers ── */
+    const storage = (name) => ({
+      get(k) { try { return window[name].getItem(k); } catch { return null; } },
+      set(k, v) { try { window[name].setItem(k, v); } catch { /* storage unavailable */ } },
+    });
+    const local = storage('localStorage');
+    const session = storage('sessionStorage');
+
+    const isUrl = (s) => /^https?:\/\//i.test(s || '');
+    const isTyping = (el) => !!el && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
+    const vcls = (p) => (p === 'REAL' ? 'real' : p === 'AI_GENERATED' ? 'ai' : 'uncertain');
+    const isDefinite = (p) => p === 'REAL' || p === 'AI_GENERATED';
+    // The API returns P(AI). For a Human Made verdict the model's certainty is 1 - P(AI).
+    const certainty = (p, c) => (p === 'REAL' ? 1 - c : c);
+
+    const httpMessage = (status, demo) => ({
+      400: 'Unsupported or unreadable image. Try a JPEG or PNG.',
+      401: demo ? 'The demo key was refused. Please try again later.' : 'That key was not recognised.',
+      413: 'The file is too large, even after resizing.',
+      429: demo ? 'The demo is catching its breath. Wait a moment, or add your own key for higher limits.'
+        : 'Rate limit reached. Wait a moment and try again.',
+    }[status] || `The server answered ${status}.`);
+
+    function formatFilename(name) {
+      if (!name) return 'unknown.jpg';
+      if (name.length > 30 || name.includes('?q=') || name.includes('base64')) return 'pasted_image.jpg';
+      if (name.length > 20) {
+        const parts = name.split('.');
+        const ext = parts.length > 1 ? '.' + parts.pop() : '';
+        return parts.join('.').substring(0, 15) + '...' + ext;
+      }
+      return name;
     }
 
-    async function resizeImage(file, maxPx = 1500) {
-      return new Promise((resolve) => {
+    // Maps a vote to what the user believes the true label is.
+    function deriveUserCorrection(prediction, vote) {
+      if (vote === 'agree') return isDefinite(prediction) ? prediction : 'UNKNOWN';
+      if (prediction === 'AI_GENERATED') return 'REAL';
+      if (prediction === 'REAL') return 'AI_GENERATED';
+      if (prediction === 'UNCERTAIN_LEANING_AI') return 'REAL';
+      if (prediction === 'UNCERTAIN_LEANING_REAL') return 'AI_GENERATED';
+      return 'UNKNOWN';
+    }
+
+    // Re-encodes anything the browser can decode (WebP, AVIF, GIF...) and shrinks large files.
+    function normalizeImage(file) {
+      return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
         img.onload = () => {
           URL.revokeObjectURL(url);
           const { naturalWidth: w, naturalHeight: h } = img;
-          if (w <= maxPx && h <= maxPx) { resolve(file); return; }
-          const scale = maxPx / Math.max(w, h);
+          if (UPLOAD_TYPES.includes(file.type) && Math.max(w, h) <= MAX_PX) return resolve(file);
+          const scale = Math.min(1, MAX_PX / Math.max(w, h));
           const canvas = document.createElement('canvas');
           canvas.width = Math.round(w * scale);
           canvas.height = Math.round(h * scale);
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff';                       // avoid black backgrounds on transparent images
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           canvas.toBlob(
-            (blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })),
-            'image/jpeg', 0.92
-          );
+            (blob) => blob
+              ? resolve(new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }))
+              : reject(new Error('Could not prepare the image.')),
+            'image/jpeg', 0.92);
         };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('This image could not be read by the browser.')); };
         img.src = url;
       });
     }
 
-    /* ── Act Label ── */
-    function ActLabel({ act, title }) {
-      return <div className="act-label">{act} · {title}</div>;
+    async function fetchImage(url) {
+      let res;
+      try { res = await fetch(url); }
+      catch { throw new Error('The image server blocks browser requests (CORS). Download the image and upload it directly.'); }
+      if (!res.ok) throw new Error(`Could not fetch the image (HTTP ${res.status}).`);
+      const blob = await res.blob();
+      if (!blob.type.startsWith('image/')) throw new Error('That address does not point to an image.');
+      return new File([blob], url.split('?')[0].split('/').pop() || 'image', { type: blob.type });
     }
 
-    /* ── GradCAM Slider ── */
+    function droppedImage(dt) {
+      const files = [...dt.files].filter((f) => f.type.startsWith('image/'));
+      if (files.length) return { files };
+      const html = dt.getData('text/html');
+      const src = html && new DOMParser().parseFromString(html, 'text/html').querySelector('img')?.src;
+      if (isUrl(src)) return { url: src };
+      const uri = dt.getData('text/uri-list').split('\n').find(isUrl);
+      if (uri) return { url: uri.trim() };
+      const text = dt.getData('text/plain').trim();
+      return isUrl(text) ? { url: text } : {};
+    }
+
+    /* ── Components ── */
+    class ErrorBoundary extends React.Component {
+      constructor(props) { super(props); this.state = { failed: false }; }
+      static getDerivedStateFromError() { return { failed: true }; }
+      render() {
+        if (!this.state.failed) return this.props.children;
+        return (
+          <div style={{ padding: '20vh 24px', textAlign: 'center', font: 'italic 20px var(--font-serif)', color: 'var(--muted)' }}>
+            <p style={{ marginBottom: 16 }}>A tragedy of errors befell the stage.</p>
+            <button className="btn-go" onClick={() => location.reload()}>Raise the curtain again</button>
+          </div>
+        );
+      }
+    }
+
+    function AccessMenu({ apiKey, open, setOpen, onSave }) {
+      const [draft, setDraft] = useState('');
+      const box = useRef(null);
+      const usingDemo = apiKey === DEMO_KEY;
+
+      useEffect(() => {
+        if (!open) return;
+        const away = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+        const esc = (e) => { if (e.key === 'Escape') setOpen(false); };
+        document.addEventListener('mousedown', away);
+        document.addEventListener('keydown', esc);
+        return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc); };
+      }, [open, setOpen]);
+
+      const save = (key) => { onSave(key || DEMO_KEY); setDraft(''); setOpen(false); };
+
+      return (
+        <div className="topbar-right" ref={box}>
+          <button className="access-chip" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>
+            <span className={`access-dot ${usingDemo ? '' : 'own'}`} />
+            {usingDemo ? 'Demo access' : 'Your key'}
+          </button>
+          {open && (
+            <div className="access-pop" role="dialog" aria-label="Access">
+              <p className="access-note">Anyone may use the public demo, within limits. Hold your own key? Enter it for higher limits.</p>
+              <input type="password" placeholder="Your access key" value={draft} autoFocus autoComplete="off"
+                aria-label="Access key" onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && save(draft.trim())} />
+              <div className="access-actions">
+                <button className="btn-go" onClick={() => save(draft.trim())}>Save</button>
+                {!usingDemo && <button className="link-btn" onClick={() => save(DEMO_KEY)}>Use demo access</button>}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     function GradSlider({ original, heatmap }) {
       const [pos, setPos] = useState(50);
-      const [on, setOn] = useState(false);
       const ref = useRef(null);
-      const move = useCallback((x) => {
-        if (!ref.current) return;
-        const r = ref.current.getBoundingClientRect();
-        setPos(Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100)));
-      }, []);
-      useEffect(() => {
-        if (!on) return;
-        const end = () => setOn(false);
-        const go = (e) => move(e.clientX ?? e.touches?.[0]?.clientX);
-        window.addEventListener('mousemove', go);
-        window.addEventListener('mouseup', end);
-        window.addEventListener('touchmove', go, { passive: true });
-        window.addEventListener('touchend', end);
-        return () => {
-          window.removeEventListener('mousemove', go);
-          window.removeEventListener('mouseup', end);
-          window.removeEventListener('touchmove', go);
-          window.removeEventListener('touchend', end);
-        };
-      }, [on, move]);
+      const frame = useRef(0);
+
+      const setFromX = (x) => {
+        cancelAnimationFrame(frame.current);
+        frame.current = requestAnimationFrame(() => {
+          if (!ref.current) return;
+          const r = ref.current.getBoundingClientRect();
+          setPos(Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100)));
+        });
+      };
+      useEffect(() => () => cancelAnimationFrame(frame.current), []);
+
       return (
         <>
           <div className="sec">The Mousetrap</div>
-          <div ref={ref} className="slider"
-            onMouseDown={(e) => { setOn(true); move(e.clientX); }}
-            onTouchStart={(e) => { setOn(true); move(e.touches[0].clientX); }}>
+          <div ref={ref} className="slider" role="slider" tabIndex={0}
+            aria-label="Compare the original image with the heatmap"
+            aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pos)}
+            onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setFromX(e.clientX); }}
+            onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) setFromX(e.clientX); }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') setPos((p) => Math.max(0, p - 5));
+              if (e.key === 'ArrowRight') setPos((p) => Math.min(100, p + 5));
+            }}>
             <img src={original} alt="Original" draggable={false} />
             <div className="slider-over" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-              <img src={`data:image/png;base64,${heatmap}`} alt="Illumination" draggable={false} />
+              <img src={`data:image/png;base64,${heatmap}`} alt="Heatmap overlay" draggable={false} />
             </div>
-            <div className="slider-line" style={{ left: `${pos}%` }}>
-              <div className="slider-handle">⇔</div>
-            </div>
+            <div className="slider-line" style={{ left: `${pos}%` }}><div className="slider-handle">⇔</div></div>
           </div>
           <div className="slider-hint">← Original · · · Illumination →</div>
         </>
       );
     }
 
-    /* ── Extension Section ── */
+    function DropZone({ onFiles, onUrl }) {
+      const [over, setOver] = useState(false);
+      const handleDrop = (e) => {
+        e.preventDefault(); setOver(false);
+        const { files, url } = droppedImage(e.dataTransfer);
+        if (files) onFiles(files); else if (url) onUrl(url);
+      };
+      return (
+        <div className="gloss-anchor">
+          <div className={`drop empty ${over ? 'over' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOver(false); }}
+            onDrop={handleDrop}>
+            <input type="file" accept="image/*" aria-label="Choose an image to analyze"
+              onChange={(e) => { onFiles([...e.target.files]); e.target.value = ''; }} />
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"
+              strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12, opacity: 0.45 }} aria-hidden="true">
+              <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" /><line x1="16" y1="8" x2="2" y2="22" /><line x1="17.5" y1="15" x2="9" y2="15" />
+            </svg>
+            <div className="drop-primary">Hark! Drop thy image here, or Ctrl+V</div>
+            <div className="drop-hint">A blank canvas awaits · JPEG · PNG · WebP</div>
+          </div>
+          <div className="gloss">Tread the boards: place thy image upon the stage for examination by the learned engine.</div>
+        </div>
+      );
+    }
+
+    function Verdict({ result, mode, preview, round, feedback, onFeedback, onExeunt }) {
+      const [pos, setPos] = useState(0);
+      const { prediction: pred, confidence } = result;
+      const cls = vcls(pred);
+      const lines = EPILOGUES[pred] || ['The rest is silence.'];
+
+      useEffect(() => {
+        const t = setTimeout(() => setPos(confidence * 100), 60);
+        return () => clearTimeout(t);
+      }, [confidence]);
+
+      return (
+        <section className="broadside" aria-label="Verdict">
+          <div className="broadside-ornament" aria-hidden="true">❧  ❦  ❧</div>
+          <div className={`broadside-verdict ${cls}`}>{LABELS[pred] || pred}</div>
+          <div className="broadside-heraldry">
+            {HERALDRY[pred]}{isDefinite(pred) && ` · ${(certainty(pred, confidence) * 100).toFixed(1)}%`}
+          </div>
+          <div className="broadside-sub">{SUBS[pred]}</div>
+          <div className="broadside-rule" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
+          <div className="broadside-meta">
+            <span>{formatFilename(result.filename)}</span><span className="sep">·</span>
+            <span className="serif-detail">{mode === 'explain' ? 'The Mousetrap' : 'Fast'}</span><span className="sep">·</span>
+            <span>{result.processing_time_ms} ms</span>
+            {result.cached && <><span className="sep">·</span><span className="serif-detail">Previously, in the Globe...</span></>}
+          </div>
+          <div className="broadside-rule" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
+
+          <div className="gloss-anchor conf">
+            <div className="conf-row">
+              <span className="conf-label">Soliloquy</span>
+              <span className="conf-score">{(confidence * 100).toFixed(1)}% machine-made</span>
+            </div>
+            <div className="conf-track"><div className="conf-marker" style={{ left: `${pos}%` }} /></div>
+            <div className="conf-zones">
+              <span className="zone-tip" tabIndex={0} data-tip="The Infant: certainty of origin, born of mortal hands.">Real</span>
+              <span className="zone-tip" tabIndex={0} data-tip="The Justice: in fair round belly, weighing all sides with scholarly indecision.">Uncertain</span>
+              <span className="zone-tip" tabIndex={0} data-tip="Second childishness: mere oblivion, generated by machine and naught else.">AI</span>
+            </div>
+            <div className="gloss">A soliloquy: the model's inner monologue, spoken aloud for your eyes only.</div>
+          </div>
+
+          <hr className="rule" />
+
+          {result.heatmap_base64 && preview
+            ? <GradSlider original={preview} heatmap={result.heatmap_base64} />
+            : preview && <><div className="sec">Analyzed Image</div><div className="img-box"><img src={preview} alt="The analyzed image" /></div></>}
+
+          <div className="epilogue">{lines[round % lines.length]}</div>
+          {feedback ? (
+            <div className="feedback-noted" role="status">{feedback === 'failed' ? 'Could not be recorded.' : 'Noted.'}</div>
+          ) : (
+            <div className="feedback-line">
+              <span>Was this right?</span>
+              <button className="feedback-btn up" aria-label="Correct verdict" title="Correct (C)" onClick={() => onFeedback('agree')}>↑</button>
+              <button className="feedback-btn down" aria-label="Wrong verdict" title="Wrong (W)" onClick={() => onFeedback('disagree')}>↓</button>
+            </div>
+          )}
+          <div className="actions"><button className="btn-reset" onClick={onExeunt}>Exeunt</button></div>
+        </section>
+      );
+    }
+
     function ExtSection() {
       const [open, setOpen] = useState(false);
-      const acts = [
-        { num: 'Act I', title: 'Install the extension', desc: 'Load from the Chrome Web Store or install unpacked via developer mode.' },
-        { num: 'Act II', title: 'Configure settings', desc: 'Click the icon and enter your API key. Saved locally, forevermore.' },
-        { num: 'Act III', title: 'Right-click any image', desc: 'Summon the detector on any canvas across the wide web.' },
-        { num: 'Act IV', title: 'Behold the verdict', desc: 'A popup reveals the truth: confidence scores and GradCAM heatmaps.' },
-        { num: 'Act V', title: 'Enable passive mode', desc: 'Let the extension badge AI images silently as you browse without right-click.' },
-      ];
       return (
-        <div className="ext-section">
-          <div className="ext-header" onClick={() => setOpen(o => !o)}>
-            <span className="ext-title">Browser Extension</span>
+        <div>
+          <button className="ext-header" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+            <span>Browser Extension</span>
             <span className="ext-chevron" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>▼</span>
-          </div>
+          </button>
           {open && (
             <div className="ext-body">
-              {acts.map(({ num, title, desc }) => (
+              {EXT_ACTS.map(([num, title, desc]) => (
                 <div className="ext-step" key={num}>
                   <div className="ext-step-num">{num}</div>
                   <div className="ext-step-title">{title}</div>
@@ -1216,276 +1466,165 @@
       );
     }
 
-    function formatFilename(name) {
-      if (!name) return 'unknown.jpg';
-
-      if (name.length > 30 || name.includes('?q=') || name.includes('base64')) {
-        return 'pasted_image.jpg';
-      }
-
-      if (name.length > 20) {
-        const parts = name.split('.');
-        const ext = parts.length > 1 ? '.' + parts.pop() : '';
-        const base = parts.join('.');
-        return base.substring(0, 15) + '...' + ext;
-      }
-
-      return name;
-    }
-
     /* ── App ── */
     function App() {
-      const saved = localStorage.getItem('aon_key');
-
-      const [apiKey, setApiKey] = useState(saved || DEMO_KEY);
-      const [keyOpen, setKeyOpen] = useState(false);
-      const [isDemo, setIsDemo] = useState(!saved || saved === DEMO_KEY);
+      const [apiKey, setApiKey] = useState(() => local.get(KEY_STORE) || DEMO_KEY);
+      const [accessOpen, setAccessOpen] = useState(false);
       const [mode, setMode] = useState('explain');
-      const [over, setOver] = useState(false);
       const [loading, setLoading] = useState(false);
-      const [elapsed, setElapsed] = useState(0);
+      const [elapsed, setElapsed] = useState('0.0');
       const [result, setResult] = useState(null);
       const [error, setError] = useState(null);
+      const [errCode, setErrCode] = useState(null);
       const [preview, setPreview] = useState(null);
       const [showUrl, setShowUrl] = useState(false);
       const [urlInput, setUrlInput] = useState('');
-      const [w, setW] = useState(0);
-      const [firstFolioMode, setFirstFolioMode] = useState(false);
-      const [fpClicks, setFpClicks] = useState(0);
+      const [round, setRound] = useState(0);
+      const [feedback, setFeedback] = useState(null);       // null | 'agree' | 'disagree' | 'failed'
+      const [heroSeen, setHeroSeen] = useState(() => session.get('aon_hero') === '1');
+      const [folio, setFolio] = useState(() => local.get('aon_folio') === '1');
       const [showSoliloquy, setShowSoliloquy] = useState(false);
-      const [analysisCount, setAnalysisCount] = useState(0);
 
-      const fileRef = useRef(null);
-      const timerRef = useRef(null);
-      const konamiIdx = useRef(0);
-      const fpTimer = useRef(null);
       const toolRef = useRef(null);
+      const timer = useRef(0);
+      const konami = useRef(0);
+      const folioClicks = useRef({ n: 0, t: 0 });
+      const latest = useRef({});                             // always-fresh handlers for window listeners
+      const usingDemo = apiKey === DEMO_KEY;
 
-      /* Console Easter Egg — once */
-      useEffect(() => {
-        console.log(
-          '%c\n  Sonnet XVIII (Adapted)\n\n' +
-          '  Shall I compare thee to a human hand?\n' +
-          '  Thou art more doubtful and more generate.\n' +
-          '  Rough algorithms do shake the darling buds of May,\n' +
-          '  And summer\'s lease hath all too short a render.\n\n' +
-          '  — AI or Not AI, v2.0.0\n',
-          'font-style:italic;color:#a1a1aa;font-family:serif;font-size:13px;'
-        );
-      }, []);
+      const scrollToTool = (block = 'start') =>
+        setTimeout(() => toolRef.current?.scrollIntoView({ behavior: 'smooth', block }), 50);
 
-      /* First Folio body class */
-      useEffect(() => {
-        document.body.classList.toggle('first-folio', firstFolioMode);
-      }, [firstFolioMode]);
-
-      /* Title update */
-      useEffect(() => {
-        document.title = result
-          ? `${LABELS[result.prediction] || result.prediction} — AI or Not AI`
-          : "AI or Not AI, That's the Question";
-      }, [result]);
-
-      /* Demo key init */
-      useEffect(() => {
-        if (!localStorage.getItem('aon_key')) localStorage.setItem('aon_key', DEMO_KEY);
-      }, []);
-
-      /* Keyboard: shortcuts + Konami */
-      useEffect(() => {
-        const handler = (e) => {
-          /* Konami */
-          if (e.key === KONAMI[konamiIdx.current]) {
-            konamiIdx.current++;
-            if (konamiIdx.current === KONAMI.length) {
-              setShowSoliloquy(true);
-              konamiIdx.current = 0;
-            }
-          } else {
-            konamiIdx.current = 0;
-          }
-          if (e.key === 'Escape') { setShowSoliloquy(false); }
-          if (e.target.tagName === 'INPUT') return;
-          if (e.key.toLowerCase() === 'r') reset();
-          if (e.key.toLowerCase() === 'e') { setMode('explain'); reset(); }
-          if (e.key.toLowerCase() === 'f') { setMode('predict'); reset(); }
-          if (e.key.toLowerCase() === 'u') setShowUrl(s => !s);
-        };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
-      }, []);
-
-      /* Paste */
-      useEffect(() => {
-        const handler = async (e) => {
-          const items = e.clipboardData?.items;
-          if (!items) return;
-          for (const item of items) {
-            if (item.type.startsWith('image/')) {
-              e.preventDefault();
-              runFiles([item.getAsFile()]);
-              break;
-            }
-          }
-          const text = e.clipboardData.getData('text');
-          if (text && text.startsWith('http')) {
-            e.preventDefault();
-            runFromUrl(text);
-          }
-        };
-        window.addEventListener('paste', handler);
-        return () => window.removeEventListener('paste', handler);
-      }, [apiKey, mode]);
-
-      /* Confidence bar animation */
-      useEffect(() => {
-        if (!result) { setW(0); return; }
-        const t = setTimeout(() => setW(result.confidence * 100), 60);
-        return () => clearTimeout(t);
-      }, [result?.confidence]);
-
-      const reset = () => {
-        setResult(null); setError(null); setPreview(null);
-        setElapsed(0); setW(0); setShowUrl(false); setUrlInput('');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      const clearState = () => {
+        setResult(null); setError(null); setErrCode(null); setPreview(null);
+        setElapsed('0.0'); setFeedback(null);
       };
-
-      const saveKey = () => {
-        const k = apiKey.trim(); if (!k) return;
-        localStorage.setItem('aon_key', k);
-        setKeyOpen(false); setIsDemo(k === DEMO_KEY);
-      };
+      const reset = () => { clearState(); setShowUrl(false); setUrlInput(''); scrollToTool(); };
+      const home = () => { clearState(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+      const chooseMode = (m) => { setMode(m); reset(); };
+      const saveKey = (k) => { local.set(KEY_STORE, k); setApiKey(k); };
 
       const startTimer = () => {
-        const start = Date.now();
-        timerRef.current = setInterval(
-          () => setElapsed(((Date.now() - start) / 1000).toFixed(1)), 100
-        );
-      };
-      const stopTimer = () => clearInterval(timerRef.current);
-
-      /* Triple-click portrait → First Folio */
-      const handlePortraitClick = () => {
-        clearTimeout(fpTimer.current);
-        const n = fpClicks + 1;
-        setFpClicks(n);
-        if (n >= 3) {
-          setFirstFolioMode(m => !m);
-          setFpClicks(0);
-        } else {
-          fpTimer.current = setTimeout(() => setFpClicks(0), 1800);
-        }
+        const t0 = Date.now();
+        clearInterval(timer.current);
+        timer.current = setInterval(() => setElapsed(((Date.now() - t0) / 1000).toFixed(1)), 100);
       };
 
-      const runFromUrl = async (url) => {
-        if (!url.trim()) return;
-        reset();
+      const fail = (e) => {
+        if (e.status) { setError(httpMessage(e.status, usingDemo)); setErrCode(e.status); }
+        else if (e instanceof TypeError) { setError('Could not reach the server. It may be waking up, so try again in a moment.'); setErrCode(null); }
+        else { setError(e.message); setErrCode(null); }
+      };
+
+      const run = async (getFile) => {
+        if (latest.current.loading) return;
+        clearState(); setHeroSeen(true); session.set('aon_hero', '1');
         setLoading(true); startTimer();
         try {
-          const r = await fetch(url);
-          if (!r.ok) throw new Error(`Could not fetch image (HTTP ${r.status})`);
-          const blob = await r.blob();
-          if (!blob.type.startsWith('image/')) throw new Error('URL does not point to an image.');
-          const file = new File([blob], url.split('/').pop() || 'image.jpg', { type: blob.type });
+          const file = await normalizeImage(await getFile());
           setPreview(URL.createObjectURL(file));
-          const form = new FormData(); form.append('file', file);
-          const ep = mode === 'explain' ? '/explain' : '/predict';
-          const res = await fetch(`/v1/inference${ep}`, {
+          const form = new FormData();
+          form.append('file', file);
+          const res = await fetch(`/v1/inference/${mode === 'explain' ? 'explain' : 'predict'}`, {
             method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form,
           });
-          if (!res.ok) throw new Error(`Server error (${res.status}).`);
+          if (!res.ok) throw Object.assign(new Error('http'), { status: res.status });
           setResult(await res.json());
-          setAnalysisCount(c => c + 1);
-        } catch (e) {
-          setError(e.message.toLowerCase().includes('fetch')
-            ? 'CORS error — the image server blocks browser requests. Try downloading and uploading the file directly.'
-            : e.message);
-        } finally { stopTimer(); setLoading(false); }
+          setRound((n) => n + 1);
+        } catch (e) { fail(e); }
+        finally { clearInterval(timer.current); setLoading(false); }
       };
+      const runFiles = (files) => { if (files?.length) run(async () => files[0]); };
+      const runFromUrl = (url) => { if (url?.trim()) run(() => fetchImage(url.trim())); };
 
-      const runFiles = async (files) => {
-        if (!files?.length) return;
-        reset(); setLoading(true); startTimer();
+      const submitFeedback = async (vote) => {
+        if (!result || feedback) return;
+        setFeedback(vote);                                   // optimistic
         try {
-          const file = await resizeImage(files[0], 1500);
-          setPreview(URL.createObjectURL(file));
-          const form = new FormData(); form.append('file', file);
-          const ep = mode === 'explain' ? '/explain' : '/predict';
-          const res = await fetch(`/v1/inference${ep}`, {
-            method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form,
+          const res = await fetch('/v1/feedback/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey.trim() },
+            body: JSON.stringify({
+              filename: result.filename, model_prediction: result.prediction, confidence: result.confidence,
+              user_correction: deriveUserCorrection(result.prediction, vote), client_source: 'playground_v2',
+            }),
           });
-          if (!res.ok) {
-            const s = res.status;
-            if (s === 401) throw new Error('Invalid API key.');
-            if (s === 413) throw new Error('File too large even after resize.');
-            if (s === 400) throw new Error('Unsupported format. Use JPEG or PNG.');
-            if (s === 429) throw new Error('Rate limit reached. Wait a moment and try again.');
-            throw new Error(`Server error (${s}).`);
-          }
-          setResult(await res.json());
-          setAnalysisCount(c => c + 1);
-        } catch (e) {
-          setError(e.message);
-        } finally { stopTimer(); setLoading(false); }
+          if (!res.ok) throw new Error('feedback rejected');
+        } catch { setFeedback('failed'); }
       };
 
-      const getEpilogue = (prediction) => {
-        const lines = EPILOGUES[prediction] || ['The rest is silence.'];
-        return lines[analysisCount % lines.length];
+      const onPortrait = () => {
+        const c = folioClicks.current;
+        clearTimeout(c.t); c.n += 1;
+        if (c.n >= 3) { c.n = 0; setFolio((f) => !f); } else c.t = setTimeout(() => { c.n = 0; }, 1800);
       };
 
-      const vc = result ? vcls(result.prediction) : '';
+      latest.current = { loading, result, feedback, showSoliloquy, runFiles, runFromUrl, reset, chooseMode, submitFeedback };
+
+      /* Window listeners are registered once and read fresh handlers through `latest`. */
+      useEffect(() => {
+        const onKey = (e) => {
+          const s = latest.current;
+          if (s.showSoliloquy) { setShowSoliloquy(false); return; }
+          if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+          if (e.key === KONAMI[konami.current]) {
+            if (++konami.current === KONAMI.length) { konami.current = 0; setShowSoliloquy(true); }
+          } else konami.current = 0;
+          const k = e.key.toLowerCase();
+          if (k === 'r') s.reset();
+          else if (k === 'e') s.chooseMode('explain');
+          else if (k === 'f') s.chooseMode('predict');
+          else if (k === 'u') setShowUrl((v) => !v);
+          else if (k === 'c' && s.result && !s.feedback) s.submitFeedback('agree');
+          else if (k === 'w' && s.result && !s.feedback) s.submitFeedback('disagree');
+        };
+        const onPaste = (e) => {
+          if (isTyping(e.target) || !e.clipboardData) return;
+          const item = [...e.clipboardData.items].find((i) => i.type.startsWith('image/'));
+          if (item) { e.preventDefault(); latest.current.runFiles([item.getAsFile()]); return; }
+          const text = e.clipboardData.getData('text').trim();
+          if (isUrl(text)) { e.preventDefault(); latest.current.runFromUrl(text); }
+        };
+        window.addEventListener('keydown', onKey);
+        window.addEventListener('paste', onPaste);
+        return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('paste', onPaste); };
+      }, []);
+
+      /* Deep link from the extension: /?imageUrl=... */
+      useEffect(() => {
+        const url = new URLSearchParams(window.location.search).get('imageUrl');
+        if (isUrl(url)) { setUrlInput(url); latest.current.runFromUrl(url); }
+      }, []);
+
+      useEffect(() => {                                       // console easter egg, once
+        console.log('%c\n  Sonnet XVIII (Adapted)\n\n  Shall I compare thee to a human hand?\n  Thou art more doubtful and more generate.\n  Rough algorithms do shake the darling buds of May,\n  And summer\'s lease hath all too short a render.\n\n  - AI or Not AI, v2.0.0\n',
+          'font-style:italic;color:#a1a1aa;font-family:serif;font-size:13px;');
+      }, []);
+      useEffect(() => { document.body.classList.toggle('first-folio', folio); local.set('aon_folio', folio ? '1' : '0'); }, [folio]);
+      useEffect(() => {
+        document.title = result ? `${LABELS[result.prediction] || result.prediction} - AI or Not AI` : "AI or Not AI, That's the Question";
+      }, [result]);
+      useEffect(() => { if (error) scrollToTool('center'); }, [error]);
+      useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+      useEffect(() => () => clearInterval(timer.current), []);
 
       return (
-        <div>
-          {/* Topbar */}
+        <>
           <nav className="topbar">
-            <div className="topbar-left">
-              <span className="wordmark" onClick={reset}>AI or Not AI</span>
+            <button className="wordmark" onClick={home}>AI or Not AI</button>
+            <div className="seg" role="group" aria-label="Analysis mode">
+              <button className={`seg-btn ${mode === 'predict' ? 'on' : ''}`} aria-pressed={mode === 'predict'}
+                title="Instant result, classification only (F)" onClick={() => chooseMode('predict')}>Fast</button>
+              <button className={`seg-btn ${mode === 'explain' ? 'on' : ''}`} aria-pressed={mode === 'explain'}
+                title="Wherein I'll catch the conscience of the machine (E)" onClick={() => chooseMode('explain')}>The Mousetrap</button>
             </div>
-            <div className="seg">
-              <button
-                title="Instant result — Classification only"
-                className={`seg-btn ${mode === 'predict' ? 'on' : ''}`}
-                onClick={() => { setMode('predict'); reset(); }}>
-                Fast
-              </button>
-              <button
-                title="The play's the thing / Wherein I'll catch the conscience of the machine."
-                className={`seg-btn ${mode === 'explain' ? 'on' : ''}`}
-                onClick={() => { setMode('explain'); reset(); }}>
-                The Mousetrap
-              </button>
-            </div>
-            <div className="topbar-right">
-              {!keyOpen && !isDemo ? (
-                <div style={{ cursor: 'pointer' }} onClick={() => setKeyOpen(true)}>
-                  <span style={{ color: 'var(--real)', marginRight: '6px' }}>✓</span>API key saved
-                </div>
-              ) : keyOpen ? (
-                <input type="password" placeholder="API Key"
-                  style={{ width: '140px', padding: '6px 10px', height: '28px' }}
-                  value={apiKey}
-                  onChange={e => setApiKey(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && saveKey()}
-                  autoFocus />
-              ) : null}
-            </div>
+            <AccessMenu apiKey={apiKey} open={accessOpen} setOpen={setAccessOpen} onSave={saveKey} />
           </nav>
 
-          {/* Demo Banner */}
-          {isDemo && (
-            <div className="demo-banner">
-              <span>Demo mode — 5 requests/sec · No signup needed</span>
-              <button onClick={() => { setKeyOpen(true); setIsDemo(false); }}>Use your own key</button>
-            </div>
-          )}
-
-          {/* Konami Soliloquy */}
           {showSoliloquy && (
-            <div className="soliloquy-overlay" onClick={() => setShowSoliloquy(false)}>
+            <div className="soliloquy-overlay" role="dialog" aria-modal="true" aria-label="Soliloquy" onClick={() => setShowSoliloquy(false)}>
               <div className="soliloquy-content">
-                <p>To be AI, or not to be AI — that is the question.</p>
+                <p>To be AI, or not to be AI, that is the question.</p>
                 <p>Whether 'tis nobler in the machine to suffer</p>
                 <p>The slings and arrows of outrageous training data,</p>
                 <p>Or to take arms against a sea of pixels,</p>
@@ -1496,223 +1635,75 @@
           )}
 
           <main className="main">
-
-            {/* ACT I — The Question */}
             {!result && !loading && (
-              <section className="playbill">
-                <img
-                  src="/static/images.png"
-                  alt="The Chandos Portrait — Authenticity: disputed."
+              <section className={`playbill ${heroSeen ? 'compact' : ''}`}>
+                <img src="/static/images.png" className="playbill-portrait" onClick={onPortrait}
+                  alt="The Chandos Portrait. Authenticity: disputed."
                   title="The Chandos Portrait, c.1610. Attributed to John Taylor. Authenticity: disputed."
-                  className="playbill-portrait"
-                  onError={e => e.target.style.display = 'none'}
-                  onClick={handlePortraitClick}
-                />
-                <div className="playbill-ornament">❧  ❦  ❧</div>
-                <div className="playbill-quote">"AI or Not AI, That's the Question."</div>
-                <div className="playbill-attribution">— after Hamlet, Act III, Scene I</div>
-                <div className="playbill-ornament" style={{ fontSize: '11px', letterSpacing: '0.4em' }}>
-                  ══════════════════
-                </div>
+                  onError={(e) => { e.target.style.display = 'none'; }} />
+                <div className="ornament" aria-hidden="true">❧  ❦  ❧</div>
+                <h1 className="playbill-quote">"AI or Not AI, That's the Question."</h1>
+                <div className="playbill-attribution">after Hamlet, Act III, Scene I</div>
+                <div className="ornament" style={{ fontSize: 11, letterSpacing: '.4em' }} aria-hidden="true">══════════════════</div>
                 <div className="playbill-byline">A Philosophical Enquiry in Five Acts</div>
                 <div className="playbill-edition">Presented at the Globe Theatre of the Web</div>
-                <div className="scroll-cue" onClick={() => toolRef.current?.scrollIntoView({ behavior: 'smooth' })}>
-                  <span>Begin thy inquiry</span>
-                  <span>↓</span>
-                </div>
+                <button className="scroll-cue" onClick={() => scrollToTool()}><span>Begin thy inquiry</span><span aria-hidden="true">↓</span></button>
               </section>
             )}
 
-            {/* ACT II — The Boards */}
             {!result && !loading && (
               <div ref={toolRef}>
-                <ActLabel act="ACT II" title="The Boards" />
-                <div className="gloss-anchor">
-                  <div
-                    className={`drop empty ${over ? 'over' : ''}`}
-                    onDragOver={e => { e.preventDefault(); setOver(true); }}
-                    onDragLeave={() => setOver(false)}
-                    onDrop={e => {
-                      e.preventDefault(); setOver(false);
-                      // 1. Durum: Masaüstünden gerçek bir dosya sürüklendiyse
-                      const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
-                      if (files.length > 0) {
-                        runFiles(files);
-                        return;
-                      }
-
-                      // 2. Durum: Başka sekmeden HTML parçası (örneğin resim etiketi) sürüklendiyse
-                      const html = e.dataTransfer.getData('text/html');
-                      if (html) {
-                        const match = html.match(/src\s*=\s*"([^"]+)"/); // HTML içinden src="" kısmını çıkar
-                        if (match && match[1]) {
-                          runFromUrl(match[1]);
-                          return;
-                        }
-                      }
-
-                      // 3. Durum: Sadece düz bir link veya metin sürüklendiyse
-                      const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
-                      if (url && url.startsWith('http')) {
-                        runFromUrl(url);
-                      }
-                    }}
-                    onClick={() => fileRef.current?.click()}
-                  >
-                    <input ref={fileRef} type="file" accept="image/jpeg,image/png"
-                      onChange={e => runFiles([...e.target.files])}
-                      onClick={e => e.stopPropagation()} />
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" strokeWidth="1.2"
-                      strokeLinecap="round" strokeLinejoin="round"
-                      style={{ marginBottom: '12px', opacity: 0.45 }}>
-                      <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
-                      <line x1="16" y1="8" x2="2" y2="22" />
-                      <line x1="17.5" y1="15" x2="9" y2="15" />
-                    </svg>
-                    <div className="drop-primary">Hark! Drop thy image here, or Ctrl+V</div>
-                    <div className="drop-hint">A blank canvas awaits · JPEG / PNG</div>
-                  </div>
-                  <div className="gloss">
-                    Tread the boards — place thy image upon the stage for examination by the learned engine.
-                  </div>
-                </div>
-
+                <div className="act-label">ACT II · The Boards</div>
+                <DropZone onFiles={runFiles} onUrl={runFromUrl} />
                 {error && (
-                  <div className="err">
-                    <span>
-                      <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
-                        A tragedy of errors:
-                      </span>
-                      {' '}{error}
+                  <div className="err" role="alert">
+                    <span><span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>A tragedy of errors:</span> {error}</span>
+                    <span className="err-actions">
+                      {usingDemo && errCode === 429 && <button className="btn-retry" onClick={() => { setError(null); setAccessOpen(true); }}>Add your key</button>}
+                      {!usingDemo && errCode === 401 && <button className="btn-retry" onClick={() => { saveKey(DEMO_KEY); setError(null); }}>Use demo access</button>}
+                      <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
                     </span>
-                    <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
                   </div>
                 )}
-
                 <div className="url-toggle">
                   {!showUrl ? (
-                    <button onClick={e => { e.stopPropagation(); setShowUrl(true); }}>
-                      Or summon from URL
-                    </button>
+                    <button onClick={() => setShowUrl(true)}>Or summon from URL</button>
                   ) : (
-                    <div className="url-row" onClick={e => e.stopPropagation()}>
-                      <input type="url" placeholder="https://..." value={urlInput}
-                        onChange={e => setUrlInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && runFromUrl(urlInput)}
-                        autoFocus />
+                    <div className="url-row">
+                      <input type="url" placeholder="https://..." value={urlInput} autoFocus aria-label="Image URL"
+                        onChange={(e) => setUrlInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && runFromUrl(urlInput)} />
                       <button className="btn-go" onClick={() => runFromUrl(urlInput)}>Analyze</button>
-                      <button className="btn-go" onClick={() => { setShowUrl(false); setUrlInput(''); }}>✕</button>
+                      <button className="btn-go" aria-label="Close URL input" onClick={() => { setShowUrl(false); setUrlInput(''); }}>✕</button>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* ACT III — The Deliberation */}
             {loading && (
               <>
-                <ActLabel act="ACT III" title="The Deliberation" />
-                <div className="loader-wrap">
-                  <div className="loading-hourglass">⌛</div>
-                  <div className="status-text">
-                    {mode === 'explain' ? 'The plot thickens...' : 'Consulting the muse...'}
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--dim)', marginTop: '4px' }}>
-                    {elapsed}s
-                  </div>
+                <div className="act-label">ACT III · The Deliberation</div>
+                <div className="loader-wrap" role="status" aria-live="polite">
+                  <div className="loading-hourglass" aria-hidden="true">⌛</div>
+                  <div className="status-text">{mode === 'explain' ? 'The plot thickens...' : 'Consulting the muse...'}</div>
+                  <div className="elapsed">{elapsed}s</div>
                 </div>
               </>
             )}
 
-            {/* ACT IV — The Verdict */}
             {result && !loading && (
               <>
-                <ActLabel act="ACT IV" title="The Verdict" />
-                <section className="broadside">
-
-                  <div className="broadside-ornament">❧  ❦  ❧</div>
-                  <div className={`broadside-verdict ${vc}`}>
-                    {LABELS[result.prediction] || result.prediction}
-                  </div>
-                  <div className="broadside-heraldry">
-                    {HERALDRY[result.prediction]} &nbsp;·&nbsp; {(result.confidence * 100).toFixed(1)}%
-                  </div>
-                  <div className="broadside-sub">{SHAKESPEARE_SUBS[result.prediction]}</div>
-                  <div className="broadside-rule">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
-                  <div className="broadside-meta">
-                    <span>{formatFilename(result.filename)}</span>
-                    <span className="sep">·</span>
-                    <span className="serif-detail">{mode === 'explain' ? 'The Mousetrap' : 'Fast'}</span>
-                    <span className="sep">·</span>
-                    <span>{result.processing_time_ms} ms</span>
-                    {result.cached && (
-                      <><span className="sep">·</span>
-                        <span className="serif-detail">Previously, in the Globe...</span></>
-                    )}
-                  </div>
-                  <div className="broadside-rule">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
-
-                  {/* Confidence as Soliloquy */}
-                  <div className="gloss-anchor" style={{ textAlign: 'left', marginBottom: '0' }}>
-                    <div className="conf-row">
-                      <span className="conf-label">Soliloquy</span>
-                      <span className="conf-score">{(result.confidence * 100).toFixed(1)}%</span>
-                    </div>
-                    <div className="conf-track">
-                      <div className={`conf-fill ${vc}`} style={{ width: `${w}%` }} />
-                    </div>
-                    <div className="conf-zones">
-                      <span className="zone-tip"
-                        data-tip="The Infant — certainty of origin, born of mortal hands.">
-                        Real
-                      </span>
-                      <span className="zone-tip"
-                        data-tip="The Justice — in fair round belly, weighing all sides with scholarly indecision.">
-                        Uncertain
-                      </span>
-                      <span className="zone-tip"
-                        data-tip="Second childishness — mere oblivion, generated by machine and naught else.">
-                        AI
-                      </span>
-                    </div>
-                    <div className="gloss">
-                      A soliloquy — the model's inner monologue, spoken aloud for your eyes only.
-                    </div>
-                  </div>
-
-                  <hr className="rule" />
-
-                  {result.heatmap_base64 && preview
-                    ? <GradSlider original={preview} heatmap={result.heatmap_base64} />
-                    : preview && (
-                      <>
-                        <div className="sec">Analyzed Image</div>
-                        <div className="img-box">
-                          <img src={preview} alt="The analyzed image" />
-                        </div>
-                      </>
-                    )
-                  }
-
-                  <div className="actions">
-                    <button className="btn-reset" onClick={reset}>Exeunt</button>
-                  </div>
-
-                  <div className="epilogue">{getEpilogue(result.prediction)}</div>
-
-                </section>
+                <div className="act-label">ACT IV · The Verdict</div>
+                <Verdict result={result} mode={mode} preview={preview} round={round}
+                  feedback={feedback} onFeedback={submitFeedback} onExeunt={reset} />
               </>
             )}
 
-            {/* ACT V — The Epilogue */}
-            <ActLabel act="ACT V" title="The Epilogue" />
-            <div className="fleuron-divider">❧  ❦  ❧</div>
+            <div className="act-label">ACT V · The Epilogue</div>
+            <div className="fleuron" aria-hidden="true">❧  ❦  ❧</div>
             <ExtSection />
-
           </main>
 
-          {/* Prompter's Box */}
           <div className="prompters-box">
             <div className="prompters-label">[Prompter]</div>
             <div className="kb"><kbd>E</kbd> The Mousetrap</div>
@@ -1720,13 +1711,13 @@
             <div className="kb"><kbd>U</kbd> Summon URL</div>
             <div className="kb"><kbd>R</kbd> Exeunt</div>
             <div className="kb"><kbd>Ctrl+V</kbd> Paste image</div>
+            {result && !feedback && (<><div className="kb"><kbd>C</kbd> Correct</div><div className="kb"><kbd>W</kbd> Wrong</div></>)}
           </div>
-
-        </div>
+        </>
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    ReactDOM.createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
   </script>
 </body>
 

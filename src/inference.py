@@ -16,7 +16,7 @@ from src.core.enums import InferenceStatus
 from src.logger import logger
 from src.services.base_engine import BaseMLEngine
 
-# global mean and standart deviation values for further calculations
+# Global mean and standart deviation values for further calculations
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 _STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
