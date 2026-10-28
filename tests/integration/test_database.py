@@ -1,16 +1,39 @@
+"""
+This integration test module is designed to validate the functionality of the database layer, specifically focusing on the feedback and prediction log repositories.
+It ensures that the CRUD operations, soft deletion, pagination, and indexing behave as expected when interacting with the database.
+"""
+
 import pytest
 
 from src.core.enums import ErrorType, FeedbackLabel, PredictionLabel
+from src.services.feedback_service import classify_error
 
 
 @pytest.mark.asyncio
 async def test_create_feedback_in_db(feedback_repo, mock_feedback_data):
-    # Save the data
+    """
+    Testing logging feedback data into the database and verifying that the stored data matches the input.
+    Specifically, this test checks that the feedback item is correctly created with the expected attributes, most importantly the error
+    type derived from the model's prediction and the user's correction.
+
+    Args:
+        feedback_repo: The repo instance for interacting with the feedback table in the database.
+        mock_feedback_data: A template data object to represent feedback entry for testing.
+
+
+    Assertions:
+        - The feedback item is created successfully in the database.
+        - The attributes of the feedback item match the input data (filename, model prediction, confidence, user correction, and error type
+        - The feedback item is not marked as deleted upon creation.
+    """
     await feedback_repo.create_feedback(
         filename=mock_feedback_data.filename,
         model_prediction=mock_feedback_data.model_prediction,
         confidence=mock_feedback_data.confidence,
         user_correction=mock_feedback_data.user_correction,
+        error_type=classify_error(
+            mock_feedback_data.model_prediction, mock_feedback_data.user_correction
+        ),
         client_source=mock_feedback_data.client_source,
     )
 

@@ -1,3 +1,10 @@
+"""
+This test suite tests the API layer of the application, focusing on endpoints related to inference, feedback, and health checks.
+It uses FastAPI's TestClient to simulate HTTP requests and validate responses, ensuring that the API
+    behaves as expected under various scenarios, including successful operations, validation errors, rate limiting, and authentication checks.
+
+"""
+
 import io
 import time
 from unittest.mock import AsyncMock, MagicMock
@@ -36,6 +43,11 @@ def client():
     fake_cache = {}
 
     async def fake_predict(image_bytes: bytes, filename: str = ""):
+        """
+        Immitates a predict method that caches results based on the hash of the image bytes.
+
+        """
+
         img_hash = str(hash(image_bytes))
         if img_hash in fake_cache:
             return {

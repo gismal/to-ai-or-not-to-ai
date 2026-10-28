@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     # Demo limit
     DEMO_RATE_LIMIT_PER_MIN: int = 30
+    DRIFT_MIN_SAMPLES: int = 30
 
     # Model
     MODEL_THRESHOLD: float = 0.75

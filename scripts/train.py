@@ -30,7 +30,7 @@ except ImportError:
 
 class _NoMlFlow:
     """
-    Duck Typing for mlflow because it was throwing unbounded error
+    Duck Typing for mlflow because it was throwing possibly unbound error
     """
 
     @staticmethod
@@ -80,6 +80,7 @@ def get_transforms() -> tuple[transforms.Compose, transforms.Compose]:
         [
             transforms.Resize((224, 224)),
             transforms.RandomHorizontalFlip(),
+            # transforms.RandomApply([transforms.GaussianBlur(5, sigma=(0.1, 2.0))], p=0.3),  if yes train with kaggle once again
             transforms.RandomRotation(10),
             transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1),
             transforms.ToTensor(),
@@ -129,6 +130,17 @@ def get_dataloaders(config: TrainConfig) -> tuple[DataLoader, DataLoader, list[s
         f"Dataset ready — train: {len(train_dataset)}, "
         f"val: {len(val_dataset)}, classes: {train_dataset.classes}"
     )
+
+    EXPECTED_CLASSES = ["AI_GENERATED", "REAL"]  # inference reads probs[0] as P(AI)
+
+    if (
+        train_dataset.classes != EXPECTED_CLASSES
+        or val_dataset.classes != EXPECTED_CLASSES
+    ):
+        raise ValueError(
+            f"Expected {EXPECTED_CLASSES}, got train={train_dataset.classes}, val={val_dataset.classes}"
+        )
+
     return train_loader, val_loader, train_dataset.classes
 
 
@@ -137,13 +149,11 @@ def build_model(num_classes: int, freeze_backbone: bool = True) -> nn.Module:
     """Load pretrained MobileNetv3-Small and swap the classifier head"""
     model = models.mobilenet_v3_small(weights="DEFAULT")
 
-    # Fix 3: Assert features is an nn.Module
     assert isinstance(model.features, nn.Module)
     if freeze_backbone:
         for param in model.features.parameters():
             param.requires_grad = False
 
-    # Fix 2: Assert last layer is nn.Linear
     last_layer = model.classifier[-1]
     assert isinstance(last_layer, nn.Linear)
 
@@ -258,7 +268,7 @@ class Trainer:
 
     def run(self, train_loader: DataLoader, val_loader: DataLoader) -> dict[str, float]:
         """Run the full training loop and return the best validation metrics"""
-        logger.info(f"Training on {self.device} for up to {self.config.epochs}")
+        logger.info(f"Training on {self.device} for up to epochs {self.config.epochs}")
 
         for epoch in range(1, self.config.epochs + 1):
             train_loss = self._train_epoch(train_loader)
@@ -308,12 +318,12 @@ def export_model(
         do_constant_folding=True,
         input_names=["input"],
         output_names=["output"],
-        dynamic_axes=None,
+        dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
     )
     logger.info(f"ONNX model exported {config.onnx_path}")
 
     metadata = {
-        "model_version": "v2.0.0",
+        "model_version": "v2.0.0",  # fix: hardcoded
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "base_model": "MobileNetV3_Small",
         "classes": classes,
@@ -326,7 +336,6 @@ def export_model(
     logger.info(f"Metadata saved: {config.metadata_path}")
 
 
-# -- Entry Point -------
 # -- Entry Point -------
 def main() -> None:
     """Executes the MLOps training pipeline.
@@ -392,6 +401,11 @@ def main() -> None:
             trainer.early_stopping = EarlyStopping(patience=3)
             trainer.config.epochs = 5
 
+            """
+            3. Phase 2 overwrites the config, so metadata reports the wrong epoch count. trainer.config.epochs = 5 changes the shared config, so export_model writes "epochs_trained": 5. The real run was up to 20 epochs plus 5. Phase 2’s settings (5 epochs, lr 1e-5, patience 3) are also hardcoded and never logged to MLflow. Pass the epoch count into run() instead of mutating the config, count the epochs actually run, and move the Phase 2 values into TrainConfig (finetune_epochs, finetune_lr, finetune_patience) so you can log them.
+            
+            """
+
             best_metrics = trainer.run(train_loader, val_loader)
 
             export_model(model, config, best_metrics, classes)
@@ -408,6 +422,7 @@ def main() -> None:
 
     except FileNotFoundError as e:
         logger.warning(f"Aborted: {e}. Prepare the dataset and retry.")
+        raise SystemExit(1) from e
     except Exception as e:
         logger.critical(f"Unexpected error: {e}", exc_info=True)
         raise
@@ -415,3 +430,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# todo: random.shuffle runs without random.seed(42), so the exact split can’t be reproduced
+# todo: The F1 of 0.966 is measured on the validation set that also chose the best epoch, so it’s slightly optimistic. Split 80/10/10 in the notebook, evaluate the test set once at the end, and report that number in the model card

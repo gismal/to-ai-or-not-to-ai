@@ -1,13 +1,39 @@
+# Version control and tooling
+.git/
+.github/
+.gitignore
+.pre-commit-config.yaml
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments and secrets (compose and Render inject env vars at runtime)
 venv/
+.venv/
 env/
 .env
+.env.*
+
+# Python noise
 __pycache__/
 *.pyc
-.pytest_cache/
+
+# Not needed at runtime
+tests/
+docs/
+notebooks/
+*.ipynb
+extension/
+monitoring/
 data/
 logs/
-.git/
-tests/,
-*.md,
-notebooks/,
-monitoring/
+mlruns/
+*.md
+requirements-test.txt
+requirements-train.txt
+Makefile
+Dockerfile
+.dockerignore
+docker-compose*.yml

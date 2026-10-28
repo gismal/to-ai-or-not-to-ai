@@ -7,8 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config import settings
 from src.core.enums import ErrorType
 from src.infra.feedback_item import FeedbackItem
-from src.infra.prediction_log import PredictionLog
 from src.logger import logger
+
+HARD_ERRORS = (ErrorType.FALSE_POSITIVE, ErrorType.FALSE_NEGATIVE)
+RETRAIN_JOB = "retrain_model"
 
 
 class RetrainService:
@@ -36,70 +38,72 @@ class RetrainService:
             days=lookback_days
         )
 
-        total_with_feedback = await self.session.scalar(
-            select(func.count(PredictionLog.id))
-            .join(FeedbackItem, FeedbackItem.filename == PredictionLog.filename)
-            .where(
-                FeedbackItem.is_deleted.is_(False),
-                PredictionLog.is_deleted.is_(False),
-                PredictionLog.created_at >= cutoff,
-            )
+        rated = (
+            FeedbackItem.is_deleted.is_(False),
+            FeedbackItem.created_at >= cutoff,
+            FeedbackItem.error_type != ErrorType.UNKNOWN,
+        )
+        window = {"lookback_days": lookback_days}
+
+        total = (
+            await self.session.scalar(select(func.count(FeedbackItem.id)).where(*rated))
+            or 0
         )
 
-        if not total_with_feedback:
+        if total == 0:
             logger.info(
-                f"Drift check: no predictions with feedback in the last {lookback_days} days."
+                f"Drift check: no rated feedback in the last {lookback_days} days."
             )
+            return {"status": "no_data", "error_rate": 0.0, **window}
+        if total < settings.DRIFT_MIN_SAMPLES:
             return {
-                "status": "no_data",
+                "status": "insufficient_data",
+                "samples": total,
+                "required": settings.DRIFT_MIN_SAMPLES,
                 "error_rate": 0.0,
-                "lookback_days": lookback_days,
+                **window,
             }
 
-        errors = await self.session.scalar(
-            select(func.count(FeedbackItem.id)).where(
-                FeedbackItem.error_type.in_(
-                    [ErrorType.FALSE_POSITIVE, ErrorType.FALSE_NEGATIVE]
-                ),
-                FeedbackItem.is_deleted.is_(False),
-                FeedbackItem.created_at >= cutoff,
+        errors = (
+            await self.session.scalar(
+                select(func.count(FeedbackItem.id)).where(
+                    *rated, FeedbackItem.error_type.in_(HARD_ERRORS)
+                )
             )
+            or 0
         )
-
-        errors = errors or 0
-        total_with_feedback = total_with_feedback or 1
-
-        error_rate = round(errors / total_with_feedback, 4)
+        error_rate = round(errors / total, 4)
         logger.info(
-            f"Drift check ({lookback_days}d) — "
-            f"error rate: {error_rate:.2%} "
-            f"({errors} errors / {total_with_feedback} labelled predictions)"
+            f"Drift check ({lookback_days}d): {error_rate:.2%} ({errors} errors / {total} rated answers)"
         )
 
-        # -- Trigger retraining if threshold exceeded ----------
-        if error_rate >= settings.DRIFT_THRESHOLD:
-            job = await self.arq_pool.enqueue_job("retrain_model")
+        if error_rate < settings.DRIFT_THRESHOLD:
+            return {"status": "ok", "error_rate": error_rate, **window}
 
-            if not job:
-                logger.error("Drift spotted but can't enqueued to retraining ")
-                return {
-                    "status": "error",
-                    "message": "Failed to enqueue retraining job",
-                }
-
-            logger.warning(
-                f"Drift threshold exceed ({error_rate:.2%}). "
-                f"Retraining enqueued. Job ID: {job.job_id}"
+        if self.arq_pool is None:
+            logger.error(
+                "Drift detected but the job queue is unavailable (Redis disabled)."
             )
             return {
-                "status": "retraining_enqueued",
-                "job_id": job.job_id,
+                "status": "error",
+                "message": "Job queue unavailable",
                 "error_rate": error_rate,
-                "lookback_days": lookback_days,
+                **window,
             }
 
+        job = await self.arq_pool.enqueue_job(RETRAIN_JOB, _job_id=RETRAIN_JOB)
+        if job is None:
+            logger.info(
+                "Drift detected, but a retraining job is already queued or recently finished."
+            )
+            return {"status": "already_queued", "error_rate": error_rate, **window}
+
+        logger.warning(
+            f"Drift threshold exceeded ({error_rate:.2%}). Retraining enqueued, job {job.job_id}."
+        )
         return {
-            "status": "ok",
+            "status": "retraining_enqueued",
+            "job_id": job.job_id,
             "error_rate": error_rate,
-            "lookback_days": lookback_days,
+            **window,
         }
