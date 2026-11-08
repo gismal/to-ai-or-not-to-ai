@@ -2,7 +2,7 @@ import contextvars
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from src.config import settings
@@ -15,7 +15,7 @@ request_id_ctx: contextvars.ContextVar[str] = contextvars.ContextVar(
 class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         log: dict = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "request_id": request_id_ctx.get(),
             "logger": record.name,

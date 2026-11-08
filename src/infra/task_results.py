@@ -4,7 +4,7 @@ Saves the job history for future Postgres queries
 """
 
 import enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
@@ -27,11 +27,11 @@ class TaskResult(Base):
     error = Column(Text, nullable=True)  # populated on failure
     started_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
         index=True,
     )
     completed_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
         index=True,
     )  # populated on finish

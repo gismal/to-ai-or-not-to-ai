@@ -7,7 +7,7 @@ import copy
 import json
 import os
 from contextlib import nullcontext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import torch
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
@@ -324,7 +324,7 @@ def export_model(
 
     metadata = {
         "model_version": "v2.0.0",  # fix: hardcoded
-        "trained_at": datetime.now(timezone.utc).isoformat(),
+        "trained_at": datetime.now(UTC).isoformat(),
         "base_model": "MobileNetV3_Small",
         "classes": classes,
         "epochs_trained": config.epochs,

@@ -6,21 +6,18 @@ Create Date: 2026-06-23 13:37:31.697304
 
 """
 
-from typing import Sequence, Union
-
+from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
 revision: str = "22f7235b02a8"
-down_revision: Union[str, Sequence[str], None] = "e61879474172"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "e61879474172"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
     """Upgrade schema."""
-    pass
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    pass

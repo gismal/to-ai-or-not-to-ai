@@ -1,6 +1,6 @@
 import asyncio
-from datetime import datetime, timezone
-from typing import ClassVar
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import urlparse
 
 from arq import Retry, cron
@@ -10,6 +10,9 @@ from src.config import settings
 from src.infra.database import AsyncSessionLocal
 from src.logger import logger
 from src.repositories.task_result_repo import TaskResultRepository
+
+if TYPE_CHECKING:
+    from src.services.retrain_service import DriftReport
 
 
 # -- Model Retraining --------------------------
@@ -52,13 +55,11 @@ async def retrain_model(ctx: dict) -> dict:
 
 
 # -- Scheduled Drift Check ----------------------------------------
-async def check_drift_scheduled(ctx: dict) -> dict:
+async def check_drift_scheduled(ctx: dict) -> "DriftReport":
     """
     It will run every night at 02:00 UTC and check error rate
     """
-    logger.info(
-        f"Scheduled drift check starting at{datetime.now(timezone.utc).isoformat()}"
-    )
+    logger.info(f"Scheduled drift check starting at{datetime.now(UTC).isoformat()}")
     # lazy import to avoid circular dependency
     from src.services.retrain_service import RetrainService
 

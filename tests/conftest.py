@@ -5,6 +5,11 @@ Controls
 
 import os
 
+# Database connection parameters
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+os.environ["API_KEY"] = "test_gizli_anahtar_123"
+os.environ["MODEL_THRESHOLD"] = "0.75"
+
 import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -15,10 +20,6 @@ from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.schemas.feedback import FeedbackCreateRequest
 from src.services.feedback_service import classify_error
 
-# Database connection parameters
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["API_KEY"] = "test_gizli_anahtar_123"
-os.environ["MODEL_THRESHOLD"] = "0.75"
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
 TestingSessionLocal = async_sessionmaker(bind=test_engine, expire_on_commit=False)

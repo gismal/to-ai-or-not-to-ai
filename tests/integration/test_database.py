@@ -58,6 +58,9 @@ async def test_soft_delete(feedback_repo, mock_feedback_data):
         model_prediction=mock_feedback_data.model_prediction,
         confidence=mock_feedback_data.confidence,
         user_correction=mock_feedback_data.user_correction,
+        error_type=classify_error(
+            mock_feedback_data.model_prediction, mock_feedback_data.user_correction
+        ),
         client_source=mock_feedback_data.client_source,
     )
     item = await feedback_repo.get_feedback_by_filename("db_test_image.png")
@@ -78,6 +81,9 @@ async def test_get_recent_errors_pagination(feedback_repo, mock_feedback_data):
             model_prediction=mock_feedback_data.model_prediction,
             confidence=mock_feedback_data.confidence,
             user_correction=mock_feedback_data.user_correction,
+            error_type=classify_error(
+                mock_feedback_data.model_prediction, mock_feedback_data.user_correction
+            ),
             client_source=mock_feedback_data.client_source,
         )
 

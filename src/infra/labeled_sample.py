@@ -11,7 +11,7 @@ This is the active learning table. When the model is uncertain:
 This closes the human-in-the-loop gap in the MLOps cycle.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
@@ -50,6 +50,6 @@ class LabeledSample(Base):
     added_to_training = Column(Boolean, default=False, nullable=False)
     created_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         index=True,
     )

@@ -27,3 +27,4 @@ models/*.pkl
 !models/model_v1.onnx
 !models/model_v1.onnx.data
 future_plans.txt
+logs/

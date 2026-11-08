@@ -5,13 +5,14 @@ It defines the prediction and feedback labels and error types to be tested.
 
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
 
 from src.config import settings
 from src.core.enums import ErrorType, FeedbackLabel, PredictionLabel
+from src.services import retrain_service
 from src.services.retrain_service import RetrainService
 
 CORRECT = (PredictionLabel.REAL, FeedbackLabel.REAL, ErrorType.CORRECT)
@@ -57,6 +58,7 @@ def drift_settings(monkeypatch):
     """
     monkeypatch.setattr(settings, "DRIFT_THRESHOLD", 0.15)
     monkeypatch.setattr(settings, "DRIFT_MIN_SAMPLES", 10)
+    monkeypatch.setattr(retrain_service, "_model_trained_at", lambda: None)
 
 
 async def add(repo, n, kind, tag="x"):
@@ -190,7 +192,7 @@ async def test_old_feedback_is_outside_the_window(db_session, feedback_repo):
 
     old = await add(feedback_repo, 20, FALSE_NEGATIVE, tag="old")
     for item in old:
-        item.created_at = datetime.now(timezone.utc) - timedelta(days=30)
+        item.created_at = datetime.now(UTC) - timedelta(days=30)
     await db_session.flush()
     await add(feedback_repo, 10, CORRECT)
     result = await RetrainService(db_session, FakePool()).check_drift_and_trigger()  # type: ignore
@@ -268,3 +270,38 @@ async def test_exactly_the_minimum_is_enough(db_session, feedback_repo):
     await add(feedback_repo, settings.DRIFT_MIN_SAMPLES, FALSE_POSITIVE)
     result = await RetrainService(db_session, FakePool()).check_drift_and_trigger()  # type: ignore
     assert result["status"] == "retraining_enqueued"
+
+
+ABSTAINED = (
+    PredictionLabel.UNCERTAIN_LEANING_AI,
+    FeedbackLabel.REAL,
+    ErrorType.UNCERTAIN_FAIL,
+)
+
+
+async def test_abstentions_do_not_dilute_the_error_rate(db_session, feedback_repo):
+    """2 wrong out of 10 decided answers is 20%. 100 abstentions by the model change nothing."""
+    await add(feedback_repo, 8, CORRECT)
+    await add(feedback_repo, 2, FALSE_POSITIVE)
+    await add(feedback_repo, 100, ABSTAINED)
+    result = await RetrainService(db_session, FakePool()).check_drift_and_trigger()
+    assert result["error_rate"] == 0.2
+    assert result["status"] == "retraining_enqueued"
+
+
+async def test_feedback_about_an_older_model_is_ignored(
+    db_session, feedback_repo, monkeypatch
+):
+    """Complaints from before the current model was trained do not count."""
+    for item in await add(feedback_repo, 20, FALSE_NEGATIVE, tag="old_model"):
+        item.created_at = datetime.now(UTC) - timedelta(days=3)
+    await db_session.flush()
+    await add(feedback_repo, 10, CORRECT)
+    monkeypatch.setattr(
+        retrain_service,
+        "_model_trained_at",
+        lambda: datetime.now(UTC) - timedelta(days=1),
+    )
+    result = await RetrainService(db_session, FakePool()).check_drift_and_trigger()
+    assert result["status"] == "ok"
+    assert result["error_rate"] == 0.0
