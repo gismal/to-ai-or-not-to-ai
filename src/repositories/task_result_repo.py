@@ -2,7 +2,7 @@
 Creates and updates task result records
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -55,7 +55,7 @@ class TaskResultRepository:
                 logger.warning(f"TaskResult {record_id} not found for update")
                 return
             record.status = status  # type: ignore
-            record.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
+            record.completed_at = datetime.now(UTC).replace(tzinfo=None)  # type: ignore
             record.error = error  # type: ignore
             await self.session.commit()
 

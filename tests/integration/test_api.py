@@ -1,3 +1,10 @@
+"""
+This test suite tests the API layer of the application, focusing on endpoints related to inference, feedback, and health checks.
+It uses FastAPI's TestClient to simulate HTTP requests and validate responses, ensuring that the API
+    behaves as expected under various scenarios, including successful operations, validation errors, rate limiting, and authentication checks.
+
+"""
+
 import io
 import time
 from unittest.mock import AsyncMock, MagicMock
@@ -36,6 +43,11 @@ def client():
     fake_cache = {}
 
     async def fake_predict(image_bytes: bytes, filename: str = ""):
+        """
+        Immitates a predict method that caches results based on the hash of the image bytes.
+
+        """
+
         img_hash = str(hash(image_bytes))
         if img_hash in fake_cache:
             return {
@@ -164,9 +176,9 @@ def test_rate_limiting(client, auth_headers):
         )
         for _ in range(6)
     ]
-    assert any(
-        r.status_code == 429 for r in responses
-    ), f"Expected 429, got: {[r.status_code for r in responses]}"
+    assert any(r.status_code == 429 for r in responses), (
+        f"Expected 429, got: {[r.status_code for r in responses]}"
+    )
 
 
 def test_predict_invalid_format(client, auth_headers):
@@ -251,3 +263,16 @@ async def test_cache_hit_on_second_request(client, auth_headers):
     assert r1.status_code == 200
     assert r2.status_code == 200
     assert r2.json()["cached"] is True
+
+
+@pytest.mark.parametrize(
+    "method,path", [("post", "/v1/admin/check-drift"), ("get", "/v1/admin/uncertain")]
+)
+def test_demo_key_cannot_reach_admin(client, method, path):
+    r = getattr(client, method)(path, headers={"X-API-Key": settings.DEMO_API_KEY})
+    assert r.status_code == 401
+
+
+def test_demo_key_passes_public_auth(client):
+    r = client.get("/v1/inference/health", headers={"X-API-Key": settings.DEMO_API_KEY})
+    assert r.status_code != 401  # 200 or 503 depending on the test environment

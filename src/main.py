@@ -125,6 +125,11 @@ app.include_router(feedback_router)
 app.include_router(admin_router)
 
 
+@app.get("/privacy", include_in_schema=False)
+async def privacy():
+    return FileResponse("frontend/privacy.html")
+
+
 @app.middleware("http")
 async def request_id_middleware(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))

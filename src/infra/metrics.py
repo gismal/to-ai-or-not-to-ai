@@ -7,6 +7,8 @@ here makes them importable from anywhere without side effects
 
 from prometheus_client import Counter, Histogram
 
+from src.core.enums import PredictionLabel
+
 # -- Prediction tracking ------------------
 PREDICTION_COUNTER = Counter(
     name="ai_detector_predictions_total",
@@ -37,3 +39,12 @@ EXPLAIN_HISTOGRAM = Histogram(
     documentation="Time spent running GradCAM explanation",
     buckets=[0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 5.0],
 )
+
+
+# -- Start every label series at 0 ------------------
+# A counter that first appears already at 1 makes rate() and increase() miss that first event,
+# and the donut chart only lists labels that have occurred. Creating the series up front fixes both.
+for _label in PredictionLabel:
+    PREDICTION_COUNTER.labels(label=_label.value)
+for _result in ("hit", "miss"):
+    CACHE_COUNTER.labels(result=_result)

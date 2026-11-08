@@ -1,3 +1,10 @@
 [tool.ruff]
 [tool.ruff.lint]
 ignore = ["B008", "BLE001"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/conftest.py" = ["E402"]
+
+[[tool.mypy.overrides]]
+module = ["onnxruntime.*", "pytorch_grad_cam.*", "torchvision.*"]
+ignore_missing_imports = true

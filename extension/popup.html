@@ -28,7 +28,6 @@
             --dim: #52525b;
             --ai: #c0392b;
             --real: #27ae60;
-            --uncertain: #d4a017;
             --font-mono: 'JetBrains Mono', ui-monospace, monospace;
             --font-serif: 'IM Fell English', serif;
         }
@@ -43,7 +42,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Header ── */
         .header {
             display: flex;
             align-items: center;
@@ -53,7 +51,6 @@
         }
 
         .wordmark {
-            font-family: var(--font-mono);
             font-weight: 600;
             font-size: 12px;
             text-transform: uppercase;
@@ -65,8 +62,7 @@
             height: 7px;
             border-radius: 50%;
             background: var(--dim);
-            transition: background 0.3s;
-            flex-shrink: 0;
+            transition: background .3s;
         }
 
         .conn-dot.ok {
@@ -77,22 +73,34 @@
             background: var(--ai);
         }
 
-        /* ── Body ── */
         .body {
             padding: 16px;
+        }
+
+        .access-line {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 14px;
+            min-height: 22px;
+        }
+
+        .access-line.err {
+            color: var(--ai);
         }
 
         .label {
             display: block;
             font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: .1em;
             color: var(--muted);
             margin-bottom: 5px;
         }
 
         .field {
-            margin-bottom: 13px;
+            margin-bottom: 12px;
         }
 
         input[type="url"],
@@ -106,18 +114,17 @@
             font-size: 12px;
             color: var(--text);
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color .2s;
         }
 
-        input:focus {
+        input:focus-visible {
             border-color: var(--border-hi);
         }
 
         input::placeholder {
-            color: var(--muted);
+            color: var(--dim);
         }
 
-        /* ── Mode toggle ── */
         .seg {
             display: flex;
             background: rgba(255, 255, 255, 0.03);
@@ -138,8 +145,7 @@
             font-size: 10px;
             font-weight: 500;
             cursor: pointer;
-            text-align: center;
-            transition: background 0.2s, color 0.2s;
+            transition: background .2s, color .2s;
             white-space: nowrap;
         }
 
@@ -148,25 +154,27 @@
             color: var(--bg);
         }
 
-        /* ── Toggle switch ── */
+        .rule {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin: 13px 0;
+        }
+
         .toggle-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 13px;
         }
 
-        .toggle-text .toggle-label {
-            font-size: 13px;
-            color: var(--text);
+        .toggle-label {
+            font-size: 12px;
         }
 
-        .toggle-text .toggle-hint {
-            font-size: 14px;
-            color: var(--muted);
+        .toggle-hint {
             font-family: var(--font-serif);
             font-style: italic;
-            margin-top: 1px;
+            font-size: 11px;
+            color: var(--muted);
         }
 
         .toggle {
@@ -177,9 +185,13 @@
         }
 
         .toggle input {
+            position: absolute;
             opacity: 0;
-            width: 0;
-            height: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            margin: 0;
+            z-index: 1;
         }
 
         .track {
@@ -187,8 +199,7 @@
             inset: 0;
             background: var(--border);
             border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
+            transition: background .2s;
         }
 
         .track::after {
@@ -200,7 +211,7 @@
             background: var(--muted);
             top: 3px;
             left: 3px;
-            transition: transform 0.2s, background 0.2s;
+            transition: transform .2s, background .2s;
         }
 
         .toggle input:checked+.track {
@@ -212,17 +223,58 @@
             background: var(--real);
         }
 
-        /* ── Divider ── */
-        .rule {
-            border: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            margin: 13px 0;
+        .toggle input:focus-visible+.track {
+            outline: 1px solid var(--border-hi);
+            outline-offset: 2px;
         }
 
-        /* ── Save button ── */
+        .disclosure {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 6px;
+            line-height: 1.6;
+        }
+
+        details.adv summary {
+            cursor: pointer;
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 12px;
+            color: var(--muted);
+            list-style: none;
+        }
+
+        details.adv summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.adv summary::before {
+            content: '+ ';
+            font-family: var(--font-mono);
+            font-style: normal;
+        }
+
+        details.adv[open] summary::before {
+            content: '- ';
+        }
+
+        details.adv summary:hover {
+            color: var(--text);
+        }
+
+        .adv-body {
+            margin-top: 12px;
+        }
+
+        .adv-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .btn-save {
-            width: 100%;
-            padding: 9px;
+            flex: 1;
+            padding: 8px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 5px;
@@ -231,8 +283,7 @@
             font-size: 11px;
             font-weight: 600;
             cursor: pointer;
-            transition: border-color 0.2s, color 0.2s;
-            letter-spacing: 0.04em;
+            transition: border-color .2s, color .2s;
         }
 
         .btn-save:hover {
@@ -240,33 +291,49 @@
             color: var(--text);
         }
 
-        /* ── Status ── */
+        .link-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .link-btn:hover {
+            color: var(--text);
+        }
+
         .status {
             font-family: var(--font-serif);
             font-style: italic;
-            font-size: 13px;
+            font-size: 11px;
             text-align: center;
             margin-top: 10px;
             min-height: 16px;
             color: var(--muted);
         }
 
-        .status.ok {
-            color: var(--real);
-        }
-
         .status.err {
             color: var(--ai);
         }
 
-        /* ── Hint ── */
         .hint {
             font-family: var(--font-serif);
             font-style: italic;
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.18);
+            color: var(--muted);
             text-align: center;
-            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+            }
         }
     </style>
 </head>
@@ -274,51 +341,60 @@
 <body>
     <div class="header">
         <span class="wordmark">AI or Not AI</span>
-        <div class="conn-dot" id="connDot" title="API status"></div>
+        <div class="conn-dot" id="connDot" role="img" aria-label="Connection status"></div>
     </div>
 
     <div class="body">
-        <div class="field">
-            <label class="label" for="apiUrl">API URL</label>
-            <input type="url" id="apiUrl" placeholder="https://to-ai-or-not-to-ai.onrender.com" spellcheck="false" />
-        </div>
+        <div class="access-line" id="accessLine" role="status" aria-live="polite">Setting the stage...</div>
 
         <div class="field">
-            <label class="label" for="apiKey">API Key</label>
-            <input type="password" id="apiKey" placeholder="X-API-Key" />
-        </div>
-
-        <div class="field">
-            <label class="label">Mode</label>
-            <div class="seg">
-                <button class="seg-btn" id="modeFast">Fast</button>
-                <button class="seg-btn" id="modeExplain">The Mousetrap</button>
+            <span class="label" id="modeLabel">Mode</span>
+            <div class="seg" role="group" aria-labelledby="modeLabel">
+                <button class="seg-btn" id="modeFast" type="button">Fast</button>
+                <button class="seg-btn" id="modeExplain" type="button">The Mousetrap</button>
             </div>
         </div>
 
         <hr class="rule" />
 
         <div class="toggle-row">
-            <div class="toggle-text">
+            <div>
                 <div class="toggle-label">Passive Badge Mode</div>
                 <div class="toggle-hint">Badge AI images as you browse</div>
             </div>
             <label class="toggle">
-                <input type="checkbox" id="passiveBadge" />
+                <input type="checkbox" id="passiveBadge" aria-label="Passive badge mode" />
                 <span class="track"></span>
             </label>
         </div>
+        <div class="disclosure">When on, large images from pages you visit are sent to the server for analysis.</div>
 
         <hr class="rule" />
 
-        <button class="btn-save" id="save">Save &amp; Test Connection</button>
-        <div class="status" id="status"></div>
+        <details class="adv" id="adv">
+            <summary>Use your own server or key</summary>
+            <div class="adv-body">
+                <div class="field">
+                    <label class="label" for="apiUrl">Server address</label>
+                    <input type="url" id="apiUrl" spellcheck="false" />
+                </div>
+                <div class="field">
+                    <label class="label" for="apiKey">Access key (optional)</label>
+                    <input type="password" id="apiKey" placeholder="Leave empty for the public demo"
+                        autocomplete="off" />
+                </div>
+                <div class="adv-actions">
+                    <button class="btn-save" id="save" type="button">Save &amp; test</button>
+                    <button class="link-btn" id="reset" type="button">Reset to demo</button>
+                </div>
+            </div>
+        </details>
 
-        <hr class="rule" />
-
+        <div class="status" id="status" role="status" aria-live="polite"></div>
         <div class="hint">Right-click any image to summon the detector.</div>
     </div>
 
+    <script src="config.js"></script>
     <script src="popup.js"></script>
 </body>
 

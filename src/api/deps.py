@@ -1,3 +1,4 @@
+import secrets
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
@@ -20,16 +21,35 @@ from src.services.retrain_service import RetrainService
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=True)
 
 
-def verify_api_key(api_key: str = Security(api_key_header)) -> str:
-    real = settings.API_KEY.get_secret_value()
-    demo = settings.DEMO_API_KEY
+def _matches(candidate: str, *valid: str) -> bool:
+    """Constant-time comparison. Empty keys never match, so an unset
+    DEMO_API_KEY switches demo access off instead of letting "" through."""
+    return bool(candidate) and any(
+        v and secrets.compare_digest(candidate.encode(), v.encode()) for v in valid
+    )
 
-    if api_key not in (real, demo):
-        logger.warning("Unauthorized API access attempt")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API Key",
-        )
+
+def _reject() -> HTTPException:
+    logger.warning("Unauthorized API access attempt")
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing API Key",
+    )
+
+
+def verify_api_key(api_key: str = Security(api_key_header)) -> str:
+    """Admin scope: the real key only."""
+    if not _matches(api_key, settings.API_KEY.get_secret_value()):
+        raise _reject()
+    return api_key
+
+
+def verify_public_key(api_key: str = Security(api_key_header)) -> str:
+    """Public scope (inference, feedback): the real key or the public demo key."""
+    if not _matches(
+        api_key, settings.API_KEY.get_secret_value(), settings.DEMO_API_KEY
+    ):
+        raise _reject()
     return api_key
 
 

@@ -29,7 +29,7 @@ from src.api.deps import (
     get_explainability_service,
     get_inference_service,
     get_prediction_log_repository,
-    verify_api_key,
+    verify_public_key,
 )
 from src.config import settings
 from src.core.exceptions import InvalidImageFormatError
@@ -45,7 +45,7 @@ from src.services.inference_service import InferenceService
 router = APIRouter(
     prefix="/v1/inference",
     tags=["Inference"],
-    dependencies=[Depends(verify_api_key)],
+    dependencies=[Depends(verify_public_key)],
 )
 
 health_router = APIRouter(tags=["System"])

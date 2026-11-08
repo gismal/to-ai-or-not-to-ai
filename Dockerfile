@@ -43,4 +43,4 @@ RUN adduser --disabled-password --gecos "" appuser
 USER appuser
 
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*"]

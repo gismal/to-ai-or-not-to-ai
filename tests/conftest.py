@@ -1,4 +1,14 @@
+"""
+This test module tests the database integrity.
+Controls
+"""
+
 import os
+
+# Database connection parameters
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+os.environ["API_KEY"] = "test_gizli_anahtar_123"
+os.environ["MODEL_THRESHOLD"] = "0.75"
 
 import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -8,11 +18,7 @@ from src.infra.database import Base
 from src.repositories.feedback_repo import FeedbackRepository
 from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.schemas.feedback import FeedbackCreateRequest
-
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["API_KEY"] = "test_gizli_anahtar_123"
-os.environ["MODEL_THRESHOLD"] = "0.75"
-
+from src.services.feedback_service import classify_error
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
@@ -66,3 +72,22 @@ def mock_feedback_data():
 @pytest.fixture
 async def prediction_log_repo(db_session):
     return PredictionLogRepository(db_session)
+
+
+@pytest.fixture
+def add_feedback(feedback_repo):
+    async def _add(
+        filename="img.png",
+        prediction=PredictionLabel.AI_GENERATED,
+        truth=FeedbackLabel.REAL,
+        confidence=0.9,
+    ):
+        return await feedback_repo.create_feedback(
+            filename=filename,
+            model_prediction=prediction,
+            confidence=confidence,
+            user_correction=truth,
+            error_type=classify_error(prediction, truth),
+        )
+
+    return _add
