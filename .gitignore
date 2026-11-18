@@ -4,20 +4,20 @@ venv/
 __pycache__/
 *.pyc
 
-# Proje & Test
+# Project 
 .env
+.env.*
+!.env.example
 .pytest_cache/
-test_raporu.html
-heatmap.png
 .DS_Store
 
-# Loglar & MLflow
+# Logs & MLflow
 logs/
 *.logs
 mlruns/
 mlflow.db
 
-# Modeller ve Veriler
+# Models and Datas
 data/
 *.pt
 best_checkpoint.pt
@@ -28,3 +28,4 @@ models/*.pkl
 !models/model_v1.onnx.data
 future_plans.txt
 logs/
+    
