@@ -225,7 +225,7 @@
       font-size: 15px;
       text-transform: uppercase;
       letter-spacing: .25em;
-      color: rgba(255, 255, 255, .16);
+      color: rgba(255, 255, 255, .45);
       user-select: none
     }
 
@@ -310,21 +310,33 @@
 
     .playbill-attribution {
       font-size: 12px;
-      color: rgba(255, 255, 255, .4);
+      color: rgba(255, 255, 255, .55);
       text-transform: uppercase;
       letter-spacing: .25em;
       margin-bottom: 28px
     }
 
+    .playbill-plain {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto 26px
+    }
+
+    .playbill.compact .playbill-plain {
+      margin-bottom: 8px
+    }
+
     .playbill-byline {
       font: italic 16px var(--font-serif);
-      color: rgba(255, 255, 255, .4);
+      color: rgba(255, 255, 255, .55);
       margin-bottom: 6px
     }
 
     .playbill-edition {
       font-size: 10px;
-      color: rgba(255, 255, 255, .3);
+      color: rgba(255, 255, 255, .5);
       text-transform: uppercase;
       letter-spacing: .3em
     }
@@ -340,7 +352,7 @@
       gap: 6px;
       background: none;
       border: 0;
-      color: rgba(255, 255, 255, .3);
+      color: rgba(255, 255, 255, .5);
       font-size: 15px;
       text-transform: uppercase;
       letter-spacing: .2em;
@@ -422,11 +434,61 @@
         top: 0;
         width: 186px;
         font: italic larger var(--font-serif);
-        color: rgba(255, 255, 255, .35);
+        color: rgba(255, 255, 255, .5);
         line-height: 1.7;
         border-left: 1px solid rgba(255, 255, 255, .05);
         padding-left: 14px
       }
+    }
+
+    /* Sample images */
+    .samples {
+      margin-top: 22px;
+      text-align: center
+    }
+
+    .samples-label {
+      font: italic 13px var(--font-serif);
+      color: var(--muted);
+      margin-bottom: 10px
+    }
+
+    .samples-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    .sample {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0;
+      width: 96px;
+      cursor: pointer;
+      overflow: hidden;
+      color: var(--muted);
+      transition: border-color .2s, color .2s
+    }
+
+    .sample:hover {
+      border-color: var(--border-hi);
+      color: var(--text)
+    }
+
+    .sample img {
+      display: block;
+      width: 100%;
+      height: 72px;
+      object-fit: cover
+    }
+
+    .sample span {
+      display: block;
+      font-size: 10px;
+      padding: 5px 4px;
+      letter-spacing: .04em
     }
 
     /* URL, inputs, buttons */
@@ -560,6 +622,13 @@
       color: var(--muted)
     }
 
+    .waking {
+      font: italic 14px/1.6 var(--font-serif);
+      color: var(--muted);
+      text-align: center;
+      max-width: 340px
+    }
+
     .elapsed {
       font-size: 11px;
       color: var(--dim)
@@ -637,7 +706,7 @@
 
     .broadside-heraldry {
       font: italic 15px var(--font-serif);
-      color: rgba(255, 255, 255, .45);
+      color: rgba(255, 255, 255, .6);
       letter-spacing: .08em;
       margin-bottom: 14px
     }
@@ -658,7 +727,7 @@
 
     .broadside-meta {
       font-size: 13px;
-      color: rgba(255, 255, 255, .45);
+      color: rgba(255, 255, 255, .6);
       margin-bottom: 22px
     }
 
@@ -882,7 +951,7 @@
 
     .epilogue {
       font: italic 17px var(--font-serif);
-      color: rgba(255, 255, 255, .4);
+      color: rgba(255, 255, 255, .55);
       text-align: center;
       margin-bottom: 12px
     }
@@ -899,7 +968,7 @@
       justify-content: center;
       gap: 8px;
       font-size: 10px;
-      color: rgba(255, 255, 255, .35);
+      color: rgba(255, 255, 255, .55);
       text-transform: uppercase;
       letter-spacing: .08em
     }
@@ -912,7 +981,7 @@
       line-height: 1;
       min-width: 44px;
       min-height: 44px;
-      color: rgba(255, 255, 255, .35);
+      color: rgba(255, 255, 255, .6);
       border-radius: 4px;
       transition: color .2s
     }
@@ -931,7 +1000,7 @@
 
     .feedback-noted {
       font: italic 12px var(--font-serif);
-      color: rgba(255, 255, 255, .4)
+      color: rgba(255, 255, 255, .55)
     }
 
     /* Extension section */
@@ -1008,7 +1077,7 @@
 
     .anno-domini {
       font-size: 9px;
-      color: rgba(255, 255, 255, .25);
+      color: rgba(255, 255, 255, .45);
       text-align: center;
       margin-top: 28px;
       letter-spacing: .2em;
@@ -1041,7 +1110,7 @@
 
     .soliloquy-dismiss {
       font-size: 9px;
-      color: rgba(255, 255, 255, .3);
+      color: rgba(255, 255, 255, .5);
       text-transform: uppercase;
       letter-spacing: .2em;
       margin-top: 40px
@@ -1052,7 +1121,7 @@
       bottom: 24px;
       left: 24px;
       z-index: 50;
-      opacity: .07;
+      opacity: .35;
       transition: opacity .3s
     }
 
@@ -1063,7 +1132,7 @@
 
     .prompters-label {
       font: italic 9px var(--font-serif);
-      color: rgba(255, 255, 255, .35);
+      color: rgba(255, 255, 255, .55);
       margin-bottom: 7px
     }
 
@@ -1072,7 +1141,7 @@
       align-items: center;
       gap: 7px;
       font-size: 10px;
-      color: rgba(255, 255, 255, .3);
+      color: rgba(255, 255, 255, .55);
       margin-bottom: 4px
     }
 
@@ -1082,7 +1151,7 @@
       border-radius: 3px;
       padding: 1px 5px;
       font: 9px var(--font-mono);
-      color: rgba(255, 255, 255, .3)
+      color: rgba(255, 255, 255, .55)
     }
 
     /* Focus + motion */
@@ -1198,6 +1267,14 @@
       UNCERTAIN_LEANING_REAL: ['There are more things in heaven and earth.', 'Neither here nor there.'],
       UNCERTAIN_NEUTRAL: ['The rest is silence.', 'What light through yonder window breaks?'],
     };
+    // Put these three files in frontend/samples/. Any that are missing are simply not shown.
+    const SAMPLES = [
+      { src: '/static/samples/real.jpg', label: 'A photograph' },
+      { src: '/static/samples/ai.jpg', label: 'An AI image' },
+      { src: '/static/samples/unsure.jpg', label: 'A hard case' },
+    ];
+    const WAKING_AFTER_S = 8;
+
     const EXT_ACTS = [
       ['Act I', 'Install the extension', 'Load from the Chrome Web Store or install unpacked via developer mode.'],
       ['Act II', 'Ready from the first moment', 'The public demo is built in. For higher limits, add your own server or key under "Use your own server or key" in the popup.'],
@@ -1421,6 +1498,25 @@
       );
     }
 
+    function Samples({ onPick }) {
+      const [broken, setBroken] = useState([]);
+      const shown = SAMPLES.filter((s) => !broken.includes(s.src));
+      if (!shown.length) return null;
+      return (
+        <div className="samples">
+          <div className="samples-label">No image at hand? Try one of these.</div>
+          <div className="samples-row">
+            {shown.map((s) => (
+              <button key={s.src} className="sample" onClick={() => onPick(s.src)} aria-label={`Analyze sample: ${s.label}`}>
+                <img src={s.src} alt="" loading="lazy" onError={() => setBroken((b) => [...b, s.src])} />
+                <span>{s.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     function Verdict({ result, mode, preview, round, feedback, onFeedback, onExeunt }) {
       const [pos, setPos] = useState(0);
       const { prediction: pred, confidence } = result;
@@ -1437,7 +1533,7 @@
           <div className="broadside-ornament" aria-hidden="true">❧  ❦  ❧</div>
           <div className={`broadside-verdict ${cls}`}>{LABELS[pred] || pred}</div>
           <div className="broadside-heraldry">
-            {HERALDRY[pred]}{isDefinite(pred) && ` · ${(certainty(pred, confidence) * 100).toFixed(1)}%`}
+            {HERALDRY[pred]}{isDefinite(pred) && ` · ${(certainty(pred, confidence) * 100).toFixed(1)}% sure`}
           </div>
           <div className="broadside-sub">{SUBS[pred]}</div>
           <div className="broadside-rule" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
@@ -1702,6 +1798,7 @@
                 <div className="ornament" aria-hidden="true">❧  ❦  ❧</div>
                 <h1 className="playbill-quote">"AI or Not AI, That's the Question."</h1>
                 <div className="playbill-attribution">after Hamlet, Act III, Scene I</div>
+                <p className="playbill-plain">Upload an image. The model says AI-made, human-made, or honestly not sure, and shows you where it looked.</p>
                 <div className="ornament" style={{ fontSize: 11, letterSpacing: '.4em' }} aria-hidden="true">══════════════════</div>
                 <div className="playbill-byline">A Philosophical Enquiry in Five Acts</div>
                 <div className="playbill-edition">Presented at the Globe Theatre of the Web</div>
@@ -1735,6 +1832,7 @@
                     </div>
                   )}
                 </div>
+                <Samples onPick={runFromUrl} />
               </div>
             )}
 
@@ -1745,6 +1843,9 @@
                   <div className="loading-hourglass" aria-hidden="true">⌛</div>
                   <div className="status-text">{mode === 'explain' ? 'The plot thickens...' : 'Consulting the muse...'}</div>
                   <div className="elapsed">{elapsed}s</div>
+                  {parseFloat(elapsed) >= WAKING_AFTER_S && (
+                    <div className="waking">The theatre is waking from its slumber. Free hosting can take up to a minute the first time; later verdicts come quickly.</div>
+                  )}
                 </div>
               </>
             )}
