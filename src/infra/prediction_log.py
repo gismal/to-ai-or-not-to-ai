@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
@@ -31,6 +31,6 @@ class PredictionLog(Base):
     client_source = Column(String, default="API_v1")
     created_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
     )
     is_deleted = Column(Boolean, default=False)

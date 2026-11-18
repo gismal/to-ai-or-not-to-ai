@@ -3,9 +3,12 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>AI or Not — Result</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI or Not AI: Verdict</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
     <style>
         *,
@@ -13,373 +16,456 @@
         *::after {
             box-sizing: border-box;
             margin: 0;
-            padding: 0;
+            padding: 0
         }
 
         :root {
-            --bg: #0A0A0F;
-            --surface: #1A1A24;
-            --border: #2A2A3A;
-            --text: #F0F0F0;
-            --muted: #8888A0;
-            --ai: #6C63FF;
-            --real: #22D3A5;
-            --uncertain: #FF9F43;
-            --danger: #FF6B6B;
-        }
-
-        html,
-        body {
-            height: 100%;
+            --bg: #0d0d0f;
+            --surface: #131316;
+            --border: #2a2a32;
+            --border-hi: #555562;
+            --text: #f4f4f5;
+            --muted: #a1a1aa;
+            --dim: #7a7a85;
+            --ai: #c0392b;
+            --real: #27ae60;
+            --uncertain: #d4a017;
+            --mono: 'JetBrains Mono', ui-monospace, monospace;
+            --serif: 'IM Fell English', serif
         }
 
         body {
+            width: 100%;
             background: var(--bg);
             color: var(--text);
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            font: 12px/1.5 var(--mono);
             -webkit-font-smoothing: antialiased;
-            padding: 20px;
+            overflow-x: hidden
         }
 
-        h1,
-        h2,
-        h3,
-        .mono {
-            font-family: 'Space Grotesk', sans-serif;
+        button,
+        a {
+            font-family: inherit
         }
 
-        /* ── Loading ── */
-        #view-loading {
+        .topbar {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 300px;
-            gap: 16px;
-            color: var(--muted);
-        }
-
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid var(--border);
-            border-top-color: var(--ai);
-            border-radius: 50%;
-            animation: spin .8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* ── Error ── */
-        #view-error {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 300px;
-            gap: 12px;
-            text-align: center;
-        }
-
-        .error-icon {
-            font-size: 2rem;
-        }
-
-        .error-msg {
-            background: rgba(255, 107, 107, 0.1);
-            border: 1px solid var(--danger);
-            border-radius: 10px;
-            padding: 12px 16px;
-            color: var(--danger);
-            font-size: 0.85rem;
-            line-height: 1.5;
-            max-width: 340px;
-        }
-
-        /* ── Results ── */
-        #view-results {
-            display: none;
-            flex-direction: column;
-            gap: 16px;
-            animation: fadeUp .3s ease;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Header */
-        .result-header {
-            display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            background: rgba(13, 13, 15, .95);
+            position: sticky;
+            top: 0;
+            z-index: 10
         }
 
-        .verdict-label {
-            font-size: 1.4rem;
+        .wordmark {
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .14em
+        }
+
+        .mode-tag {
+            font: italic 11px var(--serif);
+            color: var(--muted)
+        }
+
+        #view-loading,
+        #view-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            gap: 14px;
+            padding: 28px;
+            text-align: center
+        }
+
+        #view-error,
+        #view-result {
+            display: none
+        }
+
+        .hourglass {
+            font-size: 32px;
+            animation: pulse 2s infinite ease-in-out
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: .5
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1
+            }
+        }
+
+        .status-text {
+            font: italic 17px var(--serif);
+            color: var(--muted)
+        }
+
+        .err-msg {
+            font: italic 13px/1.6 var(--serif);
+            color: #e0584a;
+            background: rgba(192, 57, 43, .07);
+            border: 1px solid rgba(192, 57, 43, .25);
+            border-radius: 6px;
+            padding: 12px 16px
+        }
+
+        @keyframes curtain {
+            from {
+                clip-path: inset(0 50% 0 50%);
+                opacity: 0
+            }
+
+            to {
+                clip-path: inset(0);
+                opacity: 1
+            }
+        }
+
+        .broadside {
+            text-align: center;
+            padding: 20px 20px 0;
+            animation: curtain .6s cubic-bezier(.16, 1, .3, 1) both
+        }
+
+        .ornament {
+            font-family: var(--serif);
+            color: rgba(255, 255, 255, .14);
+            font-size: 17px;
+            letter-spacing: .5em;
+            margin-bottom: 14px;
+            user-select: none
+        }
+
+        .verdict {
+            font-size: 26px;
             font-weight: 700;
             letter-spacing: -.02em;
+            line-height: 1;
+            margin-bottom: 7px
         }
 
-        .verdict-label.ai {
-            color: var(--ai);
+        .verdict.ai {
+            color: var(--ai)
         }
 
-        .verdict-label.real {
-            color: var(--real);
+        .verdict.real {
+            color: var(--real)
         }
 
-        .verdict-label.uncertain {
-            color: var(--uncertain);
+        .verdict.uncertain {
+            color: var(--uncertain)
         }
 
-        .filename {
-            font-size: 0.75rem;
+        .heraldry {
+            font: italic 13px var(--serif);
+            color: rgba(255, 255, 255, .45);
+            letter-spacing: .06em;
+            margin-bottom: 10px
+        }
+
+        .sub {
+            font: italic 15px var(--serif);
             color: var(--muted);
-            text-align: right;
-            max-width: 160px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            margin-bottom: 18px
         }
 
-        .timing {
-            font-size: 0.72rem;
-            color: var(--muted);
-            text-align: right;
-            margin-top: 2px;
+        .rule-line {
+            color: rgba(255, 255, 255, .12);
+            font-size: 9px;
+            letter-spacing: .4em;
+            margin: 8px 0;
+            user-select: none
         }
 
-        /* Confidence bar */
+        .meta {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .45);
+            margin-bottom: 18px
+        }
+
+        .meta .sep {
+            margin: 0 8px;
+            color: rgba(255, 255, 255, .2)
+        }
+
+        .meta .serif {
+            font: italic 12px var(--serif)
+        }
+
+        .conf {
+            padding: 0 20px;
+            margin-bottom: 14px
+        }
+
         .conf-row {
             display: flex;
             justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--muted);
-            margin-bottom: 6px;
+            margin-bottom: 8px
         }
 
-        .conf-row .score {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text);
+        .conf-label {
+            font: italic 11px var(--serif);
+            color: var(--muted)
         }
 
-        .bar-track {
-            height: 7px;
-            background: var(--border);
-            border-radius: 99px;
-            overflow: hidden;
+        .conf-score {
+            font-size: 11px;
+            font-weight: 600
         }
 
-        .bar-fill {
-            height: 100%;
-            border-radius: 99px;
-            width: 0%;
-            transition: width .9s cubic-bezier(.16, 1, .3, 1);
+        .conf-track {
+            position: relative;
+            height: 3px;
+            border-radius: 2px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, rgba(39, 174, 96, .55), rgba(212, 160, 23, .55) 55%, rgba(192, 57, 43, .55))
         }
 
-        .bar-fill.ai {
-            background: var(--ai);
+        .conf-marker {
+            position: absolute;
+            top: -4px;
+            left: 0;
+            width: 2px;
+            height: 11px;
+            background: var(--text);
+            transform: translateX(-50%);
+            transition: left 1.2s cubic-bezier(.16, 1, .3, 1)
         }
 
-        .bar-fill.real {
-            background: var(--real);
-        }
-
-        .bar-fill.uncertain {
-            background: var(--uncertain);
-        }
-
-        .zone-labels {
+        .conf-zones {
             display: flex;
             justify-content: space-between;
-            font-size: 0.67rem;
+            font-size: 9px;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: .08em
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, .07);
+            margin: 16px 20px
+        }
+
+        .images-wrap {
+            padding: 0 20px;
+            margin-bottom: 14px
+        }
+
+        .sec {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .1em;
             color: var(--muted);
-            margin-top: 5px;
+            margin-bottom: 8px
         }
 
-        .zone-labels .mid {
-            color: var(--uncertain);
-        }
-
-        /* Images */
-        .images-row {
+        .images-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px
         }
 
         .img-box {
-            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 6px;
             overflow: hidden;
+            line-height: 0;
+            background: var(--surface)
         }
 
-        .img-box .img-label {
-            font-size: 0.7rem;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 600;
-            color: var(--muted);
-            letter-spacing: .04em;
+        .img-label {
+            display: block;
+            font-size: 9px;
             text-transform: uppercase;
-            padding: 7px 10px 4px;
+            letter-spacing: .08em;
+            color: var(--muted);
+            padding: 5px 8px 3px;
+            line-height: 1
+        }
+
+        .img-label.heat {
+            color: var(--uncertain)
         }
 
         .img-box img {
             display: block;
             width: 100%;
-            height: 140px;
-            object-fit: cover;
+            height: 130px;
+            object-fit: cover
         }
 
-        /* Single image (no heatmap) */
-        .image-single {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .image-single img {
-            display: block;
-            width: 100%;
+        .img-box.single img {
+            height: auto;
             max-height: 200px;
-            object-fit: contain;
+            object-fit: contain
         }
 
-        /* Actions */
+        .epilogue {
+            font: italic 12px var(--serif);
+            color: rgba(255, 255, 255, .4);
+            text-align: center;
+            padding: 0 20px 8px
+        }
+
+        .feedback-line,
+        .feedback-noted {
+            text-align: center;
+            padding: 0 20px 4px
+        }
+
+        .feedback-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 9px;
+            color: rgba(255, 255, 255, .35);
+            text-transform: uppercase;
+            letter-spacing: .08em
+        }
+
+        .feedback-btn {
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            min-width: 40px;
+            min-height: 40px;
+            color: rgba(255, 255, 255, .35);
+            border-radius: 4px;
+            transition: color .2s
+        }
+
+        .feedback-btn.up:hover {
+            color: var(--real)
+        }
+
+        .feedback-btn.down:hover {
+            color: var(--ai)
+        }
+
+        .feedback-noted {
+            font: italic 12px var(--serif);
+            color: rgba(255, 255, 255, .4)
+        }
+
         .actions {
             display: flex;
-            flex-direction: column;
             gap: 8px;
+            padding: 10px 20px 18px
         }
 
         .btn-primary {
-            width: 100%;
-            padding: 10px;
-            background: var(--ai);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.85rem;
+            flex: 1;
+            padding: 9px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--muted);
+            font-size: 10px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity .15s;
             text-decoration: none;
             text-align: center;
             display: block;
+            transition: border-color .2s, color .2s;
+            letter-spacing: .04em
         }
 
         .btn-primary:hover {
-            opacity: .85;
+            border-color: var(--border-hi);
+            color: var(--text)
         }
 
-        .btn-secondary {
-            width: 100%;
-            padding: 9px;
+        .btn-close {
+            padding: 9px 14px;
             background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 5px;
             color: var(--muted);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.85rem;
+            font-size: 10px;
             cursor: pointer;
-            transition: border-color .15s;
+            transition: color .2s
         }
 
-        .btn-secondary:hover {
-            border-color: var(--ai);
-            color: var(--text);
+        .btn-close:hover {
+            color: var(--text)
         }
 
-        .cached-tag {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 99px;
-            font-size: 0.7rem;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 600;
-            background: rgba(108, 99, 255, .15);
-            color: var(--ai);
-            border: 1px solid var(--ai);
-            margin-left: 8px;
+        a:focus-visible,
+        button:focus-visible {
+            outline: 1px solid var(--text);
+            outline-offset: 2px
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            * {
+                animation: none !important;
+                transition: none !important
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="topbar"><span class="wordmark">AI or Not AI</span><span class="mode-tag" id="modeTag"></span></div>
 
-    <!-- Loading -->
-    <div id="view-loading">
-        <div class="spinner"></div>
-        <p id="loading-msg">Fetching image…</p>
+    <div id="view-loading" role="status" aria-live="polite">
+        <div class="hourglass" aria-hidden="true">⌛</div>
+        <div class="status-text" id="loadingText">The plot thickens...</div>
     </div>
 
-    <!-- Error -->
-    <div id="view-error">
-        <div class="error-icon">⚠️</div>
-        <div class="error-msg" id="error-msg"></div>
-        <button class="btn-secondary" onclick="window.close()">Close</button>
+    <div id="view-error" role="alert">
+        <div class="err-msg" id="errMsg">A tragedy of errors occurred.</div>
+        <button class="btn-close" id="btnCloseErr">Close</button>
     </div>
 
-    <!-- Results -->
-    <div id="view-results">
-        <div class="result-header">
-            <div>
-                <div class="verdict-label" id="verdict-label">—</div>
-                <span id="cached-tag" style="display:none" class="cached-tag">⚡ cached</span>
+    <div id="view-result">
+        <section class="broadside" aria-label="Verdict">
+            <div class="ornament" aria-hidden="true">❧ ❦ ❧</div>
+            <div class="verdict" id="verdict"></div>
+            <div class="heraldry" id="heraldry"></div>
+            <div class="sub" id="verdictSub"></div>
+            <div class="rule-line" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
+            <div class="meta" id="meta"></div>
+            <div class="rule-line" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
+        </section>
+
+        <div class="conf">
+            <div class="conf-row"><span class="conf-label">Soliloquy</span><span class="conf-score"
+                    id="confScore"></span></div>
+            <div class="conf-track">
+                <div class="conf-marker" id="confMarker"></div>
             </div>
-            <div>
-                <div class="filename" id="filename"></div>
-                <div class="timing" id="timing"></div>
-            </div>
+            <div class="conf-zones"><span>Real</span><span>Uncertain</span><span>AI</span></div>
         </div>
-
-        <!-- Confidence bar -->
-        <div>
-            <div class="conf-row">
-                <span>Confidence</span>
-                <span class="score" id="conf-score"></span>
-            </div>
-            <div class="bar-track">
-                <div class="bar-fill" id="bar-fill"></div>
-            </div>
-            <div class="zone-labels">
-                <span>← REAL</span>
-                <span class="mid">UNCERTAIN</span>
-                <span>AI →</span>
-            </div>
-        </div>
-
-        <!-- Image(s) -->
-        <div id="images-container"></div>
-
-        <!-- Actions -->
+        <hr />
+        <div id="imagesArea"></div>
+        <div class="epilogue" id="epilogue"></div>
+        <div id="feedback"></div>
         <div class="actions">
-            <a class="btn-primary" id="btn-playground" href="#" target="_blank">
-                Open full analysis in playground →
-            </a>
-            <button class="btn-secondary" onclick="window.close()">Close</button>
+            <a class="btn-primary" id="btnPlayground" href="#" target="_blank" rel="noopener">Open full analysis →</a>
+            <button class="btn-close" id="btnClose">Close</button>
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="results.js"></script>
 </body>
 

@@ -4,14 +4,14 @@ Feedback domain: submit user corrections
 
 from fastapi import APIRouter, Depends, status
 
-from src.api.deps import get_feedback_service, verify_api_key
+from src.api.deps import get_feedback_service, verify_public_key
 from src.schemas.feedback import FeedbackCreateRequest, FeedbackResponse
 from src.services.feedback_service import FeedbackService
 
 feedback_router = APIRouter(
     prefix="/v1/feedback",
     tags=["Feedback"],
-    dependencies=[Depends(verify_api_key)],
+    dependencies=[Depends(verify_public_key)],
 )
 
 

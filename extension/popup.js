@@ -1,53 +1,109 @@
-/**
- * popup.js — Settings popup
- * Loads saved settings from chrome.storage.sync on open.
- * Saves and tests the connection on button click.
- */
+// Defaults make the extension work the moment it is installed.
+// Empty fields in "Use your own server or key" mean "use these".
+const { DEMO_KEY, DEFAULT_API_URL } = AON;   // see config.js
+const DEFAULTS = { apiUrl: DEFAULT_API_URL, apiKey: DEMO_KEY, mode: 'explain', passiveBadge: false };
 
-const get = id => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
+let state = { ...DEFAULTS };
+let checkId = 0;
 
-// ── Load saved settings ──────────────────────────────────────────────────────
+init();
 
-chrome.storage.sync.get(['apiUrl', 'apiKey', 'mode', 'passiveBadge'], ({ apiUrl, apiKey, mode, passiveBadge }) => {
-    get('apiUrl').value = apiUrl || 'http://localhost:8000';
-    get('apiKey').value = apiKey || '';
-    get('mode').value = mode || 'explain';
-    get('passiveBadge').checked = passiveBadge || false;
-});
+async function init() {
+    state = await chrome.storage.sync.get(DEFAULTS);
 
-// ── Save + test ──────────────────────────────────────────────────────────────
+    $('apiUrl').placeholder = DEFAULT_API_URL;
+    $('apiUrl').value = state.apiUrl === DEFAULT_API_URL ? '' : state.apiUrl;
+    $('apiKey').value = state.apiKey === DEMO_KEY ? '' : state.apiKey;
+    $('passiveBadge').checked = state.passiveBadge;
+    $('adv').open = state.apiUrl !== DEFAULT_API_URL || state.apiKey !== DEMO_KEY;
+    renderMode(state.mode);
 
-get('save').addEventListener('click', async () => {
-    const apiUrl = get('apiUrl').value.trim().replace(/\/$/, '');
-    const apiKey = get('apiKey').value.trim();
-    const mode = get('mode').value;
+    $('modeFast').addEventListener('click', () => setMode('predict'));
+    $('modeExplain').addEventListener('click', () => setMode('explain'));
+    $('passiveBadge').addEventListener('change', (e) => chrome.storage.sync.set({ passiveBadge: e.target.checked }));
+    $('save').addEventListener('click', saveCustom);
+    $('reset').addEventListener('click', resetToDemo);
 
-    if (!apiUrl) { showStatus('Enter an API URL.', 'err'); return; }
-    if (!apiKey) { showStatus('Enter an API key.', 'err'); return; }
+    check();
+}
 
-    // Save before testing so the values are persisted even if the test fails
-    await chrome.storage.sync.set({ apiUrl, apiKey, mode, passiveBadge: get('passiveBadge').checked });
-    showStatus('Saved. Testing connection…', '');
+function renderMode(m) {
+    $('modeFast').classList.toggle('on', m === 'predict');
+    $('modeExplain').classList.toggle('on', m === 'explain');
+    $('modeFast').setAttribute('aria-pressed', String(m === 'predict'));
+    $('modeExplain').setAttribute('aria-pressed', String(m === 'explain'));
+}
+
+function setMode(m) {
+    state.mode = m;
+    renderMode(m);
+    chrome.storage.sync.set({ mode: m });   // saved immediately, no button needed
+}
+
+async function saveCustom() {
+    const url = ($('apiUrl').value.trim() || DEFAULT_API_URL).replace(/\/$/, '');
+    if (!/^https?:\/\//.test(url)) { showStatus('Enter a full address starting with https://', true); return; }
+    const key = $('apiKey').value.trim() || DEMO_KEY;
+    state.apiUrl = url;
+    state.apiKey = key;
+    await chrome.storage.sync.set({ apiUrl: url, apiKey: key });
+    showStatus('');
+    check();
+}
+
+async function resetToDemo() {
+    state.apiUrl = DEFAULT_API_URL;
+    state.apiKey = DEMO_KEY;
+    await chrome.storage.sync.set({ apiUrl: DEFAULT_API_URL, apiKey: DEMO_KEY });
+    $('apiUrl').value = '';
+    $('apiKey').value = '';
+    showStatus('');
+    check();
+}
+
+// Health check. Free hosting sleeps, so a slow first answer is explained, not hidden.
+async function check() {
+    const id = ++checkId;
+    const demo = state.apiKey === DEMO_KEY;
+    setLine('Setting the stage...');
+    setDot('');
+
+    const ctrl = new AbortController();
+    const slow = setTimeout(() => id === checkId &&
+        setLine('Waking the server. Free hosting sleeps, so this can take up to a minute.'), 4000);
+    const hard = setTimeout(() => ctrl.abort(), 70000);
 
     try {
-        const res = await fetch(`${apiUrl}/v1/inference/health`, {
-            headers: { 'X-API-Key': apiKey },
+        const res = await fetch(`${state.apiUrl.replace(/\/$/, '')}/v1/inference/health`, {
+            headers: { 'X-API-Key': state.apiKey }, signal: ctrl.signal,
         });
-
-        if (res.ok) showStatus('✓ Connected and ready', 'ok');
-        else if (res.status === 401) showStatus('✗ Invalid API key', 'err');
-        else if (res.status === 503) showStatus('⚠ API is degraded — check Docker logs', 'err');
-        else showStatus(`✗ Server returned HTTP ${res.status}`, 'err');
-
+        if (id !== checkId) return;
+        if (res.ok) { setLine(demo ? 'Public demo, ready.' : 'Your key, ready.'); setDot('ok'); }
+        else if (res.status === 401) {
+            setLine(demo ? 'The demo key was refused. Try again later.' : 'That key was not recognised.', true);
+            setDot('err');
+        } else { setLine(`The server answered ${res.status}.`, true); setDot('err'); }
     } catch {
-        showStatus('✗ Could not reach the API — is Docker running?', 'err');
+        if (id === checkId) { setLine('Could not reach the server.', true); setDot('err'); }
+    } finally {
+        clearTimeout(slow);
+        clearTimeout(hard);
     }
-});
+}
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function showStatus(msg, type) {
-    const el = get('status');
+function setLine(msg, isErr = false) {
+    const el = $('accessLine');
     el.textContent = msg;
-    el.className = `status ${type}`;
+    el.classList.toggle('err', isErr);
+}
+function showStatus(msg, isErr = false) {
+    const el = $('status');
+    el.textContent = msg;
+    el.classList.toggle('err', isErr);
+}
+function setDot(state_) {
+    const dot = $('connDot');
+    dot.className = `conn-dot ${state_}`;
+    dot.setAttribute('aria-label', state_ === 'ok' ? 'Connected' : state_ === 'err' ? 'Unreachable' : 'Checking');
 }

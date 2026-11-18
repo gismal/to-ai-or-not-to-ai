@@ -1,6 +1,6 @@
 *"That's the question."* — Shakespeare (probably would have asked this in 2026)
 
-### [🔗 Live API Demo](#) | [🔗 Chrome Extension](#) | [📊 Grafana Dashboard](#)
+### [🔗 Live API Demo](https://to-ai-or-not-to-ai.onrender.com/) | [🔗 Chrome Extension](#)
 
 Have you ever wondered if a photo is real or AI generated in 2026? And if you suspected something was off, would you know exactly why? This doesn't just give you a yes or no. It tells you how confident it is, and if it is unsure, it admits that right away.
 

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy · AI or Not AI</title>
+    <meta name="description" content="What AI or Not AI sends, stores and never does." />
+    <link rel="icon" href="/static/favicon.png" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: #0d0d0f;
+            color: #f4f4f5;
+            font: 14px/1.75 'JetBrains Mono', ui-monospace, monospace;
+            -webkit-font-smoothing: antialiased
+        }
+
+        main {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 64px 24px 96px
+        }
+
+        h1 {
+            font: italic 400 clamp(2rem, 6vw, 2.8rem)/1.15 'IM Fell English', serif;
+            margin-bottom: 8px
+        }
+
+        .updated {
+            font-size: 11px;
+            color: #7a7a85;
+            text-transform: uppercase;
+            letter-spacing: .2em;
+            margin-bottom: 40px
+        }
+
+        h2 {
+            font: italic 400 22px 'IM Fell English', serif;
+            margin: 36px 0 8px
+        }
+
+        p,
+        li {
+            color: #c8c8cf
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-top: 6px
+        }
+
+        li {
+            margin-bottom: 6px
+        }
+
+        a {
+            color: #f4f4f5;
+            text-underline-offset: 3px
+        }
+
+        .lede {
+            font: italic 18px/1.6 'IM Fell English', serif;
+            color: #a1a1aa;
+            margin-bottom: 8px
+        }
+
+        footer {
+            margin-top: 56px;
+            font-size: 11px;
+            color: #7a7a85;
+            letter-spacing: .1em
+        }
+
+        a:focus-visible {
+            outline: 1px solid #f4f4f5;
+            outline-offset: 3px
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Privacy</h1>
+        <div class="updated">Last updated October 2026</div>
+        <p class="lede">The short version: images are sent to a server to be analysed, a small log is kept, and nothing
+            is sold or used for advertising.</p>
+
+        <h2>What the extension sends</h2>
+        <ul>
+            <li><strong>When you right-click an image</strong> and choose "Analyze with AI Detector", the extension
+                downloads that image, shrinks or converts it if needed, and uploads it to the server address in its
+                settings. By default this is my hosted demo.</li>
+            <li><strong>Passive Badge Mode is off by default.</strong> If you turn it on, the extension uploads images
+                of 150 pixels or more from pages you visit (up to six per page) so it can badge them. Turn it off at any
+                time in the popup.</li>
+            <li>The file name sent with an image is taken from the image address, so it can contain words from the
+                original page.</li>
+        </ul>
+
+        <h2>What the server keeps</h2>
+        <ul>
+            <li><strong>A prediction log:</strong> file name, verdict, confidence score, processing time and timestamp.
+                The image itself is not saved.</li>
+            <li><strong>A short-lived cache:</strong> a perceptual hash (a compact fingerprint) of the image with its
+                result, so identical images are not analysed twice.</li>
+            <li><strong>Feedback, only if you give it:</strong> when you press the up or down arrow, the file name, the
+                verdict shown, its confidence, your answer and where it came from (playground or extension).</li>
+            <li><strong>Your IP address</strong> is used to apply rate limits and may appear in hosting logs.</li>
+        </ul>
+        <p style="margin-top:10px">Feedback and human-reviewed labels may be used to measure how well the model is doing
+            and to improve it.</p>
+
+        <h2>What stays on your device</h2>
+        <ul>
+            <li>The extension stores its settings (server address, access key, mode, passive toggle) with Chrome's sync
+                storage, which Chrome may sync across devices where you are signed in.</li>
+            <li>The web playground keeps your access key, a theme preference and an "intro seen" flag in your browser's
+                local storage.</li>
+        </ul>
+
+        <h2>Third parties</h2>
+        <ul>
+            <li>The service runs on cloud hosting, database and cache providers that process data on my behalf.</li>
+            <li>The playground and the extension's windows load fonts from Google Fonts, which means Google sees a
+                request from your browser.</li>
+        </ul>
+
+        <h2>What I do not do</h2>
+        <ul>
+            <li>I do not sell or share your data, run ads, or build advertising profiles.</li>
+            <li>I do not use your data for credit, lending or any purpose unrelated to the detector.</li>
+            <li>I do not read your browsing history. The extension only handles the images described above.</li>
+        </ul>
+
+        <h2>Your choices</h2>
+        <p>Leave Passive Badge Mode off, use the extension only when you right-click, or point it at your own server
+            under "Use your own server or key". To have log or feedback entries deleted, use the contact link below and
+            include the file name.</p>
+
+        <h2>Contact</h2>
+        <p>Questions or deletion requests: <a
+                href="https://github.com/gismal/to-ai-or-not-to-ai/issues/new?title=Privacy%20request&amp;labels=privacy">open
+                an issue on GitHub</a>. Please give only the file name and do not attach the image. Issues there are
+            public, so if you would rather keep a request private, say so in the title and I will arrange another way to
+            continue.</p>
+
+        <h2>Changes</h2>
+        <p>If this policy changes, the date at the top changes with it.</p>
+
+        <footer><a href="/">← Back to AI or Not AI</a></footer>
+    </main>
+</body>
+
+</html>

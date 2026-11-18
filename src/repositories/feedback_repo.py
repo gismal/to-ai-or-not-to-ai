@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.enums import ErrorType, FeedbackLabel
+from src.core.enums import ErrorType, FeedbackLabel, PredictionLabel
 from src.core.exceptions import DatabaseError
 from src.infra.feedback_item import FeedbackItem
 from src.logger import logger
@@ -25,9 +25,10 @@ class AbstractFeedbackRepository(ABC):
     async def create_feedback(
         self,
         filename: str,
-        model_prediction: str,
+        model_prediction: PredictionLabel,
         confidence: float,
         user_correction: FeedbackLabel,
+        error_type: ErrorType,
         client_source: str = "API_v1",
     ) -> FeedbackItem:
         pass
@@ -47,39 +48,21 @@ class FeedbackRepository(AbstractFeedbackRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    def _determine_error_type(
-        self, model_pred: str, user_corr: FeedbackLabel
-    ) -> ErrorType:
-        if "UNCERTAIN" in model_pred:
-            # str for model_pred for the flexibility but can be Enum in the future if it's necesarry
-            return ErrorType.UNCERTAIN_FAIL
-        elif model_pred == "AI_GENERATED" and user_corr == FeedbackLabel.REAL:
-            return ErrorType.FALSE_POSITIVE
-        elif model_pred == "REAL" and user_corr == FeedbackLabel.AI_GENERATED:
-            return ErrorType.FALSE_NEGATIVE
-        elif model_pred == user_corr.value:
-            return ErrorType.CORRECT
-        else:
-            logger.warning(
-                f"Unclassifiable error type: pred= {model_pred}, corr = {user_corr}"
-            )
-            return ErrorType.UNCERTAIN_FAIL
-
     async def create_feedback(
         self,
         filename: str,
-        model_prediction: str,
+        model_prediction: PredictionLabel,
         confidence: float,
         user_correction: FeedbackLabel,
+        error_type: ErrorType,
         client_source: str = "API_v1",
     ) -> FeedbackItem:
-        calculated_error = self._determine_error_type(model_prediction, user_correction)
         db_item = FeedbackItem(
             filename=filename,
             model_prediction=model_prediction,
             confidence=confidence,
             user_correction=user_correction,
-            error_type=calculated_error,
+            error_type=error_type,
             client_source=client_source,
         )
 
@@ -88,7 +71,9 @@ class FeedbackRepository(AbstractFeedbackRepository):
             self.session.add(db_item)
             await self.session.flush()
             await self.session.refresh(db_item)
-            logger.info(f"Feedback saved: {filename} (ID: {db_item.id})")
+            logger.info(
+                f"Feedback saved: {filename}. Error type: {error_type.value} (ID: {db_item.id})"
+            )
             return db_item
         except SQLAlchemyError as e:
             await self.session.rollback()
@@ -148,4 +133,4 @@ class FeedbackRepository(AbstractFeedbackRepository):
             return result.scalar_one_or_none()
         except SQLAlchemyError as e:
             logger.error(f"Error fetching feedback by filename: {e}")
-            raise DatabaseError("Failed to getch feedback record")
+            raise DatabaseError("Failed to fetch feedback record")

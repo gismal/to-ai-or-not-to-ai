@@ -1,5 +1,6 @@
 from pathlib import Path
-from pydantic import BaseModel, PositiveInt, PositiveFloat
+
+from pydantic import BaseModel, PositiveFloat, PositiveInt
 
 
 class TrainConfig(BaseModel):
