@@ -1,6 +1,6 @@
 PY ?= python3
 .DEFAULT_GOAL := help
-.PHONY: help build up down rebuild logs ps shell psql migrate test lint format typecheck check train quantize mlflow clean
+.PHONY: help build up down rebuild logs ps shell psql migrate test lint format typecheck check train quantize mlflow clean smoke
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -58,3 +58,6 @@ mlflow: ## Start the MLflow tracking server
 clean: ## Remove containers AND volumes (deletes local database data)
 	@read -p "Delete all local containers and data? [y/N] " a; [ "$$a" = "y" ]
 	docker compose down -v --remove-orphans
+
+smoke: ## Post-deploy checks (make smoke URL=https://... for another host)
+	@scripts/smoke.sh $(or $(URL),http://localhost:8000)

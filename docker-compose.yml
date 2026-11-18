@@ -95,7 +95,7 @@ services:
     networks: [ mlops_network ]
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.2.0
     container_name: mlops_grafana
     restart: unless-stopped
     ports:

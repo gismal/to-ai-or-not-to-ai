@@ -1,3 +1,14 @@
+"""
+FastAPI dependencies: API key checks, database sessions, repositories and services.
+
+Two key scopes:
+
+* verify_api_key (admin scope) accepts only the real key, which stays secret.
+* verify_public_key (public scope) also accepts the demo key, which is public by design
+  because it ships in the playground and the extension. It is used for inference and
+  feedback only, and is rate limited separately.
+"""
+
 import secrets
 from collections.abc import AsyncGenerator
 from typing import Annotated
@@ -21,9 +32,14 @@ from src.services.retrain_service import RetrainService
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=True)
 
 
+# -- API keys ---------------------------------------------------------------
 def _matches(candidate: str, *valid: str) -> bool:
-    """Constant-time comparison. Empty keys never match, so an unset
-    DEMO_API_KEY switches demo access off instead of letting "" through."""
+    """
+    Constant-time comparison against the accepted keys.
+
+    Empty keys never match, so an unset DEMO_API_KEY switches demo access off
+    instead of letting an empty header through.
+    """
     return bool(candidate) and any(
         v and secrets.compare_digest(candidate.encode(), v.encode()) for v in valid
     )
@@ -53,16 +69,12 @@ def verify_public_key(api_key: str = Security(api_key_header)) -> str:
     return api_key
 
 
-def get_inference_service(request: Request) -> InferenceService:
-    """
-    Dependency injection helper to retrieve the global InferenceService instance from the FastAPI application state
-    """
-    return request.app.state.inference_service
-
-
+# -- Database -----------------------------------------------------------------
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
-    Creates and yields a new asynchronous database session for each API request. The session is automatically closed after the request is completed or if an error occurs
+    One asynchronous database session per request.
+
+    Commits when the request succeeds, rolls back if it raises, and always closes.
     """
     async with AsyncSessionLocal() as session:
         try:
@@ -73,27 +85,36 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
-def get_arq_pool(request: Request) -> ArqRedis:
+SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
+
+
+# -- Shared services from the application state ------------------------------
+def get_inference_service(request: Request) -> InferenceService:
+    """The InferenceService created once at startup."""
+    return request.app.state.inference_service
+
+
+def get_explainability_service(request: Request) -> ExplainabilityService:
+    """The ExplainabilityService (GradCAM) created once at startup."""
+    return request.app.state.explainability_service
+
+
+def get_cache_service(request: Request) -> CacheService:
+    """The CacheService created once at startup."""
+    return request.app.state.cache_service
+
+
+def get_arq_pool(request: Request) -> ArqRedis | None:
+    """The ARQ Redis pool, or None when Redis is disabled (REDIS_URL=none)."""
     return request.app.state.arq_pool
 
 
+# -- Repositories and per-request services ----------------------------------
 async def get_feedback_repository(
     session: AsyncSession = Depends(get_db_session),
 ) -> FeedbackRepository:
-    """
-    Dependency provider for the FeedbackRepository
-    Injects the active database session into the repository instance
-
-    Args:
-        session (AsyncSession): The injected database session
-
-    Returns:
-        FeedbackRepository: An initialized instance of the repository
-    """
+    """A FeedbackRepository bound to this request's session."""
     return FeedbackRepository(session)
-
-
-SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 
 
 def get_feedback_service(
@@ -102,31 +123,15 @@ def get_feedback_service(
     return FeedbackService(repo)
 
 
-def get_explainability_service(request: Request) -> ExplainabilityService:
-    """
-    Retrieves the ExplainabilityService from the app state
-    """
-    return request.app.state.explainability_service
-
-
-def get_cache_service(request: Request) -> CacheService:
-    """
-    Retrieves the CacheService from app state
-    """
-    return request.app.state.cache_service
-
-
 async def get_prediction_log_repository(
     session: AsyncSession = Depends(get_db_session),
 ) -> PredictionLogRepository:
-    """
-    Provides a PredictionLogRepository with the current request's session
-    """
+    """A PredictionLogRepository bound to this request's session."""
     return PredictionLogRepository(session)
 
 
 async def get_retrain_service(
     session: AsyncSession = Depends(get_db_session),
-    arq_pool: ArqRedis = Depends(get_arq_pool),
+    arq_pool: ArqRedis | None = Depends(get_arq_pool),
 ) -> RetrainService:
     return RetrainService(session, arq_pool)

@@ -9,8 +9,11 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content="AI or Not AI, That's the Question" />
   <meta property="og:description" content="Five verdicts, a GradCAM heatmap, and an honest uncertainty zone." />
-  <meta property="og:image" content="https://YOUR-RENDER-URL.onrender.com/static/og.png" />
+  <meta property="og:url" content="https://to-ai-or-not-to-ai.onrender.com/" />
+  <meta property="og:image" content="https://to-ai-or-not-to-ai.onrender.com/static/og.png" />
+  <meta property="og:image:alt" content="AI or Not AI: an image detector with an honest uncertainty zone" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://to-ai-or-not-to-ai.onrender.com/static/og.png" />
   <link rel="icon" href="/static/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -734,7 +737,7 @@
       padding: 8px 12px;
       font: italic 400 11px/1.6 var(--font-serif);
       color: var(--text);
-      width: 230px;
+      width: min(230px, 80vw);
       text-align: center;
       white-space: normal;
       pointer-events: none;
@@ -743,6 +746,19 @@
       z-index: 50;
       text-transform: none;
       letter-spacing: 0
+    }
+
+    .conf-zones .zone-tip:first-child::after {
+      left: 0;
+      transform: none;
+      text-align: left
+    }
+
+    .conf-zones .zone-tip:last-child::after {
+      left: auto;
+      right: 0;
+      transform: none;
+      text-align: right
     }
 
     .zone-tip:hover::after,
@@ -972,6 +988,24 @@
       line-height: 1.7
     }
 
+    .colophon {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 14px;
+      letter-spacing: .05em
+    }
+
+    .colophon a {
+      color: inherit;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--dim)
+    }
+
+    .colophon a:hover {
+      color: var(--text)
+    }
+
     .anno-domini {
       font-size: 9px;
       color: rgba(255, 255, 255, .25);
@@ -1082,17 +1116,22 @@
 
     /* Mobile */
     @media (max-width:480px) {
+      .hide-sm {
+        display: none
+      }
+
       .topbar {
         padding: 0 16px;
         gap: 8px
       }
 
       .wordmark {
-        font-size: 12px
+        font-size: 11px;
+        letter-spacing: .08em
       }
 
       .seg-btn {
-        padding: 4px 10px;
+        padding: 4px 8px;
         font-size: 10px
       }
 
@@ -1134,7 +1173,7 @@
     const { useState, useRef, useEffect } = React;
 
     /* ── Config ── */
-    const DEMO_KEY = 'demo-public';
+    const DEMO_KEY = 'demo-public';      // must equal DEMO_API_KEY on the server
     const KEY_STORE = 'aon_key';
     const MAX_PX = 1500;
     const UPLOAD_TYPES = ['image/jpeg', 'image/png'];
@@ -1239,10 +1278,13 @@
       });
     }
 
-    async function fetchImage(url) {
+    async function fetchImage(url, signal) {
       let res;
-      try { res = await fetch(url); }
-      catch { throw new Error('The image server blocks browser requests (CORS). Download the image and upload it directly.'); }
+      try { res = await fetch(url, { signal }); }
+      catch (e) {
+        if (signal?.aborted) throw e;
+        throw new Error('The image server blocks browser requests (CORS). Download the image and upload it directly.');
+      }
       if (!res.ok) throw new Error(`Could not fetch the image (HTTP ${res.status}).`);
       const blob = await res.blob();
       if (!blob.type.startsWith('image/')) throw new Error('That address does not point to an image.');
@@ -1296,7 +1338,7 @@
         <div className="topbar-right" ref={box}>
           <button className="access-chip" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>
             <span className={`access-dot ${usingDemo ? '' : 'own'}`} />
-            {usingDemo ? 'Demo access' : 'Your key'}
+            {usingDemo ? <>Demo<span className="hide-sm"> access</span></> : <><span className="hide-sm">Your </span>key</>}
           </button>
           {open && (
             <div className="access-pop" role="dialog" aria-label="Access">
@@ -1462,6 +1504,11 @@
             </div>
           )}
           <div className="anno-domini">AI or Not AI · Anno Domini MMXXVI · v II.0.0</div>
+          <div className="colophon">
+            <a href="/privacy">Privacy</a>
+            <span className="sep" aria-hidden="true">·</span>
+            <a href="https://github.com/gismal/to-ai-or-not-to-ai" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+          </div>
         </div>
       );
     }
@@ -1487,6 +1534,7 @@
 
       const toolRef = useRef(null);
       const timer = useRef(0);
+      const ctrl = useRef(null);                             // aborts the in-flight analysis
       const konami = useRef(0);
       const folioClicks = useRef({ n: 0, t: 0 });
       const latest = useRef({});                             // always-fresh handlers for window listeners
@@ -1496,6 +1544,8 @@
         setTimeout(() => toolRef.current?.scrollIntoView({ behavior: 'smooth', block }), 50);
 
       const clearState = () => {
+        ctrl.current?.abort(); ctrl.current = null;
+        clearInterval(timer.current); setLoading(false);
         setResult(null); setError(null); setErrCode(null); setPreview(null);
         setElapsed('0.0'); setFeedback(null);
       };
@@ -1519,23 +1569,31 @@
       const run = async (getFile) => {
         if (latest.current.loading) return;
         clearState(); setHeroSeen(true); session.set('aon_hero', '1');
+        const controller = new AbortController();
+        ctrl.current = controller;
+        const { signal } = controller;
         setLoading(true); startTimer();
         try {
-          const file = await normalizeImage(await getFile());
+          const file = await normalizeImage(await getFile(signal));
+          if (signal.aborted) return;
           setPreview(URL.createObjectURL(file));
           const form = new FormData();
           form.append('file', file);
           const res = await fetch(`/v1/inference/${mode === 'explain' ? 'explain' : 'predict'}`, {
-            method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form,
+            method: 'POST', headers: { 'X-API-Key': apiKey.trim() }, body: form, signal,
           });
           if (!res.ok) throw Object.assign(new Error('http'), { status: res.status });
-          setResult(await res.json());
+          const data = await res.json();
+          if (signal.aborted) return;
+          setResult(data);
           setRound((n) => n + 1);
-        } catch (e) { fail(e); }
-        finally { clearInterval(timer.current); setLoading(false); }
+        } catch (e) { if (!signal.aborted) fail(e); }
+        finally {
+          if (ctrl.current === controller) { ctrl.current = null; clearInterval(timer.current); setLoading(false); }
+        }
       };
       const runFiles = (files) => { if (files?.length) run(async () => files[0]); };
-      const runFromUrl = (url) => { if (url?.trim()) run(() => fetchImage(url.trim())); };
+      const runFromUrl = (url) => { if (url?.trim()) run((signal) => fetchImage(url.trim(), signal)); };
 
       const submitFeedback = async (vote) => {
         if (!result || feedback) return;
@@ -1606,7 +1664,7 @@
       }, [result]);
       useEffect(() => { if (error) scrollToTool('center'); }, [error]);
       useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
-      useEffect(() => () => clearInterval(timer.current), []);
+      useEffect(() => () => { ctrl.current?.abort(); clearInterval(timer.current); }, []);
 
       return (
         <>
@@ -1616,7 +1674,7 @@
               <button className={`seg-btn ${mode === 'predict' ? 'on' : ''}`} aria-pressed={mode === 'predict'}
                 title="Instant result, classification only (F)" onClick={() => chooseMode('predict')}>Fast</button>
               <button className={`seg-btn ${mode === 'explain' ? 'on' : ''}`} aria-pressed={mode === 'explain'}
-                title="Wherein I'll catch the conscience of the machine (E)" onClick={() => chooseMode('explain')}>The Mousetrap</button>
+                title="Wherein I'll catch the conscience of the machine (E)" onClick={() => chooseMode('explain')}><span className="hide-sm">The </span>Mousetrap</button>
             </div>
             <AccessMenu apiKey={apiKey} open={accessOpen} setOpen={setAccessOpen} onSave={saveKey} />
           </nav>
