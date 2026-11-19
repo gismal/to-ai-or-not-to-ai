@@ -21,8 +21,8 @@ class FeedbackCreateRequest(BaseModel):
     user_correction: FeedbackLabel = Field(
         ..., description="Actual label provided by the user (REAL or AI_GENERATED)"
     )
-    client_source: Literal["API_v1", "WEB_UI"] = Field(
-        default="API_v1", description="Source client of the feedback"
+    client_source: Literal["API_v1", "WEB_UI", "playground_v2", "extension_v1"] = Field(
+        default="API_v1", description="Which client sent the feedback"
     )
 
 

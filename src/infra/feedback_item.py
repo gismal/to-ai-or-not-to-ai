@@ -7,7 +7,6 @@ from sqlalchemy import (
     Float,
     Integer,
     String,
-    UniqueConstraint,
 )
 from sqlalchemy import (
     Enum as SQLEnum,
@@ -23,11 +22,6 @@ class FeedbackItem(Base):
     """
 
     __tablename__ = "feedback_logs"
-    __table_args__ = (
-        UniqueConstraint(
-            "filename", "client_source", name="uq_feedback_filename_source"
-        ),
-    )
 
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, index=True, nullable=False)

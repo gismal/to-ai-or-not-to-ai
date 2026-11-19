@@ -128,9 +128,12 @@ class FeedbackRepository(AbstractFeedbackRepository):
         """
         try:
             result = await self.session.execute(
-                select(FeedbackItem).where(FeedbackItem.filename == filename)
+                select(FeedbackItem)
+                .where(FeedbackItem.filename == filename)
+                .order_by(FeedbackItem.created_at.desc())
+                .limit(1)
             )
-            return result.scalar_one_or_none()
+            return result.scalars().first()
         except SQLAlchemyError as e:
             logger.error(f"Error fetching feedback by filename: {e}")
             raise DatabaseError("Failed to fetch feedback record")
