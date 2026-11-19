@@ -21,6 +21,7 @@ from src.api.deps import (
 )
 from src.config import settings
 from src.core.exceptions import ModelInferenceError
+from src.infra.limiter import limiter
 from src.main import app
 
 VALID_API_KEY = settings.API_KEY.get_secret_value()
@@ -167,18 +168,31 @@ def test_predict_success(client, auth_headers):
     assert "processing_time_ms" in data
 
 
-def test_rate_limiting(client, auth_headers):
-    responses = [
-        client.post(
-            "/v1/inference/predict",
-            files={"file": ("test.png", b"dummy", "image/png")},
-            headers=auth_headers,
-        )
-        for _ in range(6)
-    ]
-    assert any(r.status_code == 429 for r in responses), (
-        f"Expected 429, got: {[r.status_code for r in responses]}"
-    )
+def test_rate_limiting(client, auth_headers, monkeypatch):
+    """
+    The sixth request inside the window is refused with 429.
+
+    The window is widened to a minute for the test, so it doesn't depend on how
+    fast the machine is (CI can take more than a second for six requests).
+    The limit is checked before the image is validated, so invalid bytes
+    (answered with 400) still count.
+    """
+    monkeypatch.setattr(settings, "PREDICT_RATE_LIMIT", "5/minute")
+    limiter.reset()
+    try:
+        codes = [
+            client.post(
+                "/v1/inference/predict",
+                files={"file": ("test.png", b"dummy", "image/png")},
+                headers=auth_headers,
+            ).status_code
+            for _ in range(6)
+        ]
+    finally:
+        limiter.reset()
+
+    assert codes[:5] == [400] * 5, codes
+    assert codes[5] == 429, codes
 
 
 def test_predict_invalid_format(client, auth_headers):
