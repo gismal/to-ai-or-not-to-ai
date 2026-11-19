@@ -9,8 +9,7 @@ async def create_cache_client() -> aioredis.Redis:
     Creates a standalone async Redis client for the phash cache
     uses database 1 to keep cache keys isolated from ARQ job data (db 0)
     """
-    url = settings.REDIS_URL.rsplit("/", 1)[0] + "/1"
-
+    url = settings.REDIS_URL
     client = aioredis.from_url(
         url, decode_responses=False, socket_connect_timeout=5, socket_timeout=5
     )
