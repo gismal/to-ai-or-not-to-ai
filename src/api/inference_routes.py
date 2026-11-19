@@ -28,11 +28,11 @@ from src.api.deps import (
     get_db_session,
     get_explainability_service,
     get_inference_service,
-    get_prediction_log_repository,
     verify_public_key,
 )
 from src.config import settings
 from src.core.exceptions import InvalidImageFormatError
+from src.infra.database import AsyncSessionLocal
 from src.infra.limiter import limiter
 from src.logger import logger
 from src.repositories.prediction_log_repository import PredictionLogRepository
@@ -52,8 +52,6 @@ health_router = APIRouter(tags=["System"])
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
-
-
 @health_router.get(
     "/health",
     dependencies=[],
@@ -97,6 +95,22 @@ async def health_check(
 # ── Predict ───────────────────────────────────────────────────────────────────
 
 
+async def _log_prediction(**fields: Any) -> None:
+    """
+    Writes one prediction log row after the response has been sent.
+
+    Run as a background task with its own session, because the request's session is already
+    closed by the time background tasks run. It never raises: a failed log write must not break the
+    connection the response went out on.
+    """
+    try:
+        async with AsyncSessionLocal() as session:
+            await PredictionLogRepository(session).create_log(**fields)
+            await session.commit()
+    except Exception as e:
+        logger.error(f"Could not write the prediction log: {e}", exc_info=True)
+
+
 @router.post(
     "/predict",
     response_model=PredictionResponse,
@@ -127,7 +141,6 @@ async def predict_image(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     service: InferenceService = Depends(get_inference_service),
-    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
 ):
     content_bytes, safe_filename = await _read_and_validate(request, file)
     result = await service.predict(content_bytes, safe_filename)
@@ -146,7 +159,7 @@ async def predict_image(
     )
 
     background_tasks.add_task(
-        log_repo.create_log,
+        _log_prediction,
         filename=safe_filename,
         confidence=confidence,
         predicted_label=prediction,
@@ -169,7 +182,6 @@ async def predict_batch(
     background_tasks: BackgroundTasks,
     files: list[UploadFile] = File(...),
     service: InferenceService = Depends(get_inference_service),
-    log_repo: PredictionLogRepository = Depends(get_prediction_log_repository),
 ):
     if len(files) > settings.MAX_BATCH_SIZE:
         files = files[: settings.MAX_BATCH_SIZE]
@@ -178,14 +190,15 @@ async def predict_batch(
         try:
             content_bytes, safe_name = await _read_and_validate(request, f)
             result = await service.predict(content_bytes, safe_name)
+            data: dict = result if isinstance(result, dict) else result.model_dump()
             background_tasks.add_task(
-                log_repo.create_log,
+                _log_prediction,
                 filename=safe_name,
-                confidence=result.confidence,
-                predicted_label=result.prediction,
-                processing_time_ms=result.processing_time_ms,
+                confidence=data["confidence"],
+                predicted_label=data["prediction"],
+                processing_time_ms=data["processing_time_ms"],
             )
-            return result.model_dump()
+            return data
         except HTTPException as exc:
             logger.warning(f"Batch item validation failed ({f.filename}): {exc.detail}")
             return {
