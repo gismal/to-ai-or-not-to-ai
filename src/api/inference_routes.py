@@ -30,6 +30,7 @@ from src.api.deps import (
     get_inference_service,
     verify_public_key,
 )
+from src.api.rate_limits import demo_limit
 from src.config import settings
 from src.core.exceptions import InvalidImageFormatError
 from src.infra.database import AsyncSessionLocal
@@ -45,7 +46,7 @@ from src.services.inference_service import InferenceService
 router = APIRouter(
     prefix="/v1/inference",
     tags=["Inference"],
-    dependencies=[Depends(verify_public_key)],
+    dependencies=[Depends(verify_public_key), Depends(demo_limit("inference"))],
 )
 
 health_router = APIRouter(tags=["System"])
@@ -135,7 +136,7 @@ async def _log_prediction(**fields: Any) -> None:
     },
     description="Accepts an image file, validates the format and executes ONNX inference",
 )
-@limiter.limit("5/second")
+@limiter.limit(lambda: settings.PREDICT_RATE_LIMIT)
 async def predict_image(
     request: Request,
     background_tasks: BackgroundTasks,
