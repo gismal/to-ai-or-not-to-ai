@@ -96,7 +96,7 @@ class WorkerSettings:
         port=_parsed.port or 6379,
         username=_parsed.username,
         password=_parsed.password,
-        database=int(_parsed.path.lstrip("/"))
+        database=int(_parsed.path.lstrip("/") or 0)
         if _parsed.path and _parsed.path != "/"
         else 0,
         ssl=_is_ssl,
