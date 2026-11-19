@@ -2,8 +2,8 @@
 # Post-deploy smoke test: does the deployed service do its main jobs, and do its safeguards hold?
 #
 # Usage:
-#   scripts/smoke.sh https://your-app.onrender.com
-#   AON_API_KEY=... scripts/smoke.sh https://your-app.onrender.com    # also checks the real key
+#   scripts/smoke.sh https://to-ai-or-not-to-ai.onrender.com
+#   AON_API_KEY=... scripts/smoke.sh https://to-ai-or-not-to-ai.onrender.com   # also checks the real key
 #   scripts/smoke.sh http://localhost:8000 --rate-limit                # also proves the demo limit
 #
 # Environment: DEMO_KEY (default demo-public), AON_API_KEY (real key, optional),
@@ -88,7 +88,13 @@ echo; echo "Server"
 printf '  %s... waking the server if it sleeps (free hosting can take a minute)%s\n' "$D" "$N"
 TIMEOUT_NORMAL=$TIMEOUT
 TIMEOUT=120
-request GET /health
+# A sleeping host holds the connection open; a container that is still starting
+# refuses it at once (HTTP 000). Retry the second case for up to a minute.
+for _ in {1..30}; do
+  request GET /health
+  [[ "$CODE" != "000" ]] && break
+  sleep 2
+done
 TIMEOUT=$TIMEOUT_NORMAL
 expect "API is up (public health check)" 200 '"healthy"'
 if [[ "$CODE" == "000" ]]; then
@@ -108,6 +114,13 @@ request POST /v1/inference/predict -H "X-API-Key: $DEMO_KEY" -F "file=@$IMG;type
 expect "Fast prediction works" 200 '"prediction"'
 request POST /v1/inference/explain -H "X-API-Key: $DEMO_KEY" -F "file=@$IMG;type=$MIME"
 expect "GradCAM explanation works" 200 '"heatmap_base64"'
+
+echo; echo "Feedback (demo key)"
+# "UNKNOWN" is an abstention: it is stored, but the drift check ignores it,
+# so smoke runs never count as votes about the model.
+request POST /v1/feedback/ -H "X-API-Key: $DEMO_KEY" -H "Content-Type: application/json" \
+  -d '{"filename":"smoke-test.jpg","model_prediction":"AI_GENERATED","confidence":0.5,"user_correction":"UNKNOWN","client_source":"API_v1"}'
+expect "Feedback is saved" "200 201" "smoke-test.jpg"
 
 echo; echo "Access control"
 request POST /v1/inference/predict -H "X-API-Key: wrong-key" -F "file=@$IMG;type=$MIME"
