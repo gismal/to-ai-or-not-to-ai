@@ -465,7 +465,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 0;
-      width: 96px;
+      width: min(112px, calc((100vw - 56px) / 3));
       cursor: pointer;
       overflow: hidden;
       color: var(--muted);
@@ -480,8 +480,9 @@
     .sample img {
       display: block;
       width: 100%;
-      height: 72px;
-      object-fit: cover
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
+      object-position: center 25%
     }
 
     .sample span {
@@ -1273,6 +1274,7 @@
       { src: '/static/samples/ai.jpg', label: 'An AI image' },
       { src: '/static/samples/unsure.jpg', label: 'A hard case' },
     ];
+    // Optional per sample: pos: 'center 10%' moves the crop (left-right, top-bottom).
     const WAKING_AFTER_S = 8;
 
     const EXT_ACTS = [
@@ -1508,7 +1510,7 @@
           <div className="samples-row">
             {shown.map((s) => (
               <button key={s.src} className="sample" onClick={() => onPick(s.src)} aria-label={`Analyze sample: ${s.label}`}>
-                <img src={s.src} alt="" loading="lazy" onError={() => setBroken((b) => [...b, s.src])} />
+                <img src={s.src} alt="" loading="lazy" style={s.pos ? { objectPosition: s.pos } : undefined} onError={() => setBroken((b) => [...b, s.src])} />
                 <span>{s.label}</span>
               </button>
             ))}
