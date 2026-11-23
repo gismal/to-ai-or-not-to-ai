@@ -20,7 +20,6 @@ not true accuracy. It is meant to detect change over time.
 
 import json
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import Literal, TypedDict
 
 from arq import ArqRedis
@@ -30,12 +29,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config import settings
 from src.core.enums import ErrorType
 from src.infra.feedback_item import FeedbackItem
+from src.infra.model_info import METADATA_PATH
 from src.logger import logger
 
 HARD_ERRORS = (ErrorType.FALSE_POSITIVE, ErrorType.FALSE_NEGATIVE)
 DECIDED = (ErrorType.CORRECT, *HARD_ERRORS)
 RETRAIN_JOB = "retrain_model"  # fixed job id, so repeated checks never stack jobs
-METADATA_PATH = Path("models/metadata.json")
 
 Status = Literal[
     "no_data",

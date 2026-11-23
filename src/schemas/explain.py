@@ -18,6 +18,9 @@ class ExplainResponse(BaseModel):
     )
     processing_time_ms: float = Field(ge=0.0)
     cached: bool = False
+    model_version: str = Field(
+        default="unknown", description="The model that produced this answer"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -29,6 +32,7 @@ class ExplainResponse(BaseModel):
                 "heatmap_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
                 "processing_time_ms": 312.4,
                 "cached": False,
+                "model_version": "v2.0.0",
             }
         }
     )

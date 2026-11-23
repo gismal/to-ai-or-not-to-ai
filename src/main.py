@@ -1,5 +1,3 @@
-import asyncio
-import subprocess
 import uuid
 from contextlib import asynccontextmanager
 
@@ -26,6 +24,7 @@ from src.core.exceptions import (
 )
 from src.inference import ONNXPredictor
 from src.infra.limiter import limiter
+from src.infra.model_info import read_model_info
 from src.infra.redis_client import create_cache_client
 from src.logger import logger, request_id_ctx
 from src.services.cache_service import CacheService
@@ -48,31 +47,25 @@ async def lifespan(app: FastAPI):
       - Close both Redis clients
     """
     logger.info("Starting up API, loading ONNX model")
-    try:
-        result = await asyncio.to_thread(
-            subprocess.run,
-            ["alembic", "upgrade", "head"],
-            capture_output=True,
-            text=True,
-            cwd="/app",
-            check=False,
-        )
-        if result.returncode == 0:
-            logger.info("Database migrations applied.")
-        else:
-            logger.warning(f"Migration warning: {result.stderr.strip()}")
-    except Exception as e:  # to do special error catch
-        logger.error(f"Unexpected error during migration: {e}", exc_info=True)
+    app.state.model_info = read_model_info()
+    logger.info(
+        f"Serving model {app.state.model_info.version} "
+        f"(trained {app.state.model_info.trained_at or 'unknown'})"
+    )
 
     try:
         redis_url = settings.REDIS_URL
+
         if redis_url and redis_url != "none":
             # -- Redis: job queue (db 0 ) -------------
             app.state.arq_pool = await create_pool(WorkerSettings.redis_settings)
 
-            # -- Redis: cache client (db 1) seperate from job queue --------------
+            # -- Redis: cache client (db 0) seperate from job queue --------------
             app.state.cache_client = await create_cache_client()
-            app.state.cache_service = CacheService(redis_client=app.state.cache_client)
+            app.state.cache_service = CacheService(
+                redis_client=app.state.cache_client,
+                model_version=app.state.model_info.version,
+            )
             logger.info("Redis connected")
         else:
             app.state.arq_pool = None
@@ -83,7 +76,6 @@ async def lifespan(app: FastAPI):
         redis.exceptions.TimeoutError,
     ) as redis_exc:  # todo: special exception for redis and migration
         logger.warning(f"Redis unavailable ({redis_exc}) - caching disabled")
-        logger.warning(f"Migration warning: {redis_exc}", exc_info=True)
         app.state.arq_pool = None
         app.state.cache_service = None
 
@@ -154,15 +146,6 @@ app.add_middleware(
 )
 
 
-@app.get("/health", tags=["System"], status_code=status.HTTP_200_OK)
-async def health_check(request: Request):
-    inference_ok = (
-        hasattr(request.app.state, "inference_service")
-        and request.app.state.inference_service is not None
-    )
-    return {"status": "ok" if inference_ok else "degraded"}
-
-
 @app.exception_handler(InvalidImageFormatError)
 async def invalid_image_handler(request: Request, exc: InvalidImageFormatError):
     """Handles unsupported file format errors globally"""
@@ -183,7 +166,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """
     logger.warning(f"Unvalid data entry: {exc.errors()} - Endpoint: {request.url.path}")
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content={
             "details": "Invalid request data submitted",
             "errors": exc.errors(),
