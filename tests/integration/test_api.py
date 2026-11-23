@@ -103,6 +103,7 @@ def test_health_check_without_api_key(client):
 def test_health_check_success(client, auth_headers):
     response = client.get("/health", headers=auth_headers)
     assert response.status_code == 200
+    assert "version" in response.json()["model"]
 
 
 def test_create_feedback_success(client, auth_headers):
@@ -165,6 +166,7 @@ def test_predict_success(client, auth_headers):
     assert data["prediction"] == "REAL"
     assert data["confidence"] == 0.99
     assert data["status"] == "SUCCESS"
+    assert "model_version" in response.json()
     assert "processing_time_ms" in data
 
 

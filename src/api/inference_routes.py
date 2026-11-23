@@ -35,6 +35,7 @@ from src.config import settings
 from src.core.exceptions import InvalidImageFormatError
 from src.infra.database import AsyncSessionLocal
 from src.infra.limiter import limiter
+from src.infra.model_info import current_model_info
 from src.logger import logger
 from src.repositories.prediction_log_repository import PredictionLogRepository
 from src.schemas.batch import BatchPredictionResponse
@@ -50,6 +51,14 @@ router = APIRouter(
 )
 
 health_router = APIRouter(tags=["System"])
+
+
+def _with_model_version(result: Any, request: Request) -> Any:
+    """Adds the serving model's version to a prediction (a dict or a response model)."""
+    version = current_model_info(request).version
+    if isinstance(result, dict):
+        return {**result, "model_version": version}
+    return result.model_copy(update={"model_version": version})
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -90,7 +99,11 @@ async def health_check(
             detail={"status": "degraded", "checks": checks},
         )
 
-    return {"status": "healthy", "checks": checks}
+    return {
+        "status": "healthy",
+        "checks": checks,
+        "model": current_model_info(request).as_dict(),
+    }
 
 
 # ── Predict ───────────────────────────────────────────────────────────────────
@@ -166,7 +179,7 @@ async def predict_image(
         predicted_label=prediction,
         processing_time_ms=processing_time,
     )
-    return result
+    return _with_model_version(result, request)
 
 
 # ── Predict Batch ─────────────────────────────────────────────────────────────
@@ -199,7 +212,7 @@ async def predict_batch(
                 predicted_label=data["prediction"],
                 processing_time_ms=data["processing_time_ms"],
             )
-            return data
+            return _with_model_version(data, request)
         except HTTPException as exc:
             logger.warning(f"Batch item validation failed ({f.filename}): {exc.detail}")
             return {
@@ -256,11 +269,12 @@ async def explain_image(
     explainer: ExplainabilityService = Depends(get_explainability_service),
 ):
     content_bytes, safe_filename = await _read_and_validate(request, file)
-    return await explainer.explain(
+    result = await explainer.explain(
         image_bytes=content_bytes,
         filename=safe_filename,
         decide_class_fn=service._decide_class,
     )
+    return _with_model_version(result, request)
 
 
 # ── Shared validation helper ──────────────────────────────────────────────────
