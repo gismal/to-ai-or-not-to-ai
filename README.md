@@ -1,6 +1,6 @@
 *"That's the question."* — Shakespeare (probably would have asked this in 2026)
 
-### [🔗 Live API Demo](https://to-ai-or-not-to-ai.onrender.com/) | [🔗 Chrome Extension](#)
+### [🔗 Live API Demo](https://to-ai-or-not-to-ai.onrender.com/) | [🔗 Chrome Extension](#) 
 
 Have you ever wondered if a photo is real or AI generated in 2026? And if you suspected something was off, would you know exactly why? This doesn't just give you a yes or no. It tells you how confident it is, and if it is unsure, it admits that right away.
 
@@ -35,7 +35,8 @@ The uncertain category is intentional. Personally I don't like when AI models pr
                         ▼
 ┌─────────────────────────────────────────────────────┐
 │              FastAPI  (src/main.py)                 │
-│  • API key auth      • Rate limiting (5 req/s)      │
+│  • API key auth      • Rate limiting on /           |
+|                        predict (5 req/s)            │
 │  • Request ID trace  • Prometheus metrics           │
 └──────┬─────────────────┬──────────────┬─────────────┘
        │                 │              │
@@ -90,21 +91,21 @@ The uncertain category is intentional. Personally I don't like when AI models pr
 - Response times under 200ms for cached results, around 400ms for fresh inference
 
 ### Security
-- **API key authentication** on every endpoint
+- **API key authentication** covers for two scenarios, one for the real key opens everything (admin included) and second a public demo key (demo-public) that is rate limited per IP to use inference and feedback. /health, /metrics, the playground and the privacy page are public.
 - **python-magic** for file validation — checks actual byte signatures, not just extensions
 - **Path traversal protection** filenames sanitized with `PurePosixPath`
-- **Rate limiting** 5 requests per second per IP
+- **Rate limiting** 5 requests per second per IP on /predict additionally the demo key's per-minute limit per IP. Inference and feedback have seperate demo budgets.
 
 ### Observability
 - **Prometheus metrics** via `/metrics` — request latency, prediction distribution, error rates, cache hit rate
 - **Structured JSON logging** with `X-Request-ID` tracing across every log line
-- **Deep health check** at `/v1/inference/health` — verifies model, database, and Redis are all actually alive
+- **Deep health check** at `/health` — verifies model, database, and Redis are all actually alive
 - **10-panel Grafana dashboard** request rate, latency percentiles, prediction distribution, ONNX vs GradCAM latency comparison
 
 ### The MLOps Loop
 - **Prediction logging** every inference stored with confidence score and label
 - **Feedback endpoint** clients report misclassifications (false positives, false negatives)
-- **Drift detection** `/v1/admin/check-drift` calculates the real error rate from prediction and feedback logs, triggers retraining via ARQ when it crosses the threshold
+- **Drift detection** `/v1/admin/check-drift` calculates the real error rate from prediction and feedback logs, which are rated by the users. Only decided answers count and absent answers are ignored. A threshold samples is defined to calculate the drift. They trigger retraining via ARQ when it crosses the threshold. It now uses rated feedback only within a window that starts when the current model was trained. It's also worth one sentence that feedback is voluntary, so the rate detects change rather than measuring accuracy. 
 - **Active learning** `UNCERTAIN` predictions flagged for human review via `/v1/admin/uncertain`, labeled samples routed back into the training pipeline
 - **MLflow experiment tracking** every training run logged with parameters, metrics, and model artifacts
 - **Alembic migrations** schema changes without data loss
@@ -169,17 +170,7 @@ cp .env.example .env
 Open `.env` and fill in your values:
 
 ```env
-API_KEY=your_secret_key_here
-DATABASE_URL=postgresql+asyncpg://pgadmin:yourpassword@db:5432/ai_detector
-POSTGRES_USER=pgadmin
-POSTGRES_PASSWORD=yourpassword
-POSTGRES_DB=ai_detector
-REDIS_URL=redis://redis:6379/0
-MODEL_THRESHOLD=0.75
-GRAY_AREA_MARGIN=0.35
-DRIFT_THRESHOLD=0.15
-DEBUG=false
-ALLOWED_ORIGINS=["*"]
+copy .env.example and fill it in
 ```
 
 ### 2. Run everything
@@ -190,21 +181,22 @@ make build
 docker compose up --build
 ```
 
-This starts six services: `api`, `worker`, `redis`, `db`, `prometheus`, and `grafana`. Wait for the health checks to pass.
+This starts seven services: `api`, `worker`, `redis`, `db`, `prometheus`, `mlflow` and `grafana`. Wait for the health checks to pass.
 
 ### 3. Run migrations
-
+Migrations run automatically at startup.
 ```bash
 make migrate
 # or:
 docker compose exec api alembic upgrade head
 ```
+is only needed if you run the app outside Docker.
 
 ### 4. Try it
 
 ```bash
 # Health check
-curl http://localhost:8000/v1/inference/health \
+curl http://localhost:8000/health \
   -H "X-API-Key: your_secret_key_here"
 
 # Classify an image
@@ -262,7 +254,7 @@ Same as predict, but also returns a base64-encoded GradCAM heatmap showing which
 Send up to 10 images in one request. Each file is validated and processed concurrently. Failed images return an error field instead of crashing the whole batch.
 
 ### `POST /v1/feedback/`
-Tell the model it was wrong.
+Tell the model it was wrong. It also accepts "agree" votes and UNKNOWN
 
 ```json
 {
@@ -283,7 +275,7 @@ Returns recent predictions the model was uncertain about, ready for human review
 ### `POST /v1/admin/label`
 Submit a human-verified label for an uncertain prediction. Labeled samples feed back into the next training run.
 
-### `GET /v1/inference/health`
+### `GET /health`
 Deep system health — model, database, and Redis all checked live.
 
 ### `GET /metrics`
@@ -332,6 +324,8 @@ make lint
 # Run locally without Docker
 uvicorn src.main:app --reload
 ```
+### Deployment
+Rendered with Docker. Neon is used for Postgres. For Upstash, Redis is selected. After each deployment smoke test applied and CI with branch protection. 
 
 ### Running Tests
 
@@ -350,7 +344,18 @@ make build     → docker compose up --build
 make test      → run pytest with coverage
 make lint      → ruff check src/ tests/
 make migrate   → alembic upgrade head
+make format    → ruff format src/ tests/
 make train     → python scripts/train.py
+make up        → docker compose up -d 
+make down      → docker compose down 
+make psql      → docker compose exec db sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+make rebuild   → docker compose build --no-cache api worker
+make logs      → docker compose logs -f api worker
+make check     → lint typecheck test
+make ps        → docker compose ps
+make smoke     → @scripts/smoke.sh $(or $(URL),http://localhost:8000)
+make clean     → docker compose down -v --remove-orphans
+  
 ```
 
 ---
@@ -385,13 +390,206 @@ to-ai-or-not-to-ai/
 ├── Dockerfile
 ├── docker-compose.yml   # Full stack (API, Worker, Redis, PostgreSQL, Prometheus, Grafana)
 └── Makefile
+
+|── requirements.txt
+  |── CONTRIBUTING.md
+  |── Makefile
+  |── ai-or-not
+  |  |── public
+  |  |  |── favicon.svg
+  |  |  |── icons.svg
+  |  |── vite.config.js
+  |  |── index.html
+  |  |── package.json
+  |  |── src
+  |  |  |── assets
+  |  |  |── App.jsx
+  |  |  |── index.css
+  |  |  |── App.css
+  |  |  |── main.jsx
+  |  |── README.md
+  |── tests
+  |  |── integration
+  |  |  |── test_feedback_votes.py
+  |  |  |── test_api.py
+  |  |  |── test_admin_review.py
+  |  |  |── __pycache__
+  |  |  |── test_drift.py
+  |  |  |── __init__.py
+  |  |  |── test_database.py
+  |  |── __pycache__
+  |  |  |── conftest.cpython-311-pytest-9.0.3.pyc
+  |  |  |── test_model.cpython-314-pytest-9.0.3.pyc
+  |  |  |── test_database.cpython-314-pytest-9.0.3.pyc
+  |  |  |── conftest.cpython-314-pytest-9.0.3.pyc
+  |  |  |── __init__.cpython-311.pyc
+  |  |  |── test_api.cpython-314-pytest-9.0.3.pyc
+  |  |── unit
+  |  |  |── test_model_age.py
+  |  |  |── test_auth_scopes.py
+  |  |  |── __pycache__
+  |  |  |── test_rate_limit.py
+  |  |  |── test_feedback_classification.py
+  |  |  |── test_model.py
+  |  |  |── __init__.py
+  |  |── conftest.py
+  |  |── __init__.py
+  |── monitoring
+  |  |── grafana
+  |  |  |── provisioning
+  |  |── prometheus.yml
+  |── pytest.ini
+  |── scripts
+  |  |── calibrate.py
+  |  |── __pycache__
+  |  |  |── train_config.cpython-314.pyc
+  |  |── quantize.py
+  |  |── smoke.sh
+  |  |── store_screenshots.py
+  |  |── train_config.py
+  |  |── prepare_dataset.py
+  |  |── train.py
+  |── data
+  |  |── train
+  |  |  |── REAL
+  |  |  |── FAKE
+  |  |── val
+  |  |  |── REAL
+  |  |  |── FAKE
+  |── migrations
+  |  |── __pycache__
+  |  |  |── env.cpython-314.pyc
+  |  |── script.py.mako
+  |  |── README
+  |  |── versions
+  |  |  |── __pycache__
+  |  |  |── 5b7e2c91d0a4_drop_feedback_unique_constraint.py
+  |  |  |── cf9613fa0af8_baseline_schema.py
+  |  |── env.py
+  |── frontend
+  |  |── favicon.png
+  |  |── og.png
+  |  |── index.html
+  |  |── images.png
+  |  |── samples
+  |  |  |── unsure.jpg
+  |  |  |── real.jpg
+  |  |  |── ai.jpg
+  |  |── privacy.html
+  |── MODEL_CARD.md
+  |── docs
+  |  |── store
+  |  |  |── screenshots
+  |  |  |── samples
+  |  |── ENGINEERING-DECISIONS.md
+  |  |── decisions
+  |  |  |── TECHNICAL_DEEP_DIVE.md
+  |── LICENSE
+  |── src
+  |  |── worker
+  |  |  |── __pycache__
+  |  |  |── tasks.py
+  |  |  |── __init__.py
+  |  |── repositories
+  |  |  |── __pycache__
+  |  |  |── __init__.py
+  |  |  |── task_result_repo.py
+  |  |  |── prediction_log_repository.py
+  |  |  |── feedback_repo.py
+  |  |── infra
+  |  |  |── task_results.py
+  |  |  |── __pycache__
+  |  |  |── metrics.py
+  |  |  |── api_keys.py
+  |  |  |── feedback_item.py
+  |  |  |── limiter.py
+  |  |  |── __init__.py
+  |  |  |── database.py
+  |  |  |── redis_client.py
+  |  |  |── prediction_log.py
+  |  |  |── labeled_sample.py
+  |  |── inference.py
+  |  |── __pycache__
+  |  |  |── inference.cpython-311.pyc
+  |  |  |── main.cpython-311.pyc
+  |  |  |── inference.cpython-314.pyc
+  |  |  |── utils.cpython-314.pyc
+  |  |  |── utils.cpython-311.pyc
+  |  |  |── config.cpython-311.pyc
+  |  |  |── logger.cpython-314.pyc
+  |  |  |── __init__.cpython-311.pyc
+  |  |  |── config.cpython-314.pyc
+  |  |  |── main.cpython-314.pyc
+  |  |  |── logger.cpython-311.pyc
+  |  |── config.py
+  |  |── api
+  |  |  |── inference_routes.py
+  |  |  |── __pycache__
+  |  |  |── feedback_routes.py
+  |  |  |── rate_limits.py
+  |  |  |── __init__.py
+  |  |  |── admin_routes.py
+  |  |  |── deps.py
+  |  |── utils.py
+  |  |── services
+  |  |  |── feedback_service.py
+  |  |  |── cache_service.py
+  |  |  |── __pycache__
+  |  |  |── inference_service.py
+  |  |  |── __init__.py
+  |  |  |── explainability_service.py
+  |  |  |── base_engine.py
+  |  |  |── retrain_service.py
+  |  |── __init__.py
+  |  |── schemas
+  |  |  |── batch.py
+  |  |  |── __pycache__
+  |  |  |── feedback.py
+  |  |  |── __init__.py
+  |  |  |── predict.py
+  |  |  |── label.py
+  |  |  |── explain.py
+  |  |── logger.py
+  |  |── main.py
+  |  |── core
+  |  |  |── exceptions.py
+  |  |  |── __pycache__
+  |  |  |── __init__.py
+  |  |  |── enums.py
+  |── Dockerfile
+  |── requirements-test.txt
+  |── alembic.ini
+  |── requirements-train.txt
+  |── docker-compose.yml
+  |── extension
+  |  |── icons
+  |  |  |── icon128.png
+  |  |  |── icon16.png
+  |  |  |── icon48.png
+  |  |── config.js
+  |  |── results.js
+  |  |── popup.js
+  |  |── popup.html
+  |  |── content.js
+  |  |── results.html
+  |  |── background.js
+  |  |── manifest.json
+  |── README.md
+  |── models
+  |  |── model_v1.onnx
+  |  |── metadata.json
+  |  |── best_checkpoint.pt
+  |  |── model_v1.onnx.data
+  |── pyproject.toml
+  |── railway.json
+
 ```
 
 ---
 
 ## Why I Built This
 
-I wanted to challenge myself beyond notebook projects. I focused on understanding what actually happens between "the model works locally" and "the model serves real traffic reliably."
+I wanted to challenge myself beyond notebook projects. Rather than small projects and notebook, I want to find myself in a complex, production environment to deal with.  I focused on understanding what actually happens between "the model works locally" and "the model serves real traffic reliably."
 
 My hands got dirty: dependency injection, session management, async task queues, database migrations, structured logging with request tracing, Docker networking, and what happens when the model starts drifting.
 
@@ -399,4 +597,14 @@ I took my sweet time to build all of that from scratch, make every mistake, and 
 
 ---
 
+## Future work
+- **v3: full-resolution crops instead of resizing.** Shrinking to 224 px discards the
+  fine detail where generator traces live. Train on native-resolution crops and score
+  several crops per image at inference (changes training, the API and GradCAM together).
+- **Generalization to new generators:** a frozen foundation model (e.g. CLIP) with a
+  small classifier generalizes better, but needs more memory than the free tier offers.
+
+---
+
 ## License
+MIT
