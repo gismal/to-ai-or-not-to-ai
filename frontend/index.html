@@ -592,47 +592,221 @@
     }
 
     .loader-wrap {
-      padding: 56px 0;
+      padding: 40px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px
     }
 
-    .loading-hourglass {
-      font-size: 26px;
-      animation: hourglass 2s infinite ease-in-out
-    }
-
-    @keyframes hourglass {
-
-      0%,
-      100% {
-        transform: scale(1);
-        opacity: .5
-      }
-
-      50% {
-        transform: scale(1.1);
-        opacity: 1
-      }
-    }
-
-    .status-text {
-      font: italic 20px var(--font-serif);
-      color: var(--muted)
-    }
-
-    .waking {
-      font: italic 14px/1.6 var(--font-serif);
-      color: var(--muted);
-      text-align: center;
-      max-width: 340px
-    }
-
     .elapsed {
       font-size: 11px;
       color: var(--dim)
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap
+    }
+
+    /* The scribe: a quill writes while the model thinks */
+    .scribe {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      height: 150px;
+      --quill-fill: #3a372f
+    }
+
+    body.first-folio .scribe {
+      --quill-fill: #4a3a22
+    }
+
+    .scribe-line {
+      position: absolute;
+      top: 54px;
+      width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      font: italic 18px/24px var(--font-serif);
+      color: var(--text)
+    }
+
+    .scribe-ink {
+      position: absolute;
+      left: 12px;
+      bottom: 8px;
+      width: 28px;
+      height: 26px
+    }
+
+    .quill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 40px;
+      height: 40px;
+      color: var(--text);
+      transform-origin: 3px 37px;
+      pointer-events: none
+    }
+
+    .scribe.still .scribe-line {
+      position: static;
+      width: auto;
+      padding-top: 54px;
+      text-align: center;
+      white-space: normal
+    }
+
+    .scribe.still .quill {
+      display: none
+    }
+
+    /* The curtain: shown while the free server wakes up */
+    .stage-area {
+      position: relative
+    }
+
+    .curtain-box {
+      position: relative;
+      width: 100%;
+      height: 230px
+    }
+
+    .curtain {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      overflow: hidden;
+      border-radius: 8px
+    }
+
+    .curtain.opening {
+      pointer-events: none
+    }
+
+    .curtain-valance {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: #2e0d10;
+      z-index: 3;
+      transition: opacity .4s
+    }
+
+    .curtain-half {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 51%;
+      background: #4a1519 repeating-linear-gradient(90deg, transparent 0 13px, #3c1014 13px 14px);
+      transform-origin: 50% 0;
+      animation: sway 4.5s ease-in-out infinite;
+      transition: width 1.3s cubic-bezier(.6, 0, .2, 1), clip-path 1.3s cubic-bezier(.6, 0, .2, 1), opacity .3s 1.1s
+    }
+
+    .curtain-half.left {
+      left: 0;
+      clip-path: polygon(0 0, 100% 0, 100% 60%, 100% 100%, 0 100%)
+    }
+
+    .curtain-half.right {
+      right: 0;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 60%);
+      animation-direction: reverse
+    }
+
+    .curtain.opening .curtain-half.left {
+      width: 12%;
+      clip-path: polygon(0 0, 100% 0, 35% 60%, 70% 100%, 0 100%);
+      opacity: 0
+    }
+
+    .curtain.opening .curtain-half.right {
+      width: 12%;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 30% 100%, 65% 60%);
+      opacity: 0
+    }
+
+    @keyframes sway {
+
+      0%,
+      100% {
+        rotate: 0deg
+      }
+
+      50% {
+        rotate: 1deg
+      }
+    }
+
+    .curtain-spot {
+      position: absolute;
+      top: 50%;
+      width: 150px;
+      height: 150px;
+      margin: -75px 0 0 -75px;
+      border-radius: 50%;
+      background: rgba(240, 228, 196, .07);
+      z-index: 2;
+      animation: spot 6s ease-in-out infinite;
+      transition: opacity .4s
+    }
+
+    @keyframes spot {
+
+      0%,
+      100% {
+        left: 28%
+      }
+
+      50% {
+        left: 72%
+      }
+    }
+
+    .curtain-copy {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px;
+      text-align: center;
+      transition: opacity .4s
+    }
+
+    .curtain.opening .curtain-copy,
+    .curtain.opening .curtain-spot,
+    .curtain.opening .curtain-valance {
+      opacity: 0
+    }
+
+    .curtain-line {
+      font: italic 22px/1.3 var(--font-serif);
+      color: #f0e4c4;
+      animation: fadeIn .6s ease
+    }
+
+    .curtain-note {
+      font-size: 11px;
+      line-height: 1.6;
+      color: rgba(240, 228, 196, .65);
+      max-width: 300px
+    }
+
+    .curtain-copy .elapsed {
+      color: rgba(240, 228, 196, .5)
     }
 
     /* Verdict */
@@ -1275,7 +1449,35 @@
       { src: '/static/samples/unsure.jpg', label: 'A hard case' },
     ];
     // Optional per sample: pos: 'center 10%' moves the crop (left-right, top-bottom).
-    const WAKING_AFTER_S = 8;
+    const WAKING_AFTER_S = 8;      // an analysis this slow means the server was asleep
+    const COLD_AFTER_MS = 1500;    // a /health ping this slow on page load means the same
+
+    // Written by the quill while the model thinks. Keep each under ~36 characters so it fits on a phone.
+    const PUNS = [
+  'To pixel, or not to pixel…',
+  'Is this a deepfake I see before me?',
+  'Out, damned artifact!',
+  'Fair is foul, and foul is fair…',
+  'A rose by any other prompt…',
+  'All that glitters is not real.',
+  'Brevity is the soul of inference.',
+  "There's method in this noise.",
+  'Something is rotten in the metadata.',
+  'Holding the mirror up to nature…',
+];
+    // Shown on the curtain while the free server wakes up.
+    const WAKING_LINES = [
+  'Places, please…',
+  'Now is the winter of our cold start.',
+  'To sleep, perchance to boot…',
+  'What light through yonder server wakes?',
+  'Wake! Ring the alarum bell!',
+  'The players are still in costume.',
+  'Though patience be a tired mare…',
+  'Lend me your ears, and a minute.',
+  'Parting is such sweet latency.',
+  "All the world's a stage. This one's loading.",
+];
 
     const EXT_ACTS = [
       ['Act I', 'Install the extension', 'Load from the Chrome Web Store or install unpacked via developer mode.'],
@@ -1381,6 +1583,34 @@
       const text = dt.getData('text/plain').trim();
       return isUrl(text) ? { url: text } : {};
     }
+
+    const shuffled = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(([, v]) => v);
+
+    // The engraved quill, drawn once. The nib is at (3, 37) in its 40×40 box.
+    const QUILL_SVG = (() => {
+      const N = 30, W = 8.5, BOW = 1.8, n = 0.707, pts = [];
+      for (let i = 0; i <= N; i++) {
+        const t = 0.2 + 0.8 * i / N, b = BOW * Math.sin(Math.PI * t);
+        const px = 3 + 35 * t - n * b, py = 37 - 35 * t - n * b;
+        const u = Math.min(1, (t - 0.2) / 0.8);
+        const w = W * Math.pow(Math.sin(Math.PI * Math.min(0.999, u * 0.92 + 0.04)), 0.65) * (u > 0.85 ? 1 - (u - 0.85) * 3 : 1);
+        const j = i === 11 || i === 19 ? 0.35 : 0;                 // two notches in the vane
+        pts.push({ px, py, ux: px - n * w * (1 - j), uy: py - n * w * (1 - j), lx: px + n * w * 0.72 * (1 - j * 0.8), ly: py + n * w * 0.72 * (1 - j * 0.8) });
+      }
+      const f = (v) => v.toFixed(1);
+      const vane = 'M' + pts.map((p) => `${f(p.ux)} ${f(p.uy)}`).join(' L') + ' L' + [...pts].reverse().map((p) => `${f(p.lx)} ${f(p.ly)}`).join(' L') + 'Z';
+      let barbs = '';
+      for (let i = 3; i < N - 1; i += 2) {
+        const p = pts[i], q = pts[i - 2];
+        barbs += `M${f(p.px)} ${f(p.py)} L${f(q.ux + (p.ux - q.ux) * 0.2)} ${f(q.uy + (p.uy - q.uy) * 0.2)} M${f(p.px)} ${f(p.py)} L${f(q.lx)} ${f(q.ly)} `;
+      }
+      const shaft = 'M3 37 ' + pts.map((p) => `L${f(p.px)} ${f(p.py)}`).join(' ');
+      const b = pts[1];
+      const wisps = `M${f(b.px)} ${f(b.py)} q-3.5 .5 -5 3.5 M${f(b.px)} ${f(b.py)} q.5 3.5 -1.5 5.5 M${f(pts[2].px)} ${f(pts[2].py)} q-4 -1 -6 1`;
+      return `<svg viewBox="0 0 40 40" width="40" height="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">`
+        + `<path d="${vane}" style="fill:var(--quill-fill)" stroke-width="1.35"/><path d="${barbs}" stroke-width=".7"/>`
+        + `<path d="${wisps}" stroke-width=".8"/><path d="${shaft}" stroke-width="1.35"/><path d="M3 37 L9.5 30.5" stroke-width="1.8"/></svg>`;
+    })();
 
     /* ── Components ── */
     class ErrorBoundary extends React.Component {
@@ -1519,6 +1749,109 @@
       );
     }
 
+    // A quill writes one line, dips into the inkwell, and writes the next, until the verdict arrives.
+    function Scribe({ first }) {
+      const box = useRef(null);
+      const line = useRef(null);
+      const pen = useRef(null);
+
+      useEffect(() => {
+        const B = box.current, L = line.current, P = pen.current;
+        const lines = [first, ...shuffled(PUNS)];
+        let i = 0;
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          B.classList.add('still');
+          L.textContent = lines[0];
+          const id = setInterval(() => { i = (i + 1) % lines.length; L.textContent = lines[i]; }, 3500);
+          return () => clearInterval(id);
+        }
+
+        const BASE = 72;                                       // where the nib touches the line
+        const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+        const lerp = (a, b, p) => a + (b - a) * p;
+        const ink = () => ({ x: 26, y: B.clientHeight - 24 });
+        let phase = 'write', t0 = performance.now(), full = 0, sx = 0, nx = 0, ny = BASE, from = { x: 0, y: 0 }, raf = 0;
+
+        const setLine = (text) => {
+          L.textContent = text;
+          L.style.width = 'auto'; full = L.scrollWidth; L.style.width = '0px'; L.style.opacity = 1;
+          sx = Math.max(12, (B.clientWidth - full) / 2); L.style.left = `${sx}px`;
+        };
+        const nib = (x, y, r) => { nx = x; ny = y; P.style.transform = `translate(${x - 3}px, ${y - 37}px) rotate(${r}deg)`; };
+        const go = (p, now) => { phase = p; t0 = now; };
+
+        const frame = (now) => {
+          const el = now - t0;
+          if (phase === 'write') {
+            const p = Math.min(1, el / Math.max(700, L.textContent.length * 38)), w = full * p;
+            L.style.width = `${w}px`;
+            nib(sx + w, BASE + Math.sin(now / 80) * 1.2, Math.sin(now / 60) * 5);
+            if (p >= 1) go('hold', now);
+          } else if (phase === 'hold') {
+            nib(nx, ny, 0);
+            if (el > 1300) { from = { x: nx, y: ny }; go('toInk', now); }
+          } else if (phase === 'toInk') {
+            const p = Math.min(1, el / 600), e = ease(p), k = ink();
+            nib(lerp(from.x, k.x, e), lerp(from.y, k.y, e) - 35 * Math.sin(Math.PI * p), -10 * e);
+            L.style.opacity = 1 - p;
+            if (p >= 1) go('dip', now);
+          } else if (phase === 'dip') {
+            const p = Math.min(1, el / 500), k = ink();
+            nib(k.x, k.y + 7 * Math.abs(Math.sin(p * 2 * Math.PI)), -10);
+            if (p >= 1) { i = (i + 1) % lines.length; setLine(lines[i]); from = { x: nx, y: ny }; go('toStart', now); }
+          } else {
+            const p = Math.min(1, el / 500), e = ease(p);
+            nib(lerp(from.x, sx, e), lerp(from.y, BASE, e) - 30 * Math.sin(Math.PI * p), lerp(-10, 0, e));
+            if (p >= 1) go('write', now);
+          }
+          raf = requestAnimationFrame(frame);
+        };
+
+        setLine(lines[0]);
+        raf = requestAnimationFrame(frame);
+        return () => cancelAnimationFrame(raf);
+      }, [first]);
+
+      return (
+        <div className="scribe" ref={box} aria-hidden="true">
+          <svg className="scribe-ink" viewBox="0 0 24 22">
+            <path d="M3 21 C2 13 6 9 9 8 L15 8 C18 9 22 13 21 21z" style={{ fill: 'var(--border)' }} />
+            <rect x="8" y="4" width="8" height="5" rx="1" style={{ fill: 'var(--border-hi)' }} />
+          </svg>
+          <div className="scribe-line" ref={line} />
+          <div className="quill" ref={pen} dangerouslySetInnerHTML={{ __html: QUILL_SVG }} />
+        </div>
+      );
+    }
+
+    // A closed curtain with rotating lines while the free server wakes up; `opening` gathers it to the sides.
+    function Curtain({ since, opening = false, live = false }) {
+      const [secs, setSecs] = useState(() => Math.floor((Date.now() - since) / 1000));
+      const [i, setI] = useState(0);
+      useEffect(() => {
+        const tick = setInterval(() => setSecs(Math.floor((Date.now() - since) / 1000)), 1000);
+        const rotate = setInterval(() => setI((n) => (n + 1) % WAKING_LINES.length), 4000);
+        return () => { clearInterval(tick); clearInterval(rotate); };
+      }, [since]);
+
+      return (
+        <div className={`curtain ${opening ? 'opening' : ''}`}>
+          <div className="curtain-half left" aria-hidden="true" />
+          <div className="curtain-half right" aria-hidden="true" />
+          <div className="curtain-valance" aria-hidden="true" />
+          <div className="curtain-spot" aria-hidden="true" />
+          <div className="curtain-copy">
+            <div className="curtain-line" key={i} aria-hidden="true">{WAKING_LINES[i]}</div>
+            <div className="curtain-note" role={live ? 'status' : undefined}>
+              The server naps when idle, so the first visit can take up to a minute. Later verdicts come quickly.
+            </div>
+            <div className="elapsed" aria-hidden="true">{secs}s</div>
+          </div>
+        </div>
+      );
+    }
+
     function Verdict({ result, mode, preview, round, feedback, onFeedback, onExeunt }) {
       const [pos, setPos] = useState(0);
       const { prediction: pred, confidence } = result;
@@ -1629,9 +1962,12 @@
       const [heroSeen, setHeroSeen] = useState(() => session.get('aon_hero') === '1');
       const [folio, setFolio] = useState(() => local.get('aon_folio') === '1');
       const [showSoliloquy, setShowSoliloquy] = useState(false);
+      const [server, setServer] = useState('unknown');        // 'unknown' | 'cold' | 'opening' | 'warm'
 
       const toolRef = useRef(null);
       const timer = useRef(0);
+      const runStart = useRef(0);
+      const pageStart = useRef(Date.now());
       const ctrl = useRef(null);                             // aborts the in-flight analysis
       const konami = useRef(0);
       const folioClicks = useRef({ n: 0, t: 0 });
@@ -1654,6 +1990,7 @@
 
       const startTimer = () => {
         const t0 = Date.now();
+        runStart.current = t0;
         clearInterval(timer.current);
         timer.current = setInterval(() => setElapsed(((Date.now() - t0) / 1000).toFixed(1)), 100);
       };
@@ -1752,6 +2089,32 @@
         if (isUrl(url)) { setUrlInput(url); latest.current.runFromUrl(url); }
       }, []);
 
+      /* Wake the server on page load. If /health is slow, it was asleep: show the curtain until it answers. */
+      useEffect(() => {
+        let done = false, retry = 0;
+        const slow = setTimeout(() => { if (!done) setServer('cold'); }, COLD_AFTER_MS);
+        const ping = async () => {
+          try {
+            const res = await fetch('/health', { cache: 'no-store' });
+            if (!res.ok) throw new Error(`health ${res.status}`);
+            if (done) return;
+            done = true; clearTimeout(slow);
+            setServer((s) => (s === 'cold' ? 'opening' : 'warm'));
+          } catch {
+            if (done) return;
+            if (Date.now() - pageStart.current < 120000) retry = setTimeout(ping, 3000);
+            else { done = true; clearTimeout(slow); setServer('warm'); }   // give up; requests will report their own errors
+          }
+        };
+        ping();
+        return () => { done = true; clearTimeout(slow); clearTimeout(retry); };
+      }, []);
+      useEffect(() => {                                       // let the curtain finish opening, then remove it
+        if (server !== 'opening') return;
+        const t = setTimeout(() => setServer('warm'), 1500);
+        return () => clearTimeout(t);
+      }, [server]);
+
       useEffect(() => {                                       // console easter egg, once
         console.log('%c\n  Sonnet XVIII (Adapted)\n\n  Shall I compare thee to a human hand?\n  Thou art more doubtful and more generate.\n  Rough algorithms do shake the darling buds of May,\n  And summer\'s lease hath all too short a render.\n\n  - AI or Not AI, v2.0.0\n',
           'font-style:italic;color:#a1a1aa;font-family:serif;font-size:13px;');
@@ -1811,30 +2174,35 @@
             {!result && !loading && (
               <div ref={toolRef}>
                 <div className="act-label">ACT II · The Boards</div>
-                <DropZone onFiles={runFiles} onUrl={runFromUrl} />
-                {error && (
-                  <div className="err" role="alert">
-                    <span><span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>A tragedy of errors:</span> {error}</span>
-                    <span className="err-actions">
-                      {usingDemo && errCode === 429 && <button className="btn-retry" onClick={() => { setError(null); setAccessOpen(true); }}>Add your key</button>}
-                      {!usingDemo && errCode === 401 && <button className="btn-retry" onClick={() => { saveKey(DEMO_KEY); setError(null); }}>Use demo access</button>}
-                      <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
-                    </span>
-                  </div>
-                )}
-                <div className="url-toggle">
-                  {!showUrl ? (
-                    <button onClick={() => setShowUrl(true)}>Or summon from URL</button>
-                  ) : (
-                    <div className="url-row">
-                      <input type="url" placeholder="https://..." value={urlInput} autoFocus aria-label="Image URL"
-                        onChange={(e) => setUrlInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && runFromUrl(urlInput)} />
-                      <button className="btn-go" onClick={() => runFromUrl(urlInput)}>Analyze</button>
-                      <button className="btn-go" aria-label="Close URL input" onClick={() => { setShowUrl(false); setUrlInput(''); }}>✕</button>
+                <div className="stage-area">
+                  <DropZone onFiles={runFiles} onUrl={runFromUrl} />
+                  {error && (
+                    <div className="err" role="alert">
+                      <span><span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>A tragedy of errors:</span> {error}</span>
+                      <span className="err-actions">
+                        {usingDemo && errCode === 429 && <button className="btn-retry" onClick={() => { setError(null); setAccessOpen(true); }}>Add your key</button>}
+                        {!usingDemo && errCode === 401 && <button className="btn-retry" onClick={() => { saveKey(DEMO_KEY); setError(null); }}>Use demo access</button>}
+                        <button className="btn-retry" onClick={() => setError(null)}>Dismiss</button>
+                      </span>
                     </div>
                   )}
+                  <div className="url-toggle">
+                    {!showUrl ? (
+                      <button onClick={() => setShowUrl(true)}>Or summon from URL</button>
+                    ) : (
+                      <div className="url-row">
+                        <input type="url" placeholder="https://..." value={urlInput} autoFocus aria-label="Image URL"
+                          onChange={(e) => setUrlInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && runFromUrl(urlInput)} />
+                        <button className="btn-go" onClick={() => runFromUrl(urlInput)}>Analyze</button>
+                        <button className="btn-go" aria-label="Close URL input" onClick={() => { setShowUrl(false); setUrlInput(''); }}>✕</button>
+                      </div>
+                    )}
+                  </div>
+                  <Samples onPick={runFromUrl} />
+                  {(server === 'cold' || server === 'opening') && (
+                    <Curtain since={pageStart.current} opening={server === 'opening'} live />
+                  )}
                 </div>
-                <Samples onPick={runFromUrl} />
               </div>
             )}
 
@@ -1842,11 +2210,14 @@
               <>
                 <div className="act-label">ACT III · The Deliberation</div>
                 <div className="loader-wrap" role="status" aria-live="polite">
-                  <div className="loading-hourglass" aria-hidden="true">⌛</div>
-                  <div className="status-text">{mode === 'explain' ? 'The plot thickens...' : 'Consulting the muse...'}</div>
-                  <div className="elapsed">{elapsed}s</div>
-                  {parseFloat(elapsed) >= WAKING_AFTER_S && (
-                    <div className="waking">The theatre is waking from its slumber. Free hosting can take up to a minute the first time; later verdicts come quickly.</div>
+                  {server === 'cold' || parseFloat(elapsed) >= WAKING_AFTER_S ? (
+                    <div className="curtain-box"><Curtain since={runStart.current} /></div>
+                  ) : (
+                    <>
+                      <span className="sr-only">{mode === 'explain' ? 'Analyzing the image and drawing the heatmap…' : 'Analyzing the image…'}</span>
+                      <Scribe first={mode === 'explain' ? 'The plot thickens…' : 'Consulting the muse…'} />
+                      <div className="elapsed" aria-hidden="true">{elapsed}s</div>
+                    </>
                   )}
                 </div>
               </>
