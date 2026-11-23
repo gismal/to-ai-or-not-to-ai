@@ -3,6 +3,7 @@ future ideas to be added
 """
 
 import io
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import numpy as np
@@ -11,8 +12,9 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from PIL import Image
 
-from src.core.enums import PredictionLabel
+from src.core.enums import InferenceStatus, PredictionLabel
 from src.inference import _preprocess
+from src.services.cache_service import CacheService
 from src.services.inference_service import InferenceService
 from src.utils import generate_phash
 
@@ -150,3 +152,65 @@ def test_decide_class_covers_all_values(confidence):
     )
     label = service._decide_class(confidence)
     assert label in list(PredictionLabel)
+
+
+class FakeRedis:
+    """Stores strings the way real Redis does, so the JSON round trip really runs."""
+
+    def __init__(self):
+        self.store = {}
+
+    async def get(self, key):
+        return self.store.get(key)
+
+    async def setex(self, key, ttl, value):
+        assert isinstance(value, str), (
+            "Redis stores strings; the cache must serialize first"
+        )
+        self.store[key] = value
+
+
+@pytest.fixture
+def image_bytes():
+    buf = io.BytesIO()
+    Image.linear_gradient("L").convert("RGB").save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def make_service(cache, confidence=0.92):
+    predictor = MagicMock()
+    predictor.predict.return_value = SimpleNamespace(
+        status=InferenceStatus.SUCCESS, confidence=confidence, error=None
+    )
+    service = InferenceService(
+        predictor=predictor, cache=cache, threshold=0.75, gray_area_margin=0.35
+    )
+    return service, predictor
+
+
+async def test_second_identical_image_is_served_from_the_cache(image_bytes):
+    service, predictor = make_service(CacheService(FakeRedis(), model_version="v-test"))
+
+    first = await service.predict(image_bytes, "first.png")
+    second = await service.predict(image_bytes, "second.png")
+
+    assert first.cached is False
+    assert second.cached is True
+    assert second.prediction == first.prediction
+    assert second.confidence == first.confidence
+    assert (
+        second.filename == "second.png"
+    )  # the current upload's name, not the cached one
+    predictor.predict.assert_called_once()  # the model ran only for the first upload
+
+
+async def test_a_new_model_does_not_reuse_the_old_models_answers(image_bytes):
+    redis = FakeRedis()
+    old, _ = make_service(CacheService(redis, model_version="v1"))
+    new, new_predictor = make_service(CacheService(redis, model_version="v2"))
+
+    await old.predict(image_bytes, "a.png")
+    answer = await new.predict(image_bytes, "a.png")
+
+    assert answer.cached is False
+    new_predictor.predict.assert_called_once()
