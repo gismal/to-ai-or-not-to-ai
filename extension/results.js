@@ -1,173 +1,248 @@
+const { DEFAULT_API_URL, DEMO_KEY } = AON;
+
 const LABELS = {
-    REAL: 'Human Made',
-    AI_GENERATED: 'AI Generated',
-    UNCERTAIN_LEANING_AI: 'Uncertain, Leaning AI',
-    UNCERTAIN_LEANING_REAL: 'Uncertain, Leaning Real',
-    UNCERTAIN_NEUTRAL: 'Uncertain',
+  REAL: 'Human Made', AI_GENERATED: 'AI Generated',
+  UNCERTAIN_LEANING_AI: 'Uncertain - Leaning AI', UNCERTAIN_LEANING_REAL: 'Uncertain - Leaning Real',
+  UNCERTAIN_NEUTRAL: 'Uncertain',
 };
-
-const SHAKESPEARE_SUBS = {
-    REAL: "Born of mortal hands.",
-    AI_GENERATED: "A machine's cold forgery.",
-    UNCERTAIN_LEANING_AI: "Methinks the lady doth protest too much.",
-    UNCERTAIN_LEANING_REAL: "There are more things in heaven and earth.",
-    UNCERTAIN_NEUTRAL: "Neither here nor there.",
+const SUBS = {
+  REAL: 'Born of mortal hands.', AI_GENERATED: "A machine's cold forgery.",
+  UNCERTAIN_LEANING_AI: 'Methinks the lady doth protest too much.',
+  UNCERTAIN_LEANING_REAL: 'There are more things in heaven and earth.',
+  UNCERTAIN_NEUTRAL: 'Neither here nor there.',
 };
-
-const HERALDRY = {
-    REAL: 'Vert',
-    AI_GENERATED: 'Gules',
-    UNCERTAIN_LEANING_AI: 'Or',
-    UNCERTAIN_LEANING_REAL: 'Or',
-    UNCERTAIN_NEUTRAL: 'Or',
-};
-
+const HERALDRY = { REAL: 'Vert', AI_GENERATED: 'Gules', UNCERTAIN_LEANING_AI: 'Or', UNCERTAIN_LEANING_REAL: 'Or', UNCERTAIN_NEUTRAL: 'Or' };
 const EPILOGUES = {
-    AI_GENERATED: ["What's done cannot be undone.", "All that glitters is not gold."],
-    REAL: ["All's well that ends well.", "Truth will come to light."],
-    UNCERTAIN_LEANING_AI: ["The rest is silence.", "Something is rotten in the state of Denmark."],
-    UNCERTAIN_LEANING_REAL: ["There are more things in heaven and earth.", "Neither here nor there."],
-    UNCERTAIN_NEUTRAL: ["The rest is silence.", "What light through yonder window breaks?"],
+  AI_GENERATED: ["What's done cannot be undone.", 'All that glitters is not gold.'],
+  REAL: ["All's well that ends well.", 'Truth will come to light.'],
+  UNCERTAIN_LEANING_AI: ['The rest is silence.', 'Something is rotten in the state of Denmark.'],
+  UNCERTAIN_LEANING_REAL: ['There are more things in heaven and earth.', 'Neither here nor there.'],
+  UNCERTAIN_NEUTRAL: ['The rest is silence.', 'What light through yonder window breaks?'],
 };
 
-function vcls(p) {
-    if (!p) return '';
-    if (p === 'REAL') return 'real';
-    if (p === 'AI_GENERATED') return 'ai';
-    return 'uncertain';
+const $ = (id) => document.getElementById(id);
+const definite = (p) => p === 'REAL' || p === 'AI_GENERATED';
+const cls = (p) => (p === 'REAL' ? 'real' : p === 'AI_GENERATED' ? 'ai' : 'uncertain');
+const certainty = (p, c) => (p === 'REAL' ? 1 - c : c);   // API confidence is P(AI)
+const el = (tag, className, text) => {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+
+const id = new URLSearchParams(location.search).get('id');
+const KEY = `analysis:${id}`;
+let settled = false;
+let waiting = null;
+let current = null;           // the result being shown, for feedback
+let voted = false;
+
+$('btnClose').addEventListener('click', () => window.close());
+$('btnCloseErr').addEventListener('click', () => window.close());
+$('btnCancelAccess').addEventListener('click', () => window.close());
+$('btnAllowAll').addEventListener('click', () => allowAndRun(requestAllSites()));
+$('btnAllowOne').addEventListener('click', () => allowAndRun(requestSite(pending.imageUrl)));
+window.addEventListener('pagehide', () => chrome.storage.session.remove(KEY));
+
+/* ── Loading ── */
+function updateWaiting() {
+  if (!waiting || settled) return;
+  const secs = Math.floor((Date.now() - waiting.startedAt) / 1000);
+  const base = waiting.mode === 'explain' ? 'The plot thickens...' : 'Consulting the muse...';
+  $('loadingText').textContent = secs < 8
+    ? base
+    : `Waking the server. Free hosting sleeps, so this can take up to a minute. (${secs}s)`;
+}
+const ticker = setInterval(updateWaiting, 1000);
+
+/* ── State from the background worker ── */
+let pending = null;            // the record waiting for site access
+let timeoutTimer = null;
+
+function handle(rec) {
+  if (!rec || settled) return;
+  $('modeTag').textContent = rec.mode === 'explain' ? 'The Mousetrap' : 'Fast';
+  if (rec.status === 'needs-access') { showAccess(rec); return; }
+  if (rec.status === 'loading') {
+    waiting = rec;
+    showLoading();
+    updateWaiting();
+    // The clock only starts once the analysis does, not while you decide on access.
+    timeoutTimer ??= setTimeout(() => showError('The analysis timed out. The server may be unavailable.'), 100000);
+    return;
+  }
+  if (rec.status === 'error') showError(rec.error);
+  else if (rec.status === 'success') showResult(rec);
 }
 
-function getEpilogue(prediction) {
-    const lines = EPILOGUES[prediction] || ['The rest is silence.'];
-    return lines[Math.floor(Math.random() * lines.length)];
+if (!id) showError('This window was opened without an analysis.');
+else {
+  chrome.storage.session.get(KEY).then((d) => handle(d[KEY]));
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'session' && changes[KEY]) handle(changes[KEY].newValue);
+  });
 }
 
-function $(id) { return document.getElementById(id); }
+/* ── Site access ── */
+function showAccess(rec) {
+  pending = rec;
+  let host = 'another site';
+  try { host = new URL(rec.imageUrl).hostname; } catch { /* keep the generic name */ }
+  $('accessMsg').textContent = `This image is on ${host}.`;
+  $('btnAllowOne').textContent = `Only images from ${host}`;
+  $('view-loading').style.display = 'none';
+  $('view-access').style.display = 'flex';
+}
 
-// ── Poll chrome.storage.session until result arrives ──
-const POLL_MS = 400;
-const TIMEOUT_MS = 70_000;
-const startedAt = Date.now();
+function showLoading() {
+  $('view-access').style.display = 'none';
+  $('view-loading').style.display = 'flex';
+}
 
-const timer = setInterval(async () => {
-    if (Date.now() - startedAt > TIMEOUT_MS) {
-        clearInterval(timer);
-        showError('The analysis timed out. The API may be unavailable.');
-        return;
-    }
+// `request` is the permission prompt, already opened by the click that called this.
+async function allowAndRun(request) {
+  if (!(await request)) {
+    showError('Access was not allowed, so the image could not be read.');
+    return;
+  }
+  showLoading();
+  chrome.runtime.sendMessage({ type: 'aon-run', id });
+}
 
-    const data = await chrome.storage.session.get('pendingAnalysis');
-    const analysis = data.pendingAnalysis;
-    if (!analysis) return;
-
-    // Update loading text while waiting
-    if (analysis.status === 'loading') {
-        const secs = Math.floor((Date.now() - (analysis.startedAt || startedAt)) / 1000);
-        let msg = '';
-
-        if (secs < 3) {
-            msg = analysis.mode === 'explain' ? 'The plot thickens...' : 'Consulting the muse...';
-        } else if (secs < 12) {
-            msg = analysis.mode === 'explain' ? `The Mousetrap is set... (${secs}s)` : `Deliberating... (${secs}s)`;
-        } else {
-            // RENDER COLD START WARNING
-            msg = `Waking up the server from sleep (Render free tier). This may take up to 50 seconds... (${secs}s)`;
-        }
-
-        $('loadingText').textContent = msg;
-        $('modeTag').textContent = analysis.mode === 'explain' ? 'The Mousetrap' : 'Fast';
-        return;
-    }
-
-    clearInterval(timer);
-
-    if (analysis.status === 'error') { showError(analysis.error); return; }
-    if (analysis.status === 'success') { showResult(analysis); return; }
-
-}, POLL_MS);
-
-// ── Error view ──
 function showError(message) {
-    $('view-loading').style.display = 'none';
-    const v = $('view-error');
-    v.style.display = 'flex';
-    $('errMsg').textContent = `A tragedy of errors: ${message}`;
+  if (settled) return;
+  settled = true; clearInterval(ticker); clearTimeout(timeoutTimer);
+  $('view-loading').style.display = 'none';
+  $('view-access').style.display = 'none';
+  $('view-error').style.display = 'flex';
+  $('errMsg').textContent = `A tragedy of errors: ${message}`;
 }
 
-// ── Result view ──
+/* ── Result ── */
 function showResult({ imageUrl, filename, result, apiUrl, mode }) {
-    $('view-loading').style.display = 'none';
-    $('view-result').style.display = 'block';
+  settled = true; clearInterval(ticker); clearTimeout(timeoutTimer);
+  $('view-loading').style.display = 'none';
+  $('view-result').style.display = 'block';
 
-    const { prediction, confidence, processing_time_ms, heatmap_base64, cached } = result;
-    const cls = vcls(prediction);
+  const { prediction: pred, confidence, processing_time_ms: ms, heatmap_base64: heat, cached } = result;
+  current = { prediction: pred, confidence, filename: filename || 'image.jpg' };
 
-    // Topbar mode tag
-    $('modeTag').textContent = mode === 'explain' ? 'The Mousetrap' : 'Fast';
+  const verdict = $('verdict');
+  verdict.textContent = LABELS[pred] || pred;
+  verdict.className = `verdict ${cls(pred)}`;
+  $('heraldry').textContent = (HERALDRY[pred] || 'Or') +
+    (definite(pred) ? ` · ${(certainty(pred, confidence) * 100).toFixed(1)}%` : '');
+  $('verdictSub').textContent = SUBS[pred] || '';
 
-    // Verdict
-    const verdictEl = $('verdict');
-    verdictEl.textContent = LABELS[prediction] || prediction;
-    verdictEl.className = `broadside-verdict ${cls}`;
+  const meta = $('meta');
+  meta.textContent = '';
+  const parts = [filename || 'image.jpg', null, `${ms} ms`];
+  if (cached) parts.push(null, 'Previously, in the Globe...');
+  parts[1] = mode === 'explain' ? 'The Mousetrap' : 'Fast';
+  const nodes = [el('span', '', parts[0]), el('span', 'serif', parts[1]), el('span', '', parts[2])];
+  if (cached) nodes.push(el('span', 'serif', parts[4]));
+  nodes.forEach((n, i) => { if (i) meta.append(el('span', 'sep', '·')); meta.append(n); });
 
-    // Heraldry line
-    $('heraldry').textContent =
-        `${HERALDRY[prediction] || 'Or'} · ${(confidence * 100).toFixed(1)}%`;
+  $('confScore').textContent = `${(confidence * 100).toFixed(1)}% machine-made`;
+  setTimeout(() => { $('confMarker').style.left = `${confidence * 100}%`; }, 60);
 
-    // Shakespeare sub
-    $('verdictSub').textContent = SHAKESPEARE_SUBS[prediction] || '';
+  renderImages(imageUrl, heat);
 
-    // Meta row
-    const cachedFragment = cached
-        ? `<span class="sep">·</span><span class="serif-detail">Previously, in the Globe...</span>`
-        : '';
-    $('meta').innerHTML =
-        `<span>${filename || 'image.jpg'}</span>` +
-        `<span class="sep">·</span>` +
-        `<span>${processing_time_ms} ms</span>` +
-        cachedFragment;
+  const lines = EPILOGUES[pred] || ['The rest is silence.'];
+  $('epilogue').textContent = lines[Math.floor(Math.random() * lines.length)];
 
-    // Confidence bar
-    $('confScore').textContent = `${(confidence * 100).toFixed(1)}%`;
-    const fill = $('confFill');
-    fill.className = `conf-fill ${cls}`;
-    setTimeout(() => { fill.style.width = `${confidence * 100}%`; }, 60);
+  const link = $('btnPlayground');
+  const base = (apiUrl || DEFAULT_API_URL).replace(/\/$/, '');
+  link.href = /^https?:/.test(imageUrl || '') ? `${base}/?imageUrl=${encodeURIComponent(imageUrl)}` : base;
 
-    // Images
-    const area = $('imagesArea');
-    if (heatmap_base64 && imageUrl) {
-        area.innerHTML = `
-      <div class="images-wrap">
-        <div class="sec">The Mousetrap</div>
-        <div class="images-grid">
-          <div class="img-box">
-            <span class="img-box-label">Original</span>
-            <img src="${imageUrl}" alt="Original" crossorigin="anonymous" />
-          </div>
-          <div class="img-box">
-            <span class="img-box-label" style="color:var(--uncertain)">Illumination</span>
-            <img src="data:image/png;base64,${heatmap_base64}" alt="GradCAM heatmap" />
-          </div>
-        </div>
-      </div>
-    `;
-    } else if (imageUrl) {
-        area.innerHTML = `
-      <div class="images-wrap">
-        <div class="sec">Analyzed image</div>
-        <div class="img-single">
-          <img src="${imageUrl}" alt="Analyzed image" crossorigin="anonymous" />
-        </div>
-      </div>
-    `;
-    }
-
-    // Epilogue
-    $('epilogue').textContent = getEpilogue(prediction);
-
-    // Playground deep-link
-    const base = (apiUrl || 'https://to-ai-or-not-to-ai.onrender.com').replace(/\/$/, '');
-    $('btnPlayground').href = imageUrl
-        ? `${base}/?imageUrl=${encodeURIComponent(imageUrl)}`
-        : base;
+  renderFeedback();
 }
+
+// The extension may fetch cross-origin images, so load the original as a blob (no CORS or hotlink trouble).
+async function loadOriginal(img, url) {
+  try { img.src = URL.createObjectURL(await (await fetch(url)).blob()); }
+  catch { img.alt = 'Preview unavailable'; }
+}
+
+function renderImages(imageUrl, heatmap) {
+  const area = $('imagesArea');
+  area.textContent = '';
+  if (!imageUrl) return;
+
+  const wrap = el('div', 'images-wrap');
+  wrap.append(el('div', 'sec', heatmap ? 'The Mousetrap' : 'Analyzed image'));
+  const grid = el('div', heatmap ? 'images-grid' : '');
+
+  const original = el('div', heatmap ? 'img-box' : 'img-box single');
+  if (heatmap) original.append(el('span', 'img-label', 'Original'));
+  const img = el('img');
+  img.alt = 'Original image';
+  img.referrerPolicy = 'no-referrer';
+  original.append(img);
+  loadOriginal(img, imageUrl);
+  grid.append(original);
+
+  if (heatmap) {
+    const hm = el('div', 'img-box');
+    hm.append(el('span', 'img-label heat', 'Illumination'));
+    const hmImg = el('img');
+    hmImg.alt = 'GradCAM heatmap';
+    hmImg.src = `data:image/png;base64,${heatmap}`;
+    hm.append(hmImg);
+    grid.append(hm);
+  }
+  wrap.append(grid);
+  area.append(wrap);
+}
+
+/* ── Feedback ── */
+function deriveUserCorrection(prediction, vote) {
+  if (vote === 'agree') return definite(prediction) ? prediction : 'UNKNOWN';
+  if (prediction === 'AI_GENERATED') return 'REAL';
+  if (prediction === 'REAL') return 'AI_GENERATED';
+  if (prediction === 'UNCERTAIN_LEANING_AI') return 'REAL';
+  if (prediction === 'UNCERTAIN_LEANING_REAL') return 'AI_GENERATED';
+  return 'UNKNOWN';
+}
+
+function renderFeedback(state) {
+  const box = $('feedback');
+  box.textContent = '';
+  if (state) { box.append(el('div', 'feedback-noted', state === 'failed' ? 'Could not be recorded.' : 'Noted.')); return; }
+
+  const line = el('div', 'feedback-line');
+  const up = el('button', 'feedback-btn up', '↑');
+  const down = el('button', 'feedback-btn down', '↓');
+  up.setAttribute('aria-label', 'Correct verdict'); up.title = 'Correct (C)';
+  down.setAttribute('aria-label', 'Wrong verdict'); down.title = 'Wrong (W)';
+  up.addEventListener('click', () => submitFeedback('agree'));
+  down.addEventListener('click', () => submitFeedback('disagree'));
+  line.append(el('span', '', 'Was this right?'), up, down);
+  box.append(line);
+}
+
+async function submitFeedback(vote) {
+  if (!current || voted) return;
+  voted = true;
+  renderFeedback(vote);                                   // optimistic
+  try {
+    const { apiKey, apiUrl } = await chrome.storage.sync.get({ apiKey: DEMO_KEY, apiUrl: DEFAULT_API_URL });
+    const res = await fetch(`${apiUrl.replace(/\/$/, '')}/v1/feedback/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+      body: JSON.stringify({
+        filename: current.filename, model_prediction: current.prediction, confidence: current.confidence,
+        user_correction: deriveUserCorrection(current.prediction, vote), client_source: 'extension_v1',
+      }),
+    });
+    if (!res.ok) throw new Error('rejected');
+  } catch { renderFeedback('failed'); }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === 'c') submitFeedback('agree');
+  if (k === 'w') submitFeedback('disagree');
+});

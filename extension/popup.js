@@ -21,7 +21,7 @@ async function init() {
 
   $('modeFast').addEventListener('click', () => setMode('predict'));
   $('modeExplain').addEventListener('click', () => setMode('explain'));
-  $('passiveBadge').addEventListener('change', (e) => chrome.storage.sync.set({ passiveBadge: e.target.checked }));
+  $('passiveBadge').addEventListener('change', onPassiveChange);
   $('save').addEventListener('click', saveCustom);
   $('reset').addEventListener('click', resetToDemo);
 
@@ -41,9 +41,32 @@ function setMode(m) {
   chrome.storage.sync.set({ mode: m });   // saved immediately, no button needed
 }
 
+// Passive mode reads images on every page you visit, so it needs all-sites access.
+// The permission prompt must open straight from this click, before any other await.
+async function onPassiveChange(e) {
+  const on = e.target.checked;
+  if (on && !(await requestAllSites())) {
+    e.target.checked = false;
+    showStatus('Passive mode needs access to the pages you visit.', true);
+    return;
+  }
+  showStatus('');
+  await chrome.storage.sync.set({ passiveBadge: on });   // the background worker (un)registers the badge script
+}
+
 async function saveCustom() {
   const url = ($('apiUrl').value.trim() || DEFAULT_API_URL).replace(/\/$/, '');
-  if (!/^https?:\/\//.test(url)) { showStatus('Enter a full address starting with https://', true); return; }
+  let parsed;
+  try { parsed = new URL(url); } catch { parsed = null; }
+  if (!parsed || !/^https?:$/.test(parsed.protocol)) {
+    showStatus('Enter a full address starting with https://', true);
+    return;
+  }
+  // The extension may only talk to its own API until you allow another server.
+  if (parsed.origin !== new URL(DEFAULT_API_URL).origin && !(await requestSite(url))) {
+    showStatus('Access to that server was not allowed.', true);
+    return;
+  }
   const key = $('apiKey').value.trim() || DEMO_KEY;
   state.apiUrl = url;
   state.apiKey = key;
