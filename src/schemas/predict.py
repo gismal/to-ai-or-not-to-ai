@@ -20,6 +20,9 @@ class PredictionResponse(BaseModel):
     status: InferenceStatus
     processing_time_ms: float = Field(default=0.0, ge=0.0)
     cached: bool = False
+    model_version: str = Field(
+        default="unknown", description="The model that produced this answer"
+    )
 
     # Swagger Doc Example
     model_config = ConfigDict(
@@ -30,6 +33,7 @@ class PredictionResponse(BaseModel):
                 "prediction": "AI_GENERATED",
                 "status": "SUCCESS",
                 "processing_time_ms": 145.2,
+                "model_version": "v2.0.0",
             }
         }
     )

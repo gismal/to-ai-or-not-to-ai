@@ -18,10 +18,13 @@ class CacheService:
     """
 
     CACHE_TTL = 86_400  # 24 hours
-    KEY_PREFIX = "prediction"  # "prediction: {phash}"
+    KEY_PREFIX = "prediction"  # "prediction: {model_version}:{phash}""
 
-    def __init__(self, redis_client: aioredis.Redis) -> None:
+    def __init__(
+        self, redis_client: aioredis.Redis, model_version: str = "unknown"
+    ) -> None:
         self._redis = redis_client
+        self._prefix = f"{self.KEY_PREFIX}:{model_version}"
 
     # -- Private -----------------------
     def _make_key(self, image_bytes: bytes) -> str | None:
@@ -30,7 +33,7 @@ class CacheService:
         None means caching is skipped for this image
         """
         img_hash = generate_phash(image_bytes)
-        return f"{self.KEY_PREFIX}:{img_hash}" if img_hash else None
+        return f"{self._prefix}:{img_hash}" if img_hash else None
 
     # --- Public API -------------
     async def get(self, image_bytes: bytes) -> dict | None:
@@ -49,7 +52,7 @@ class CacheService:
             if not raw:
                 return None
 
-            result = json.load(raw)
+            result = json.loads(raw)
             result["prediction"] = PredictionLabel(
                 result["prediction"]
             )  # restoring string value from enum
