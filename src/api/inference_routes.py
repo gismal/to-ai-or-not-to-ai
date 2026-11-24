@@ -302,8 +302,6 @@ async def _read_and_validate(
             detail=f"File too large. Max {settings.MAX_UPLOAD_SIZE_MB} MB allowed.",
         )
 
-    content_bytes = await file.read()
-
     mime = magic.from_buffer(content_bytes[:2048], mime=True)
     if mime not in ("image/jpeg", "image/png"):
         raise InvalidImageFormatError(

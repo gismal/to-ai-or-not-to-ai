@@ -892,6 +892,13 @@
       margin-bottom: 22px
     }
 
+    .broadside-note {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: .04em;
+      margin: -12px 0 22px
+    }
+
     .broadside-rule {
       color: rgba(255, 255, 255, .12);
       font-size: 10px;
@@ -1871,6 +1878,7 @@
             {HERALDRY[pred]}{isDefinite(pred) && ` · ${(certainty(pred, confidence) * 100).toFixed(1)}% sure`}
           </div>
           <div className="broadside-sub">{SUBS[pred]}</div>
+          <div className="broadside-note">A probability, not proof. Weigh it alongside other evidence.</div>
           <div className="broadside-rule" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
           <div className="broadside-meta">
             <span>{formatFilename(result.filename)}</span><span className="sep">·</span>
