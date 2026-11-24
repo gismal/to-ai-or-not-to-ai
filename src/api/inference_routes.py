@@ -293,8 +293,10 @@ async def _read_and_validate(
     5. Filename sanitization
     """
     max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
-    content_length = request.headers.get("content-length")
-    if content_length and int(content_length) > max_bytes:
+    content_bytes = await file.read(
+        max_bytes + 1
+    )  # never read more than the limit allows
+    if len(content_bytes) > max_bytes:
         raise HTTPException(
             status_code=413,
             detail=f"File too large. Max {settings.MAX_UPLOAD_SIZE_MB} MB allowed.",
