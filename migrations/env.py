@@ -11,7 +11,6 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from src.config import settings
-from src.infra.api_keys import APIKey  # noqa: F401
 from src.infra.database import Base
 from src.infra.feedback_item import FeedbackItem  # noqa: F401
 from src.infra.labeled_sample import LabeledSample  # noqa: F401
