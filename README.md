@@ -413,11 +413,9 @@ to-ai-or-not-to-ai/
   |  |  |── test_feedback_votes.py
   |  |  |── test_api.py
   |  |  |── test_admin_review.py
-  |  |  |── __pycache__
   |  |  |── test_drift.py
   |  |  |── __init__.py
   |  |  |── test_database.py
-  |  |── __pycache__
   |  |  |── conftest.cpython-311-pytest-9.0.3.pyc
   |  |  |── test_model.cpython-314-pytest-9.0.3.pyc
   |  |  |── test_database.cpython-314-pytest-9.0.3.pyc
@@ -427,7 +425,6 @@ to-ai-or-not-to-ai/
   |  |── unit
   |  |  |── test_model_age.py
   |  |  |── test_auth_scopes.py
-  |  |  |── __pycache__
   |  |  |── test_rate_limit.py
   |  |  |── test_feedback_classification.py
   |  |  |── test_model.py
@@ -441,7 +438,6 @@ to-ai-or-not-to-ai/
   |── pytest.ini
   |── scripts
   |  |── calibrate.py
-  |  |── __pycache__
   |  |  |── train_config.cpython-314.pyc
   |  |── quantize.py
   |  |── smoke.sh
@@ -457,12 +453,10 @@ to-ai-or-not-to-ai/
   |  |  |── REAL
   |  |  |── FAKE
   |── migrations
-  |  |── __pycache__
   |  |  |── env.cpython-314.pyc
   |  |── script.py.mako
   |  |── README
   |  |── versions
-  |  |  |── __pycache__
   |  |  |── 5b7e2c91d0a4_drop_feedback_unique_constraint.py
   |  |  |── cf9613fa0af8_baseline_schema.py
   |  |── env.py
@@ -482,23 +476,18 @@ to-ai-or-not-to-ai/
   |  |  |── screenshots
   |  |  |── samples
   |  |── ENGINEERING-DECISIONS.md
-  |  |── decisions
-  |  |  |── TECHNICAL_DEEP_DIVE.md
   |── LICENSE
   |── src
   |  |── worker
-  |  |  |── __pycache__
   |  |  |── tasks.py
   |  |  |── __init__.py
   |  |── repositories
-  |  |  |── __pycache__
   |  |  |── __init__.py
   |  |  |── task_result_repo.py
   |  |  |── prediction_log_repository.py
   |  |  |── feedback_repo.py
   |  |── infra
   |  |  |── task_results.py
-  |  |  |── __pycache__
   |  |  |── metrics.py
   |  |  |── api_keys.py
   |  |  |── feedback_item.py
@@ -509,7 +498,6 @@ to-ai-or-not-to-ai/
   |  |  |── prediction_log.py
   |  |  |── labeled_sample.py
   |  |── inference.py
-  |  |── __pycache__
   |  |  |── inference.cpython-311.pyc
   |  |  |── main.cpython-311.pyc
   |  |  |── inference.cpython-314.pyc
@@ -524,7 +512,6 @@ to-ai-or-not-to-ai/
   |  |── config.py
   |  |── api
   |  |  |── inference_routes.py
-  |  |  |── __pycache__
   |  |  |── feedback_routes.py
   |  |  |── rate_limits.py
   |  |  |── __init__.py
@@ -534,7 +521,6 @@ to-ai-or-not-to-ai/
   |  |── services
   |  |  |── feedback_service.py
   |  |  |── cache_service.py
-  |  |  |── __pycache__
   |  |  |── inference_service.py
   |  |  |── __init__.py
   |  |  |── explainability_service.py
@@ -543,7 +529,6 @@ to-ai-or-not-to-ai/
   |  |── __init__.py
   |  |── schemas
   |  |  |── batch.py
-  |  |  |── __pycache__
   |  |  |── feedback.py
   |  |  |── __init__.py
   |  |  |── predict.py
@@ -553,7 +538,6 @@ to-ai-or-not-to-ai/
   |  |── main.py
   |  |── core
   |  |  |── exceptions.py
-  |  |  |── __pycache__
   |  |  |── __init__.py
   |  |  |── enums.py
   |── Dockerfile
