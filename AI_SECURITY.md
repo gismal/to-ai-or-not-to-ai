@@ -184,7 +184,7 @@ This is the one I care about most, and it isn't technical at all. Someone runs a
 | A3 | R8 | Replace the CORS wildcard with the real site only | **Done** |
 | A4 | R6 | Log shortened or hashed filenames; delete logs and votes older than 90 days | To do |
 | A5 | R3 | Make the drift job notify me instead of attempting training; document how retraining really works | To do |
-| A6 | R7, R9 | Turn on GitHub secret scanning and Dependabot | To do |
+| A6 | R7, R9 | Turn on GitHub secret scanning, push protection and Dependabot | **Done** |
 | A7 | R11 | Show "a probability, not proof" with every verdict | To do |
 | A8 | R10 | Retrain with newer generators each release, keeping one held out | Ongoing |
 
