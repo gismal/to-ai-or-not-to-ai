@@ -36,13 +36,13 @@ from src.worker.tasks import WorkerSettings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-        Startup:
-      1. DB Migrations
-      2. ARQ pool: job queue (Redis db 0)
-      2. Cache client: pHash cache (Redis db 1)
-      3. ONNX predictor
-      4. InferenceService (receives cache, not arq_pool)
-      5. ExplainabilityService
+    Startup:
+      1. Model info: read the serving model's version from models/metadata.json
+      2. ARQ pool: job queue (Redis)
+      3. Cache client: pHash cache, keyed by model version (same Redis)
+      4. ONNX predictor
+      5. InferenceService (receives cache, not arq_pool)
+      6. ExplainabilityService
     Shutdown:
       - Close both Redis clients
     """
