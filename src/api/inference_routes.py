@@ -269,11 +269,17 @@ async def explain_image(
     explainer: ExplainabilityService = Depends(get_explainability_service),
 ):
     content_bytes, safe_filename = await _read_and_validate(request, file)
+    verdict = await service.predict(content_bytes, safe_filename)
     result = await explainer.explain(
         image_bytes=content_bytes,
         filename=safe_filename,
         decide_class_fn=service._decide_class,
     )
+    result = {
+        **result,
+        "prediction": verdict.prediction,
+        "confidence": verdict.confidence,
+    }
     return _with_model_version(result, request)
 
 

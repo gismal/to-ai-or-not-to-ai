@@ -99,6 +99,7 @@ async def lifespan(app: FastAPI):
             threshold=settings.MODEL_THRESHOLD,
             gray_area_margin=settings.GRAY_AREA_MARGIN,
             familiarity=familiarity,
+            enforce_familiarity=settings.FAMILIARITY_ENFORCE,
         )
 
         # -- GradCAM explainability --------------------------

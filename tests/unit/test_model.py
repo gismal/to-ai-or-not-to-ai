@@ -11,6 +11,7 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from PIL import Image
+from prometheus_client import REGISTRY
 
 from src.core.enums import InferenceStatus, PredictionLabel
 from src.familiarity import FamiliarityCheck
@@ -206,7 +207,7 @@ async def test_a_new_model_does_not_reuse_the_old_models_answers(image_bytes):
     new_predictor.predict.assert_called_once()
 
 
-def make_service(cache, confidence=0.92, features=None, familiarity=None):
+def make_service(cache, confidence=0.92, features=None, familiarity=None, enforce=True):
     predictor = MagicMock()
     predictor.predict.return_value = SimpleNamespace(
         status=InferenceStatus.SUCCESS,
@@ -220,6 +221,7 @@ def make_service(cache, confidence=0.92, features=None, familiarity=None):
         threshold=0.75,
         gray_area_margin=0.35,
         familiarity=familiarity,
+        enforce_familiarity=enforce,
     )
     return service, predictor
 
@@ -256,3 +258,23 @@ async def test_without_a_check_nothing_changes(image_bytes):
     answer = await service.predict(image_bytes, "a.png")
     assert answer.prediction == PredictionLabel.AI_GENERATED
     assert answer.familiar is None
+
+
+async def test_shadow_mode_measures_but_does_not_change_the_verdict(image_bytes):
+    def unfamiliar_count():
+        return (
+            REGISTRY.get_sample_value(
+                "ai_detector_familiarity_total", {"result": "unfamiliar"}
+            )
+            or 0
+        )
+
+    before = unfamiliar_count()
+    service, _ = make_service(
+        None, features=np.full(4, 100.0), familiarity=check_around_zero(), enforce=False
+    )
+    response = await service.predict(image_bytes, "x.jpg")
+
+    assert response.prediction == PredictionLabel.AI_GENERATED
+    assert response.familiar is None
+    assert unfamiliar_count() == before + 1
