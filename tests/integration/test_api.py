@@ -23,6 +23,7 @@ from src.config import settings
 from src.core.exceptions import ModelInferenceError
 from src.infra.limiter import limiter
 from src.main import app
+from src.schemas.predict import PredictionResponse
 
 VALID_API_KEY = settings.API_KEY.get_secret_value()
 
@@ -33,13 +34,13 @@ def client():
     Mocks the heavy loading state for the model and database services
     """
     mock_inference = AsyncMock()
-    mock_inference.predict.return_value = {
-        "filename": "test.png",
-        "prediction": "REAL",
-        "confidence": 0.99,
-        "status": "SUCCESS",
-        "processing_time_ms": 15.5,
-    }
+    mock_inference.predict.return_value = PredictionResponse(
+        filename="test.png",
+        prediction="REAL",
+        confidence=0.99,
+        status="SUCCESS",
+        processing_time_ms=15.5,
+    )
 
     fake_cache = {}
 
@@ -51,24 +52,24 @@ def client():
 
         img_hash = str(hash(image_bytes))
         if img_hash in fake_cache:
-            return {
-                "filename": "test.png",
-                "prediction": "REAL",
-                "confidence": 0.99,
-                "status": "SUCCESS",
-                "processing_time_ms": 0.0,
-                "cached": True,
-            }
+            return PredictionResponse(
+                filename="test.png",
+                prediction="REAL",
+                confidence=0.99,
+                status="SUCCESS",
+                processing_time_ms=0.0,
+                cached=True,
+            )
 
         fake_cache[img_hash] = True
-        return {
-            "filename": "test.png",
-            "prediction": "REAL",
-            "confidence": 0.99,
-            "status": "SUCCESS",
-            "processing_time_ms": 15.5,
-            "cached": False,
-        }
+        return PredictionResponse(
+            filename="test.png",
+            prediction="REAL",
+            confidence=0.99,
+            status="SUCCESS",
+            processing_time_ms=15.5,
+            cached=False,
+        )
 
     mock_inference.predict = fake_predict
 
