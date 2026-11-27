@@ -22,6 +22,7 @@ from src.core.exceptions import (
     InvalidImageFormatError,
     ModelInferenceError,
 )
+from src.familiarity import FamiliarityCheck
 from src.inference import ONNXPredictor
 from src.infra.limiter import limiter
 from src.infra.model_info import read_model_info
@@ -88,6 +89,7 @@ async def lifespan(app: FastAPI):
             cache=app.state.cache_service,  # type: ignore
             threshold=settings.MODEL_THRESHOLD,
             gray_area_margin=settings.GRAY_AREA_MARGIN,
+            familiarity=FamiliarityCheck.load(),
         )
 
         # -- GradCAM explainability --------------------------
