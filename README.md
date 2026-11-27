@@ -413,11 +413,9 @@ to-ai-or-not-to-ai/
   |  |  |── test_feedback_votes.py
   |  |  |── test_api.py
   |  |  |── test_admin_review.py
-  |  |  |── __pycache__
   |  |  |── test_drift.py
   |  |  |── __init__.py
   |  |  |── test_database.py
-  |  |── __pycache__
   |  |  |── conftest.cpython-311-pytest-9.0.3.pyc
   |  |  |── test_model.cpython-314-pytest-9.0.3.pyc
   |  |  |── test_database.cpython-314-pytest-9.0.3.pyc
@@ -427,7 +425,6 @@ to-ai-or-not-to-ai/
   |  |── unit
   |  |  |── test_model_age.py
   |  |  |── test_auth_scopes.py
-  |  |  |── __pycache__
   |  |  |── test_rate_limit.py
   |  |  |── test_feedback_classification.py
   |  |  |── test_model.py
@@ -441,7 +438,6 @@ to-ai-or-not-to-ai/
   |── pytest.ini
   |── scripts
   |  |── calibrate.py
-  |  |── __pycache__
   |  |  |── train_config.cpython-314.pyc
   |  |── quantize.py
   |  |── smoke.sh
@@ -457,12 +453,10 @@ to-ai-or-not-to-ai/
   |  |  |── REAL
   |  |  |── FAKE
   |── migrations
-  |  |── __pycache__
   |  |  |── env.cpython-314.pyc
   |  |── script.py.mako
   |  |── README
   |  |── versions
-  |  |  |── __pycache__
   |  |  |── 5b7e2c91d0a4_drop_feedback_unique_constraint.py
   |  |  |── cf9613fa0af8_baseline_schema.py
   |  |── env.py
@@ -482,23 +476,18 @@ to-ai-or-not-to-ai/
   |  |  |── screenshots
   |  |  |── samples
   |  |── ENGINEERING-DECISIONS.md
-  |  |── decisions
-  |  |  |── TECHNICAL_DEEP_DIVE.md
   |── LICENSE
   |── src
   |  |── worker
-  |  |  |── __pycache__
   |  |  |── tasks.py
   |  |  |── __init__.py
   |  |── repositories
-  |  |  |── __pycache__
   |  |  |── __init__.py
   |  |  |── task_result_repo.py
   |  |  |── prediction_log_repository.py
   |  |  |── feedback_repo.py
   |  |── infra
   |  |  |── task_results.py
-  |  |  |── __pycache__
   |  |  |── metrics.py
   |  |  |── api_keys.py
   |  |  |── feedback_item.py
@@ -509,7 +498,6 @@ to-ai-or-not-to-ai/
   |  |  |── prediction_log.py
   |  |  |── labeled_sample.py
   |  |── inference.py
-  |  |── __pycache__
   |  |  |── inference.cpython-311.pyc
   |  |  |── main.cpython-311.pyc
   |  |  |── inference.cpython-314.pyc
@@ -524,7 +512,6 @@ to-ai-or-not-to-ai/
   |  |── config.py
   |  |── api
   |  |  |── inference_routes.py
-  |  |  |── __pycache__
   |  |  |── feedback_routes.py
   |  |  |── rate_limits.py
   |  |  |── __init__.py
@@ -534,7 +521,6 @@ to-ai-or-not-to-ai/
   |  |── services
   |  |  |── feedback_service.py
   |  |  |── cache_service.py
-  |  |  |── __pycache__
   |  |  |── inference_service.py
   |  |  |── __init__.py
   |  |  |── explainability_service.py
@@ -543,7 +529,6 @@ to-ai-or-not-to-ai/
   |  |── __init__.py
   |  |── schemas
   |  |  |── batch.py
-  |  |  |── __pycache__
   |  |  |── feedback.py
   |  |  |── __init__.py
   |  |  |── predict.py
@@ -553,7 +538,6 @@ to-ai-or-not-to-ai/
   |  |── main.py
   |  |── core
   |  |  |── exceptions.py
-  |  |  |── __pycache__
   |  |  |── __init__.py
   |  |  |── enums.py
   |── Dockerfile
@@ -597,12 +581,30 @@ I took my sweet time to build all of that from scratch, make every mistake, and 
 
 ---
 
-## Future work
-- **v3: full-resolution crops instead of resizing.** Shrinking to 224 px discards the
-  fine detail where generator traces live. Train on native-resolution crops and score
-  several crops per image at inference (changes training, the API and GradCAM together).
-- **Generalization to new generators:** a frozen foundation model (e.g. CLIP) with a
-  small classifier generalizes better, but needs more memory than the free tier offers.
+## Future work (v3)
+
+Things I'd build next, roughly in order of how much they'd help.
+
+**Look at images the way detectors in the field do.** Right now every image is shrunk to 224×224 before the model sees it, which throws away much of the fine pixel detail that generators leave behind. The ideas I'd try:
+- **Native-resolution patches:** judge several full-resolution crops instead of one shrunken image.
+- **Frequency-domain features:** many generators leave regular patterns that show up clearly in an image's frequency spectrum (FFT/DCT).
+- **Noise residuals:** filter out the image content and look only at the sensor-or-generator "noise" that remains.
+- **Face alignment:** for face images, crop and align the face first so the model compares like with like.
+
+**Check provenance before pixels.** More and more cameras and AI tools sign their images with Content Credentials (C2PA). When a signature is present, it's a stronger answer than any model's guess, so the API should read it first.
+
+**Keep up with new generators.** Detectors go stale as new image models appear. Each retraining should add images from the newest generators, and the held-out test should always include at least one generator the model has never seen.
+
+**Close the feedback loop properly.**
+- A dashboard of votes and disagreement rate per model version.
+- A fixed "canary" image set evaluated after every deploy.
+- Retraining that's triggered by drift but approved by a human before it ships.
+
+**Per-client API keys.** Hashed keys stored in the database, each with its own rate limit and usage history, so keys can be rotated one client at a time.
+
+**No more cold starts.** A paid instance (or a scheduled keep-warm ping) would remove the up-to-a-minute wait after the free server sleeps.
+
+**Test the background worker.** The retraining worker has the least test coverage in the project, and it's the part that changes the model.
 
 ---
 
