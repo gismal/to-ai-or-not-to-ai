@@ -4,7 +4,7 @@ The inference pipeline
 
 import concurrent.futures
 import io
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
@@ -32,6 +32,7 @@ class InferenceResult:
         - detected (bool): True if the confidence score meets or exceeds the threshold
         - status (InferenceStatus): Inference status 'SUCCESS' or 'FAIL'
         - error (str | None): Exception message if an error occurred, otherwise None
+        - features (np.ndarray | None): The model's 576 internal numbers
     """
 
     image: str
@@ -39,6 +40,7 @@ class InferenceResult:
     detected: bool = False
     status: InferenceStatus = InferenceStatus.SUCCESS
     error: str | None = None
+    features: np.ndarray | None = field(default=None, repr=False)
 
 
 def _preprocess(image_source):
@@ -82,6 +84,7 @@ class ONNXPredictor(BaseMLEngine):
         self.threshold = settings.MODEL_THRESHOLD
         self._session: ort.InferenceSession | None = None
         self._input_name: str | None = None
+        self._has_features = False
         super().__init__(model_path)
 
     def _load(self) -> None:
@@ -109,6 +112,9 @@ class ONNXPredictor(BaseMLEngine):
             str(self.model_path), sess_options=session_options, providers=providers
         )
         self._input_name = self._session.get_inputs()[0].name
+
+        self._has_features = len(self._session.get_outputs()) > 1
+        logger.info(f"Model features available: {self._has_features}")
 
         # warming up the session, no latency in the first user request
         logger.info("Warming up ONNX session")
@@ -168,11 +174,14 @@ class ONNXPredictor(BaseMLEngine):
             probs = exp / exp.sum()
             confidence_score = float(probs[0])
 
+            features = np.asarray(outputs[1])[0] if self._has_features else None
             return InferenceResult(
                 image=filename,
                 confidence=round(confidence_score, 4),
                 detected=confidence_score >= self.threshold,
+                features=features,
             )
+
         except Exception as e:
             return InferenceResult(
                 image=filename, status=InferenceStatus.FAILED, error=str(e)
