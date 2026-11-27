@@ -273,3 +273,17 @@ Training runs on Kaggle's free GPUs, and this is where I lost the most hours.
 **Data problems hide in numbers you never print.** The PNG shortcut, the duplicate frames and the broken file were all found only after I added a check that printed something.
 
 **If it doesn't show progress, you can't tell slow from stuck.** I'd have saved whole evenings with a progress bar.
+
+
+
+bahset: An analogy: a person 2 metres tall is unusual; one who's 1.75 m tall and weighs 40 kg is more unusual, even though both numbers are individually normal. Mahalanobis catches unusual combinations, not just unusual values.
+
+Why this one, and not the alternatives?
+
+Option	Why not (here)
+The model's own confidence ("unsure if the score is near 0.5")	That's exactly what fails: on unfamiliar images it was confident 88% of the time. We need a signal that doesn't come from the score.
+Plain (Euclidean) distance	Ignores that the features have different scales and move together, as above.
+Nearest neighbours (distance to the closest training images)	Often works well, but the API would have to store thousands of training feature vectors and compare against all of them on every upload. That's heavier on a small free server.
+Training a separate "unfamiliar detector"	Needs examples of "unfamiliar" to learn from, which would mean using the held-out sets, and then we couldn't test on them honestly.
+
+Mahalanobis needs no retraining, fits in one small file (the class centres plus one 576×576 matrix, about 1.3 MB), costs one matrix multiplication per upload, and is a well-known method for exactly this job: catching inputs unlike the training data.
