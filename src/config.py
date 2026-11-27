@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     MODEL_THRESHOLD: float = 0.75
     GRAY_AREA_MARGIN: float = 0.35
     DRIFT_THRESHOLD: float = 0.15
+    FAMILIARITY_ENFORCE: bool = False
 
     # upload limits
     MAX_UPLOAD_SIZE_MB: int = 10

@@ -26,6 +26,14 @@ CACHE_COUNTER = Counter(
     # Labels: hit | miss
 )
 
+# -- Familiarity checks ----------------------
+FAMILIARITY_COUNTER = Counter(
+    name="ai_detector_familiarity_total",
+    documentation="How often the familiarity check called an image familiar or unfamiliar.",
+    labelnames=["result"],
+    # Labels: familiar | unfamiliar
+)
+
 # -- Inference latency ----------------------
 INFERENCE_HISTOGRAM = Histogram(
     name="ai_detector_inference_duration_seconds",

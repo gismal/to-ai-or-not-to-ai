@@ -6,7 +6,7 @@ from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
 from src.familiarity import FamiliarityCheck
 from src.inference import ONNXPredictor
-from src.infra.metrics import CACHE_COUNTER, INFERENCE_HISTOGRAM
+from src.infra.metrics import CACHE_COUNTER, FAMILIARITY_COUNTER, INFERENCE_HISTOGRAM
 from src.schemas.predict import PredictionResponse
 from src.services.cache_service import CacheService
 
@@ -23,6 +23,7 @@ class InferenceService:
         threshold: float,
         gray_area_margin: float = 0.35,
         familiarity: FamiliarityCheck | None = None,
+        enforce_familiarity: bool = False,
     ) -> None:
         """
         Initializes the inference service with its dependencies
@@ -32,8 +33,10 @@ class InferenceService:
             - threshold (float): The base confidence score to flag an image as AI
             - cache (CacheService): cache service to get the images from the redis cache
             - gray_area_margin (float): The margin below the threshold to classify as UNCERTAIN
-            - familiarity (FamiliarityCheck): The familiarity parameter to see how different the image
-            from everything it trained on
+            - familiarity (FamiliarityCheck | None): Measures how far an image is from
+            the training data. None means the check is off.
+            - enforce_familiarity (bool): If True, unfamiliar images lose their definite
+            verdict. If False (shadow mode), they're only counted in the metrics.
         """
         self.predictor = predictor
         self.threshold = threshold
@@ -41,6 +44,7 @@ class InferenceService:
         self.lower_bound = threshold - gray_area_margin
         self.one_third = gray_area_margin / 3
         self.familiarity = familiarity
+        self.enforce_familiarity = enforce_familiarity
 
     def _decide_class(self, confidence: float) -> PredictionLabel:
         """
@@ -132,13 +136,17 @@ class InferenceService:
         familiar = None
         features = getattr(result, "features", None)
         if self.familiarity is not None and features is not None:
-            familiar = not self.familiarity.is_unfamiliar(features)
-            if not familiar:
-                prediction = {
-                    PredictionLabel.AI_GENERATED: PredictionLabel.UNCERTAIN_LEANING_AI,
-                    PredictionLabel.REAL: PredictionLabel.UNCERTAIN_LEANING_REAL,
-                }.get(prediction, prediction)
-
+            looks_familiar = not self.familiarity.is_unfamiliar(features)
+            FAMILIARITY_COUNTER.labels(
+                result="familiar" if looks_familiar else "unfamiliar"
+            ).inc()
+            if self.enforce_familiarity:
+                familiar = looks_familiar
+                if not looks_familiar:
+                    if prediction == PredictionLabel.AI_GENERATED:
+                        prediction = PredictionLabel.UNCERTAIN_LEANING_AI
+                    elif prediction == PredictionLabel.REAL:
+                        prediction = PredictionLabel.UNCERTAIN_LEANING_REAL
         # -- 4. Build response --------------------
         response = {
             "filename": filename,
