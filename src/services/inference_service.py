@@ -99,10 +99,14 @@ class InferenceService:
 
         if cached:
             CACHE_COUNTER.labels(result="hit").inc()
+            elapsed_ms = round((time.time() - start) * 1000, 2)
             return PredictionResponse(
-                **cached,
-                processing_time_ms=round((time.time() - start) * 1000, 2),
-                cached=True,
+                **{
+                    **cached,
+                    "filename": filename,
+                    "processing_time_ms": elapsed_ms,
+                    "cached": True,
+                }
             )
 
         CACHE_COUNTER.labels(result="miss").inc()
@@ -139,6 +143,7 @@ class InferenceService:
         }
 
         # -- 5. Cache the result ------------------------
-        await self.cache.set(content_bytes, response)
+        if self.cache is not None:
+            await self.cache.set(content_bytes, response)
 
         return PredictionResponse(**response)  # type: ignore

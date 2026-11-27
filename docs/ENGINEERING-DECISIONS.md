@@ -1,6 +1,6 @@
 # Engineering notes
 
-How AI or Not AI is built, why it's built that way, and what went wrong along the way.
+How To AI or Not to AI is built, why it's built that way, and what went wrong along the way.
 
 The first half is the decisions: what I chose, why, and what I gave up for it. Every choice here had a cost, and I'd rather name it than pretend it didn't. The second half is the problems: the bugs and dead ends, and what each one taught me.
 

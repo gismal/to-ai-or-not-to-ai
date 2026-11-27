@@ -266,7 +266,7 @@ def test_explain_endpoint(client, auth_headers):
 
 
 @pytest.mark.asyncio
-async def test_cache_hit_on_second_request(client, auth_headers):
+async def test_route_reports_the_services_cached_flag(client, auth_headers):
     img_byte_arr = io.BytesIO()
     Image.new("RGB", (224, 224), color="green").save(img_byte_arr, format="PNG")
     img_data = img_byte_arr.getvalue()

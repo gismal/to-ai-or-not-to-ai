@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI or Not AI, That's the Question</title>
+  <title>To AI or Not to AI, That's the Question</title>
   <meta name="description" content="An AI image detector that admits when it isn't sure." />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="AI or Not AI, That's the Question" />
+  <meta property="og:title" content="To AI or Not to AI, That's the Question" />
   <meta property="og:description" content="Five verdicts, a GradCAM heatmap, and an honest uncertainty zone." />
   <meta property="og:url" content="https://to-ai-or-not-to-ai.onrender.com/" />
   <meta property="og:image" content="https://to-ai-or-not-to-ai.onrender.com/static/og.png" />
-  <meta property="og:image:alt" content="AI or Not AI: an image detector with an honest uncertainty zone" />
+  <meta property="og:image:alt" content="To AI or Not to AI: an image detector with an honest uncertainty zone" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://to-ai-or-not-to-ai.onrender.com/static/og.png" />
   <link rel="icon" href="/static/favicon.png?v=2" />
@@ -890,6 +890,13 @@
       font: italic 17px var(--font-serif);
       color: var(--muted);
       margin-bottom: 22px
+    }
+
+    .broadside-note {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: .04em;
+      margin: -12px 0 22px
     }
 
     .broadside-rule {
@@ -1871,6 +1878,7 @@
             {HERALDRY[pred]}{isDefinite(pred) && ` · ${(certainty(pred, confidence) * 100).toFixed(1)}% sure`}
           </div>
           <div className="broadside-sub">{SUBS[pred]}</div>
+          <div className="broadside-note">A probability, not proof. Weigh it alongside other evidence.</div>
           <div className="broadside-rule" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
           <div className="broadside-meta">
             <span>{formatFilename(result.filename)}</span><span className="sep">·</span>
@@ -1934,7 +1942,7 @@
               ))}
             </div>
           )}
-          <div className="anno-domini">AI or Not AI · Anno Domini MMXXVI · v II.0.0</div>
+          <div className="anno-domini">To AI or Not to AI · Anno Domini MMXXVI · v II.0.0</div>
           <div className="colophon">
             <a href="/privacy">Privacy</a>
             <span className="sep" aria-hidden="true">·</span>
@@ -2116,12 +2124,12 @@
       }, [server]);
 
       useEffect(() => {                                       // console easter egg, once
-        console.log('%c\n  Sonnet XVIII (Adapted)\n\n  Shall I compare thee to a human hand?\n  Thou art more doubtful and more generate.\n  Rough algorithms do shake the darling buds of May,\n  And summer\'s lease hath all too short a render.\n\n  - AI or Not AI, v2.0.0\n',
+        console.log('%c\n  Sonnet XVIII (Adapted)\n\n  Shall I compare thee to a human hand?\n  Thou art more doubtful and more generate.\n  Rough algorithms do shake the darling buds of May,\n  And summer\'s lease hath all too short a render.\n\n  - To AI or Not to AI, v2.0.0\n',
           'font-style:italic;color:#a1a1aa;font-family:serif;font-size:13px;');
       }, []);
       useEffect(() => { document.body.classList.toggle('first-folio', folio); local.set('aon_folio', folio ? '1' : '0'); }, [folio]);
       useEffect(() => {
-        document.title = result ? `${LABELS[result.prediction] || result.prediction} - AI or Not AI` : "AI or Not AI, That's the Question";
+        document.title = result ? `${LABELS[result.prediction] || result.prediction} - To AI or Not to AI` : "To AI or Not to AI, That's the Question";
       }, [result]);
       useEffect(() => { if (error) scrollToTool('center'); }, [error]);
       useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
@@ -2130,7 +2138,7 @@
       return (
         <>
           <nav className="topbar">
-            <button className="wordmark" onClick={home}>AI or Not AI</button>
+            <button className="wordmark" onClick={home}>To AI or Not to AI</button>
             <div className="seg" role="group" aria-label="Analysis mode">
               <button className={`seg-btn ${mode === 'predict' ? 'on' : ''}`} aria-pressed={mode === 'predict'}
                 title="Instant result, classification only (F)" onClick={() => chooseMode('predict')}>Fast</button>
@@ -2161,7 +2169,7 @@
                   title="The Chandos Portrait, c.1610. Attributed to John Taylor. Authenticity: disputed."
                   onError={(e) => { e.target.style.display = 'none'; }} />
                 <div className="ornament" aria-hidden="true">❧  ❦  ❧</div>
-                <h1 className="playbill-quote">"AI or Not AI, That's the Question."</h1>
+                <h1 className="playbill-quote">"To AI or Not to AI, That's the Question."</h1>
                 <div className="playbill-attribution">after Hamlet, Act III, Scene I</div>
                 <p className="playbill-plain">Upload an image. The model says AI-made, human-made, or honestly not sure, and shows you where it looked.</p>
                 <div className="ornament" style={{ fontSize: 11, letterSpacing: '.4em' }} aria-hidden="true">══════════════════</div>
