@@ -1,7 +1,7 @@
 # ── API Framework ─────────────────────────────────────────────────────────────
 fastapi==0.136.3
 starlette==1.1.0
-uvicorn==0.48.0
+uvicorn==0.54.0
 python-multipart==0.0.29
 h11==0.16.0
 
