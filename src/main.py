@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
       1. Model info: read the serving model's version from models/metadata.json
       2. ARQ pool: job queue (Redis)
       3. Cache client: pHash cache, keyed by model version (same Redis)
-      4. ONNX predictor
+      4. ONNX predictor + familiarity check
       5. InferenceService (receives cache, not arq_pool)
       6. ExplainabilityService
     Shutdown:
@@ -82,14 +82,23 @@ async def lifespan(app: FastAPI):
 
     try:
         # -- ONNX Inference -----------------------
-        logger.info("Uploading AI models")
+        logger.info("Loading AI models")
         predictor = ONNXPredictor()
+
+        # -- Familiarity check (optional: verdicts aren't downgraded without it) --
+        familiarity = FamiliarityCheck.load()
+        logger.info(
+            "Familiarity check loaded"
+            if familiarity
+            else "Familiarity check not found; verdicts won't be downgraded"
+        )
+
         app.state.inference_service = InferenceService(
             predictor=predictor,
             cache=app.state.cache_service,  # type: ignore
             threshold=settings.MODEL_THRESHOLD,
             gray_area_margin=settings.GRAY_AREA_MARGIN,
-            familiarity=FamiliarityCheck.load(),
+            familiarity=familiarity,
         )
 
         # -- GradCAM explainability --------------------------

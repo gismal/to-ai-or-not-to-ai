@@ -7,7 +7,7 @@ class TrainConfig(BaseModel):
     # Paths
     dataset_dir: Path = Path("data")
     output_dir: Path = Path("models")
-    model_version: str = "v2.0.0"
+    model_version: str = "v2.1.0"
 
     # Phase 1: train the new classifier head (backbone frozen)
     seed: PositiveInt = 42

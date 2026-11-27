@@ -1,18 +1,208 @@
 {
-    "model_version": "v2.0.0",
-    "trained_at": "2026-09-13T12:18:53.910121+00:00",
+    "model_version": "v2.1.0",
+    "trained_at": "2026-11-26T22:32:41.300302+00:00",
     "base_model": "MobileNetV3_Small",
     "classes": [
         "AI_GENERATED",
         "REAL"
     ],
-    "epochs_trained": 20,
     "batch_size": 16,
     "threshold": 0.75,
+    "training": {
+        "phase1": {
+            "name": "head",
+            "epochs_run": 20,
+            "lr": 0.001,
+            "train_backbone": false,
+            "best_val": {
+                "loss": 0.2362,
+                "accuracy": 0.9072,
+                "precision": 0.9076,
+                "recall": 0.9072,
+                "f1_score": 0.9072
+            }
+        },
+        "phase2": {
+            "name": "finetune",
+            "epochs_run": 8,
+            "lr": 0.0001,
+            "train_backbone": true,
+            "best_val": {
+                "loss": 0.1467,
+                "accuracy": 0.9467,
+                "precision": 0.9469,
+                "recall": 0.9467,
+                "f1_score": 0.9467
+            }
+        },
+        "exported_from_phase": 2,
+        "jpeg_augmentation": {
+            "p": 1.0,
+            "quality": [
+                60,
+                95
+            ]
+        }
+    },
     "metrics": {
-        "accuracy": 0.9603,
-        "precision": 0.9603,
-        "recall": 0.9603,
-        "f1_score": 0.9603
+        "loss": 0.1467,
+        "accuracy": 0.9467,
+        "precision": 0.9469,
+        "recall": 0.9467,
+        "f1_score": 0.9467
+    },
+    "evaluation": {
+        "test_set": {
+            "images": 8205,
+            "accuracy": 0.9465,
+            "decided_share": 0.959,
+            "accuracy_when_decided": 0.9614,
+            "f1_weighted": 0.9465
+        },
+        "unseen_generator": {
+            "images": 3399,
+            "accuracy": 0.4981,
+            "decided_share": 0.8823,
+            "accuracy_when_decided": 0.4955
+        },
+        "by_category": {
+            "face": {
+                "images": 2212,
+                "accuracy": 0.9706,
+                "decided_share": 0.9751,
+                "accuracy_when_decided": 0.9824
+            },
+            "general": {
+                "images": 5993,
+                "accuracy": 0.9376,
+                "decided_share": 0.9531,
+                "accuracy_when_decided": 0.9534
+            }
+        },
+        "thresholds": {
+            "ai": 0.75,
+            "real": 0.4
+        },
+        "test_set_with_recommended_thresholds": {
+            "images": 8205,
+            "accuracy": 0.9465,
+            "decided_share": 0.9967,
+            "accuracy_when_decided": 0.9491
+        },
+        "robustness": [
+            {
+                "condition": "clean",
+                "images": 2000,
+                "accuracy": 0.943,
+                "decided_share": 0.9975,
+                "accuracy_when_decided": 0.9479
+            },
+            {
+                "condition": "jpeg_q75",
+                "images": 2000,
+                "accuracy": 0.938,
+                "decided_share": 0.996,
+                "accuracy_when_decided": 0.9428
+            },
+            {
+                "condition": "half_size",
+                "images": 2000,
+                "accuracy": 0.913,
+                "decided_share": 0.9965,
+                "accuracy_when_decided": 0.9212
+            },
+            {
+                "condition": "blur_r1",
+                "images": 2000,
+                "accuracy": 0.9225,
+                "decided_share": 0.998,
+                "accuracy_when_decided": 0.9314
+            }
+        ]
+    },
+    "provenance": {
+        "git_commit": "915e10c6bc01a5e2a2d1609906fb645775c50d76",
+        "seed": 42,
+        "split": [
+            0.8,
+            0.1,
+            0.1
+        ],
+        "min_side": 128,
+        "holdout_sources": [
+            "RealFakeFace",
+            "FaceForensics"
+        ],
+        "duplicates_removed": {
+            "val": 178,
+            "test": 795
+        },
+        "torch": "2.10.0+cu128",
+        "onnxruntime": "1.32.0",
+        "images": {
+            "AIvsHuman/AI_GENERATED": 15000,
+            "AIvsHuman/REAL": 14900,
+            "AIvsReal/AI_GENERATED": 14991,
+            "AIvsReal/REAL": 14889,
+            "CelebA/REAL": 2313,
+            "DFDC/AI_GENERATED": 11250,
+            "DFDC/REAL": 2289,
+            "Deepfake/AI_GENERATED": 543,
+            "Deepfake/REAL": 426,
+            "FFHQ/REAL": 2313,
+            "FaceForensics/AI_GENERATED": 968,
+            "FaceForensics/REAL": 922,
+            "LFW/REAL": 2313,
+            "OpenImagesV7/REAL": 200,
+            "RealFakeFace/AI_GENERATED": 748,
+            "RealFakeFace/REAL": 761,
+            "Selfie2Anime/REAL": 2193
+        }
+    },
+    "recommended_thresholds": {
+        "MODEL_THRESHOLD": 0.41,
+        "GRAY_AREA_MARGIN": 0.02,
+        "target_precision": 0.95,
+        "chosen_on": "validation set"
+    },
+    "sha256": {
+        "best_checkpoint.pt": "df6eaa63d79c2e48599c333851bd16d907b01c4f5f6e0d40fb0d0948a4df06fa",
+        "familiarity.npz": "88fe1f699a635e4b84edddd0817d1b0c97fc24ab713bf0541ee343930d2a7a40",
+        "model_v1.onnx": "7ad58bcefe4a073e0aca37ccfc0327f7695527f62b92f8e75d3f27dbca4b1bf5",
+        "model_v1.onnx.data": "62dc3d6eada0149af43f6765e517d8728faa108fda77dbfc204825b0959d03d7"
+    },
+    "familiarity": {
+        "method": "Mahalanobis distance to the nearest class centre, on the 576 pooled features",
+        "fitted_on": "8,000 training images",
+        "threshold_chosen_on": "validation set",
+        "percentile": 95.0,
+        "threshold": 30.576,
+        "test_set": {
+            "images": 8205,
+            "flagged_unfamiliar": 0.0541,
+            "decided_share": 0.9102,
+            "accuracy_when_decided": 0.9637
+        },
+        "held_out": {
+            "images": 3399,
+            "flagged_unfamiliar": 0.0109,
+            "decided_share": 0.8758,
+            "accuracy_when_decided": 0.4945
+        },
+        "without_check": {
+            "test": {
+                "images": 8205,
+                "flagged_unfamiliar": 0.0,
+                "decided_share": 0.9617,
+                "accuracy_when_decided": 0.9613
+            },
+            "held-out": {
+                "images": 3399,
+                "flagged_unfamiliar": 0.0,
+                "decided_share": 0.8864,
+                "accuracy_when_decided": 0.4939
+            }
+        },
+        "measured_at_commit": "714ff273fd3cc95443630b402239eefebd9724a6"
     }
 }
