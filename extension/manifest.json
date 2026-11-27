@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "AI or Not AI",
+  "name": "To AI or Not to AI",
   "version": "1.3.0",
   "description": "Right-click any image to learn whether a human or a machine made it. It admits when it is unsure.",
   "homepage_url": "https://to-ai-or-not-to-ai.onrender.com",
@@ -21,7 +21,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "AI or Not AI",
+    "default_title": "To AI or Not to AI",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",

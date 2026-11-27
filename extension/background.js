@@ -20,7 +20,7 @@ const UPLOAD_TYPES = ['image/jpeg', 'image/png'];
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() =>
-    chrome.contextMenus.create({ id: MENU_ID, title: 'Check with AI or Not AI', contexts: ['image'] }));
+    chrome.contextMenus.create({ id: MENU_ID, title: 'Check with To AI or Not to AI', contexts: ['image'] }));
   syncPassiveScript();
 });
 chrome.runtime.onStartup.addListener(syncPassiveScript);

@@ -103,7 +103,7 @@ if [[ "$CODE" == "000" ]]; then
   exit 1
 fi
 request GET /
-expect "Playground page is served" 200 "AI or Not AI"
+expect "Playground page is served" 200 "To AI or Not to AI"
 request GET /static/privacy.html
 expect "Privacy policy is served" 200 "Privacy"
 request GET /static/og.png

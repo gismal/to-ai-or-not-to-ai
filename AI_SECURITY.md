@@ -1,6 +1,6 @@
 # AI security
 
-What could go wrong with AI or Not AI, how likely it is, what I've done about it, and what's still open.
+What could go wrong with To AI or Not to AI, how likely it is, what I've done about it, and what's still open.
 
 I wrote this to practise the way the ISO standards think about risk, on a real project instead of a textbook example. The process comes from **ISO/IEC 23894** (AI risk management, built on ISO 31000): understand the context, find the risks, score them, decide what to do, and be honest about what's left. The controls are mapped to **ISO/IEC 27001:2022 Annex A** for general security and to **ISO/IEC 42001** for the AI-specific parts.
 
@@ -10,7 +10,7 @@ I wrote this to practise the way the ISO standards think about risk, on a real p
 
 ## What we're protecting
 
-AI or Not AI is a website, a browser extension and an API that guess whether an image was made by AI. A small model (MobileNetV3-Small) gives one of five verdicts: human made, AI generated, or one of three shades of "honestly not sure". Each comes with a confidence score and, if you want, a heatmap of where it looked. People can vote on whether it got it right.
+To AI or Not to AI is a website, a browser extension and an API that guess whether an image was made by AI. A small model (MobileNetV3-Small) gives one of five verdicts: human made, AI generated, or one of three shades of "honestly not sure". Each comes with a confidence score and, if you want, a heatmap of where it looked. People can vote on whether it got it right.
 
 It runs on free tiers: the API on Render (one small instance that naps when idle), the database on Neon, Redis on Upstash. Training happens by hand on Kaggle, from a fixed commit of this repo.
 
@@ -185,7 +185,7 @@ This is the one I care about most, and it isn't technical at all. Someone runs a
 | A4 | R6 | Log shortened or hashed filenames; delete logs and votes older than 90 days | To do |
 | A5 | R3 | Make the drift job notify me instead of attempting training; document how retraining really works | To do |
 | A6 | R7, R9 | Turn on GitHub secret scanning, push protection and Dependabot | **Done** |
-| A7 | R11 | Show "a probability, not proof" with every verdict | To do |
+| A7 | R11 | Show "a probability, not proof" with every verdict | **Done** |
 | A8 | R10 | Retrain with newer generators each release, keeping one held out | Ongoing |
 
 Every risk and action here is owned by me.

@@ -2,7 +2,7 @@
 
 Every project has a version of its history where everything went to plan. This isn't that version.
 
-These are the bugs, dead ends and "how did this ever work" moments from building AI or Not AI, written down while I still remember how much each one hurt. Each one comes with what broke, why, how I found it, and what I'd tell my past self.
+These are the bugs, dead ends and "how did this ever work" moments from building To AI or Not to AI, written down while I still remember how much each one hurt. Each one comes with what broke, why, how I found it, and what I'd tell my past self.
 
 ---
 
