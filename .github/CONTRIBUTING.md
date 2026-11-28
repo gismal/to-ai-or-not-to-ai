@@ -1,6 +1,6 @@
 # Contributing
 
-See [Getting Started](README.md#getting-started) in the README for local setup.
+See [Getting Started](../README.md#getting-started) in the README for local setup.
 
 1. Branch from `dev` (`feat/...`, `fix/...`, `chore/...`). `main` and `dev` only accept PRs.
 2. Run `make check` (lint, types, tests) before pushing. CI runs the same checks.
