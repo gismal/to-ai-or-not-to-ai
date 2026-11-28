@@ -313,7 +313,7 @@ The dataset used for the released model: CIFAKE, ArtiFact, FFHQ, LFW, CelebA, Op
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt -r requirements-test.txt
+pip install -r requirements/test.txt
 
 # Run tests
 make test
