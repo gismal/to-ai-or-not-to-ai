@@ -1,4 +1,5 @@
-# Test and tooling dependencies. Install with: pip install -r requirements/test.txt -r base.txt
+# Test and tooling dependencies. Install with: pip install -r requirements/test.txt
+-r base.txt
 
 pytest==9.0.3
 pytest-asyncio==1.4.0
