@@ -14,8 +14,8 @@ from PIL import Image
 from prometheus_client import REGISTRY
 
 from src.core.enums import InferenceStatus, PredictionLabel
-from src.familiarity import FamiliarityCheck
-from src.inference import _preprocess
+from src.ml.familiarity import FamiliarityCheck
+from src.ml.predictor import _preprocess
 from src.services.cache_service import CacheService
 from src.services.inference_service import InferenceService
 from src.utils import generate_phash

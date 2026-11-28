@@ -4,9 +4,9 @@ import time
 
 from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
-from src.familiarity import FamiliarityCheck
-from src.inference import ONNXPredictor
 from src.infra.metrics import CACHE_COUNTER, FAMILIARITY_COUNTER, INFERENCE_HISTOGRAM
+from src.ml.familiarity import FamiliarityCheck
+from src.ml.predictor import ONNXPredictor
 from src.schemas.predict import PredictionResponse
 from src.services.cache_service import CacheService
 

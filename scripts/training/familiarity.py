@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.covariance import LedoitWolf
 from torch import Tensor, nn
 
-from src.familiarity import mahalanobis
+from src.ml.familiarity import mahalanobis
 
 
 class WithFeatures(nn.Module):

@@ -6,7 +6,7 @@ import torch
 
 from scripts.training.familiarity import WithFeatures, fit
 from scripts.training.model import build_model
-from src.familiarity import FamiliarityCheck, mahalanobis
+from src.ml.familiarity import FamiliarityCheck, mahalanobis
 
 rng = np.random.default_rng(0)
 

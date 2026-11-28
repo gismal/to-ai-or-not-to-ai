@@ -608,5 +608,8 @@ Things I'd build next, roughly in order of how much they'd help.
 
 ---
 
+## Contributing
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 MIT

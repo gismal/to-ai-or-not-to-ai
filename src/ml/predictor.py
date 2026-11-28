@@ -14,7 +14,7 @@ from PIL import Image
 from src.config import settings
 from src.core.enums import InferenceStatus
 from src.logger import logger
-from src.services.base_engine import BaseMLEngine
+from src.ml.base import BaseMLEngine
 
 # Global mean and standart deviation values for further calculations
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
