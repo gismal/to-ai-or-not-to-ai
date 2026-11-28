@@ -57,5 +57,5 @@ jobs:
         run: PYTHONPATH=. python -m pytest -v --tb=short
 
       - name: Upload Coverage Report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         if: matrix.python-version == '3.12'
