@@ -1,5 +1,5 @@
-# Test and tooling dependencies. Extends requirements.txt.
-# Install with: uv pip install -r requirements.txt -r requirements-test.txt
+# Test and tooling dependencies. Install with: pip install -r requirements/test.txt
+-r base.txt
 
 pytest==9.0.3
 pytest-asyncio==1.4.0

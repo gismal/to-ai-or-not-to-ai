@@ -285,17 +285,7 @@ Prometheus metrics endpoint.
 
 ## Training
 
-If you want to train your own model instead of using the pre-trained one:
-
-```
-data/
-├── train/
-│   ├── REAL/
-│   └── AI_GENERATED/
-└── val/
-    ├── REAL/
-    └── AI_GENERATED/
-```
+Training runs on Kaggle with notebooks/train_kaggle.ipynb See Reproducing in docs/MODEL_CARD.md
 
 ```bash
 python scripts/train.py
@@ -313,7 +303,7 @@ The dataset used for the released model: CIFAKE, ArtiFact, FFHQ, LFW, CelebA, Op
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt -r requirements-test.txt
+pip install -r requirements/test.txt
 
 # Run tests
 make test
@@ -364,209 +354,53 @@ make clean     → docker compose down -v --remove-orphans
 
 ```
 to-ai-or-not-to-ai/
-├── extension/           # Chrome Extension (Manifest V3)
-├── frontend/            # Web playground (Shakespearean theme)
-├── monitoring/          # Grafana dashboards and Prometheus config
-├── scripts/             # Training, calibration, and dataset scripts
 ├── src/
-│   ├── api/             # Routes, dependencies, rate limiting
-│   ├── core/            # Enums, custom exceptions
-│   ├── infra/           # Database engine, ORM models, Redis client
-│   ├── repositories/    # Data access layer (Feedback, Logs, Tasks)
-│   ├── schemas/         # Pydantic request/response models
-│   ├── services/        # Business logic (Inference, Explainability, Cache, etc.)
-│   ├── worker/          # ARQ task definitions and cron jobs
-│   ├── config.py        # Pydantic settings and environment variables
-│   ├── inference.py     # ONNX engine and image preprocessing
-│   ├── logger.py        # Structured JSON logging
-│   ├── main.py          # FastAPI application and lifespan events
-│   └── utils.py         # pHash generation and utilities
-├── migrations/          # Alembic migration files
+│   ├── api/                 # HTTP layer
+│   │   ├── inference_routes.py   # /predict, /predict-batch, /explain
+│   │   ├── health_routes.py      # /health
+│   │   ├── feedback_routes.py    # /feedback
+│   │   ├── admin_routes.py       # drift check, review queue, labelling
+│   │   ├── deps.py               # dependency injection, API-key checks
+│   │   └── rate_limits.py        # per-key demo limits
+│   ├── ml/                  # The model engines
+│   │   ├── predictor.py          # ONNX inference and preprocessing
+│   │   ├── explainer.py          # GradCAM heatmaps (PyTorch)
+│   │   ├── familiarity.py        # out-of-distribution check (shadow mode)
+│   │   └── base.py               # shared loading and validation
+│   ├── services/            # Business logic: inference, cache, feedback, drift
+│   ├── repositories/        # Database access (prediction logs, feedback, tasks)
+│   ├── schemas/             # Pydantic request and response models
+│   ├── infra/               # Database engine, Redis, metrics, rate limiter
+│   │   └── models/               # SQLAlchemy tables
+│   ├── core/                # Enums and exceptions
+│   ├── worker/              # ARQ background jobs and scheduled drift checks
+│   ├── config.py            # Settings from environment variables
+│   └── main.py              # App startup and wiring
+├── scripts/
+│   ├── training/            # Training package: data, model, phases, export
+│   ├── train.py             # Training entry point
+│   ├── train_config.py      # Hyperparameters and dataset list
+│   ├── smoke.sh             # Post-deploy checks
+│   └── store_screenshots.py # Chrome Web Store screenshots
 ├── tests/
-│   ├── test_api.py      # Endpoint and integration tests
-│   ├── test_database.py # Repository layer tests
-│   └── test_model.py    # Inference logic and property-based tests
-├── models/              # ONNX model weights and metadata
+│   ├── unit/                # Pure logic: thresholds, cache, familiarity, auth
+│   └── integration/         # API, database, drift, feedback votes
+├── models/                  # ONNX model, PyTorch checkpoint, familiarity stats, metadata
+├── migrations/              # Alembic database migrations
+├── notebooks/               # Kaggle notebooks: full training run, familiarity measurement
+├── frontend/                # The website (single HTML file, no build step)
+├── extension/               # Chrome extension (Manifest V3)
+├── monitoring/              # Prometheus and Grafana configuration
+├── docs/
+│   ├── MODEL_CARD.md        # What the model is, how well it works, where it fails
+│   ├── AI_SECURITY.md       # Risk register (ISO/IEC 23894 practice)
+│   └── ENGINEERING-DECISIONS.md  # Decisions, trade-offs and problems log
+├── requirements/            # base (serving), test, train
+├── .github/                 # CI, Dependabot, contributing guide
 ├── Dockerfile
-├── docker-compose.yml   # Full stack (API, Worker, Redis, PostgreSQL, Prometheus, Grafana)
-└── Makefile
-
-|── requirements.txt
-  |── CONTRIBUTING.md
-  |── Makefile
-  |── ai-or-not
-  |  |── public
-  |  |  |── favicon.svg
-  |  |  |── icons.svg
-  |  |── vite.config.js
-  |  |── index.html
-  |  |── package.json
-  |  |── src
-  |  |  |── assets
-  |  |  |── App.jsx
-  |  |  |── index.css
-  |  |  |── App.css
-  |  |  |── main.jsx
-  |  |── README.md
-  |── tests
-  |  |── integration
-  |  |  |── test_feedback_votes.py
-  |  |  |── test_api.py
-  |  |  |── test_admin_review.py
-  |  |  |── test_drift.py
-  |  |  |── __init__.py
-  |  |  |── test_database.py
-  |  |  |── conftest.cpython-311-pytest-9.0.3.pyc
-  |  |  |── test_model.cpython-314-pytest-9.0.3.pyc
-  |  |  |── test_database.cpython-314-pytest-9.0.3.pyc
-  |  |  |── conftest.cpython-314-pytest-9.0.3.pyc
-  |  |  |── __init__.cpython-311.pyc
-  |  |  |── test_api.cpython-314-pytest-9.0.3.pyc
-  |  |── unit
-  |  |  |── test_model_age.py
-  |  |  |── test_auth_scopes.py
-  |  |  |── test_rate_limit.py
-  |  |  |── test_feedback_classification.py
-  |  |  |── test_model.py
-  |  |  |── __init__.py
-  |  |── conftest.py
-  |  |── __init__.py
-  |── monitoring
-  |  |── grafana
-  |  |  |── provisioning
-  |  |── prometheus.yml
-  |── pytest.ini
-  |── scripts
-  |  |── calibrate.py
-  |  |  |── train_config.cpython-314.pyc
-  |  |── quantize.py
-  |  |── smoke.sh
-  |  |── store_screenshots.py
-  |  |── train_config.py
-  |  |── prepare_dataset.py
-  |  |── train.py
-  |── data
-  |  |── train
-  |  |  |── REAL
-  |  |  |── FAKE
-  |  |── val
-  |  |  |── REAL
-  |  |  |── FAKE
-  |── migrations
-  |  |  |── env.cpython-314.pyc
-  |  |── script.py.mako
-  |  |── README
-  |  |── versions
-  |  |  |── 5b7e2c91d0a4_drop_feedback_unique_constraint.py
-  |  |  |── cf9613fa0af8_baseline_schema.py
-  |  |── env.py
-  |── frontend
-  |  |── favicon.png
-  |  |── og.png
-  |  |── index.html
-  |  |── images.png
-  |  |── samples
-  |  |  |── unsure.jpg
-  |  |  |── real.jpg
-  |  |  |── ai.jpg
-  |  |── privacy.html
-  |── MODEL_CARD.md
-  |── docs
-  |  |── store
-  |  |  |── screenshots
-  |  |  |── samples
-  |  |── ENGINEERING-DECISIONS.md
-  |── LICENSE
-  |── src
-  |  |── worker
-  |  |  |── tasks.py
-  |  |  |── __init__.py
-  |  |── repositories
-  |  |  |── __init__.py
-  |  |  |── task_result_repo.py
-  |  |  |── prediction_log_repository.py
-  |  |  |── feedback_repo.py
-  |  |── infra
-  |  |  |── task_results.py
-  |  |  |── metrics.py
-  |  |  |── api_keys.py
-  |  |  |── feedback_item.py
-  |  |  |── limiter.py
-  |  |  |── __init__.py
-  |  |  |── database.py
-  |  |  |── redis_client.py
-  |  |  |── prediction_log.py
-  |  |  |── labeled_sample.py
-  |  |── inference.py
-  |  |  |── inference.cpython-311.pyc
-  |  |  |── main.cpython-311.pyc
-  |  |  |── inference.cpython-314.pyc
-  |  |  |── utils.cpython-314.pyc
-  |  |  |── utils.cpython-311.pyc
-  |  |  |── config.cpython-311.pyc
-  |  |  |── logger.cpython-314.pyc
-  |  |  |── __init__.cpython-311.pyc
-  |  |  |── config.cpython-314.pyc
-  |  |  |── main.cpython-314.pyc
-  |  |  |── logger.cpython-311.pyc
-  |  |── config.py
-  |  |── api
-  |  |  |── inference_routes.py
-  |  |  |── feedback_routes.py
-  |  |  |── rate_limits.py
-  |  |  |── __init__.py
-  |  |  |── admin_routes.py
-  |  |  |── deps.py
-  |  |── utils.py
-  |  |── services
-  |  |  |── feedback_service.py
-  |  |  |── cache_service.py
-  |  |  |── inference_service.py
-  |  |  |── __init__.py
-  |  |  |── explainability_service.py
-  |  |  |── base_engine.py
-  |  |  |── retrain_service.py
-  |  |── __init__.py
-  |  |── schemas
-  |  |  |── batch.py
-  |  |  |── feedback.py
-  |  |  |── __init__.py
-  |  |  |── predict.py
-  |  |  |── label.py
-  |  |  |── explain.py
-  |  |── logger.py
-  |  |── main.py
-  |  |── core
-  |  |  |── exceptions.py
-  |  |  |── __init__.py
-  |  |  |── enums.py
-  |── Dockerfile
-  |── requirements-test.txt
-  |── alembic.ini
-  |── requirements-train.txt
-  |── docker-compose.yml
-  |── extension
-  |  |── icons
-  |  |  |── icon128.png
-  |  |  |── icon16.png
-  |  |  |── icon48.png
-  |  |── config.js
-  |  |── results.js
-  |  |── popup.js
-  |  |── popup.html
-  |  |── content.js
-  |  |── results.html
-  |  |── background.js
-  |  |── manifest.json
-  |── README.md
-  |── models
-  |  |── model_v1.onnx
-  |  |── metadata.json
-  |  |── best_checkpoint.pt
-  |  |── model_v1.onnx.data
-  |── pyproject.toml
-  |── railway.json
-
+├── docker-compose.yml       # Full stack: API, worker, Postgres, Redis, Prometheus, Grafana, MLflow
+├── Makefile                 # Shortcuts: make up, make test, make check...
+└── pyproject.toml           # Ruff, mypy and pytest settings
 ```
 
 ---
@@ -609,7 +443,7 @@ Things I'd build next, roughly in order of how much they'd help.
 ---
 
 ## Contributing
-Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions welcome — see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ## License
 MIT

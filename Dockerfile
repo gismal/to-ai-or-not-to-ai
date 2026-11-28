@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY requirements/base.txt requirements.txt
 
 # Use CPU-only PyTorch index — reduces image by ~1.7GB
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels \

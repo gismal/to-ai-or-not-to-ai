@@ -294,8 +294,14 @@ def test_demo_key_cannot_reach_admin(client, method, path):
 
 
 def test_demo_key_passes_public_auth(client):
-    r = client.get("/v1/inference/health", headers={"X-API-Key": settings.DEMO_API_KEY})
-    assert r.status_code != 401  # 200 or 503 depending on the test environment
+    """The demo key gets past authentication; the dummy bytes are then rejected as an image."""
+    files = {"file": ("test.png", b"dummy", "image/png")}
+    r = client.post(
+        "/v1/inference/predict",
+        files=files,
+        headers={"X-API-Key": settings.DEMO_API_KEY},
+    )
+    assert r.status_code == 400
 
 
 def test_explain_logs_the_prediction(client, auth_headers, monkeypatch):

@@ -26,6 +26,8 @@ models/*.pkl
 !models/metadata.json
 !models/model_v1.onnx
 !models/model_v1.onnx.data
+!models/best_checkpoint.pt
+!models/familiarity.npz
 future_plans.txt
 logs/
 .coverage
