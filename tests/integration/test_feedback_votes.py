@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from src.core.enums import ErrorType, FeedbackLabel, PredictionLabel
 from src.infra.database import Base
-from src.infra.feedback_item import FeedbackItem
+from src.infra.models.feedback_item import FeedbackItem
 from src.repositories.feedback_repo import FeedbackRepository
 from src.schemas.feedback import FeedbackCreateRequest
 

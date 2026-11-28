@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_db_session, get_retrain_service, verify_api_key
 from src.core.enums import PredictionLabel
-from src.infra.labeled_sample import LabeledSample
-from src.infra.prediction_log import PredictionLog
+from src.infra.models.labeled_sample import LabeledSample
+from src.infra.models.prediction_log import PredictionLog
 from src.logger import logger
 from src.schemas.label import LabelRequest, LabelResponse, UncertainPrediction
 from src.services.retrain_service import RetrainService

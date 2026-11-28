@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.enums import ErrorType, FeedbackLabel, PredictionLabel
 from src.core.exceptions import DatabaseError
-from src.infra.feedback_item import FeedbackItem
+from src.infra.models.feedback_item import FeedbackItem
 from src.logger import logger
 
 

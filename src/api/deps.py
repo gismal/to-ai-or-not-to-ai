@@ -23,7 +23,7 @@ from src.infra.database import AsyncSessionLocal
 from src.logger import logger
 from src.ml.explainer import ExplainabilityService
 from src.repositories.feedback_repo import FeedbackRepository
-from src.repositories.prediction_log_repository import PredictionLogRepository
+from src.repositories.prediction_log_repo import PredictionLogRepository
 from src.services.cache_service import CacheService
 from src.services.feedback_service import FeedbackService
 from src.services.inference_service import InferenceService
