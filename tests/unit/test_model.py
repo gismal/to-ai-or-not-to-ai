@@ -11,8 +11,10 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from PIL import Image
+from prometheus_client import REGISTRY
 
 from src.core.enums import InferenceStatus, PredictionLabel
+from src.familiarity import FamiliarityCheck
 from src.inference import _preprocess
 from src.services.cache_service import CacheService
 from src.services.inference_service import InferenceService
@@ -177,17 +179,6 @@ def image_bytes():
     return buf.getvalue()
 
 
-def make_service(cache, confidence=0.92):
-    predictor = MagicMock()
-    predictor.predict.return_value = SimpleNamespace(
-        status=InferenceStatus.SUCCESS, confidence=confidence, error=None
-    )
-    service = InferenceService(
-        predictor=predictor, cache=cache, threshold=0.75, gray_area_margin=0.35
-    )
-    return service, predictor
-
-
 async def test_second_identical_image_is_served_from_the_cache(image_bytes):
     service, predictor = make_service(CacheService(FakeRedis(), model_version="v-test"))
 
@@ -214,3 +205,76 @@ async def test_a_new_model_does_not_reuse_the_old_models_answers(image_bytes):
 
     assert answer.cached is False
     new_predictor.predict.assert_called_once()
+
+
+def make_service(cache, confidence=0.92, features=None, familiarity=None, enforce=True):
+    predictor = MagicMock()
+    predictor.predict.return_value = SimpleNamespace(
+        status=InferenceStatus.SUCCESS,
+        confidence=confidence,
+        error=None,
+        features=features,
+    )
+    service = InferenceService(
+        predictor=predictor,
+        cache=cache,
+        threshold=0.75,
+        gray_area_margin=0.35,
+        familiarity=familiarity,
+        enforce_familiarity=enforce,
+    )
+    return service, predictor
+
+
+def check_around_zero(threshold=1.0):
+    """Familiar means: within `threshold` of the origin, in 4 dimensions."""
+    return FamiliarityCheck(
+        np.zeros((2, 4), np.float32), np.eye(4, dtype=np.float32), threshold
+    )
+
+
+async def test_an_unfamiliar_image_gets_no_definite_ai_verdict(image_bytes):
+    service, _ = make_service(None, 0.92, np.full(4, 10.0), check_around_zero())
+    answer = await service.predict(image_bytes, "a.png")
+    assert answer.prediction == PredictionLabel.UNCERTAIN_LEANING_AI
+    assert answer.familiar is False
+
+
+async def test_an_unfamiliar_image_gets_no_definite_real_verdict(image_bytes):
+    service, _ = make_service(None, 0.10, np.full(4, 10.0), check_around_zero())
+    answer = await service.predict(image_bytes, "a.png")
+    assert answer.prediction == PredictionLabel.UNCERTAIN_LEANING_REAL
+
+
+async def test_a_familiar_image_keeps_its_verdict(image_bytes):
+    service, _ = make_service(None, 0.92, np.zeros(4), check_around_zero())
+    answer = await service.predict(image_bytes, "a.png")
+    assert answer.prediction == PredictionLabel.AI_GENERATED
+    assert answer.familiar is True
+
+
+async def test_without_a_check_nothing_changes(image_bytes):
+    service, _ = make_service(None, 0.92, np.full(4, 10.0), None)
+    answer = await service.predict(image_bytes, "a.png")
+    assert answer.prediction == PredictionLabel.AI_GENERATED
+    assert answer.familiar is None
+
+
+async def test_shadow_mode_measures_but_does_not_change_the_verdict(image_bytes):
+    def unfamiliar_count():
+        return (
+            REGISTRY.get_sample_value(
+                "ai_detector_familiarity_total", {"result": "unfamiliar"}
+            )
+            or 0
+        )
+
+    before = unfamiliar_count()
+    service, _ = make_service(
+        None, features=np.full(4, 100.0), familiarity=check_around_zero(), enforce=False
+    )
+    response = await service.predict(image_bytes, "x.jpg")
+
+    assert response.prediction == PredictionLabel.AI_GENERATED
+    assert response.familiar is None
+    assert unfamiliar_count() == before + 1

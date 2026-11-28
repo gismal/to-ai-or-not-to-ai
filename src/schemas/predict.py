@@ -18,6 +18,11 @@ class PredictionResponse(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     prediction: PredictionLabel
     status: InferenceStatus
+    familiar: bool | None = Field(
+        default=None,
+        description="False if the image looks unlike the training data; the verdict is then never definite. "
+        "None if the check isn't available.",
+    )
     processing_time_ms: float = Field(default=0.0, ge=0.0)
     cached: bool = False
     model_version: str = Field(

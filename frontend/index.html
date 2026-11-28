@@ -1878,7 +1878,10 @@
             {HERALDRY[pred]}{isDefinite(pred) && ` · ${(certainty(pred, confidence) * 100).toFixed(1)}% sure`}
           </div>
           <div className="broadside-sub">{SUBS[pred]}</div>
-          <div className="broadside-note">A probability, not proof. Weigh it alongside other evidence.</div>
+                    <div className="broadside-note">A probability, not proof. Weigh it alongside other evidence.</div>
+          {result.familiar === false && (
+            <div className="broadside-note">Built for photographs. Screenshots, drawings and edited photos are outside what it can judge.</div>
+          )}
           <div className="broadside-rule" aria-hidden="true">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>
           <div className="broadside-meta">
             <span>{formatFilename(result.filename)}</span><span className="sep">·</span>

@@ -4,9 +4,9 @@ import time
 
 from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
+from src.familiarity import FamiliarityCheck
 from src.inference import ONNXPredictor
-from src.infra.metrics import CACHE_COUNTER, INFERENCE_HISTOGRAM, PREDICTION_COUNTER
-from src.logger import logger
+from src.infra.metrics import CACHE_COUNTER, FAMILIARITY_COUNTER, INFERENCE_HISTOGRAM
 from src.schemas.predict import PredictionResponse
 from src.services.cache_service import CacheService
 
@@ -22,6 +22,8 @@ class InferenceService:
         cache: CacheService,
         threshold: float,
         gray_area_margin: float = 0.35,
+        familiarity: FamiliarityCheck | None = None,
+        enforce_familiarity: bool = False,
     ) -> None:
         """
         Initializes the inference service with its dependencies
@@ -30,14 +32,19 @@ class InferenceService:
             - predictor (ONNXPredictor): The loaded ONNX runtime engine
             - threshold (float): The base confidence score to flag an image as AI
             - cache (CacheService): cache service to get the images from the redis cache
-            - gray_area_margin (float): The amrgin below the threshol to classify as UNCERTAIN
-
+            - gray_area_margin (float): The margin below the threshold to classify as UNCERTAIN
+            - familiarity (FamiliarityCheck | None): Measures how far an image is from
+            the training data. None means the check is off.
+            - enforce_familiarity (bool): If True, unfamiliar images lose their definite
+            verdict. If False (shadow mode), they're only counted in the metrics.
         """
         self.predictor = predictor
         self.threshold = threshold
         self.cache = cache
         self.lower_bound = threshold - gray_area_margin
         self.one_third = gray_area_margin / 3
+        self.familiarity = familiarity
+        self.enforce_familiarity = enforce_familiarity
 
     def _decide_class(self, confidence: float) -> PredictionLabel:
         """
@@ -125,19 +132,28 @@ class InferenceService:
         safe_confidence = float(result.confidence)
 
         prediction = self._decide_class(safe_confidence)
-        PREDICTION_COUNTER.labels(label=prediction.value).inc()
 
-        if "UNCERTAIN" in prediction.value:
-            logger.warning(
-                f"UNCERTAIN prediction: {filename} (confidence: {safe_confidence:.4f})"
-            )
-
+        familiar = None
+        features = getattr(result, "features", None)
+        if self.familiarity is not None and features is not None:
+            looks_familiar = not self.familiarity.is_unfamiliar(features)
+            FAMILIARITY_COUNTER.labels(
+                result="familiar" if looks_familiar else "unfamiliar"
+            ).inc()
+            if self.enforce_familiarity:
+                familiar = looks_familiar
+                if not looks_familiar:
+                    if prediction == PredictionLabel.AI_GENERATED:
+                        prediction = PredictionLabel.UNCERTAIN_LEANING_AI
+                    elif prediction == PredictionLabel.REAL:
+                        prediction = PredictionLabel.UNCERTAIN_LEANING_REAL
         # -- 4. Build response --------------------
         response = {
             "filename": filename,
             "confidence": safe_confidence,
             "prediction": prediction,
             "status": InferenceStatus.SUCCESS,
+            "familiar": familiar,
             "processing_time_ms": round((time.time() - start) * 1000, 2),
             "cached": False,
         }
