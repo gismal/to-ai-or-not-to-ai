@@ -27,7 +27,7 @@ from torchvision import models
 from src.core.enums import InferenceStatus, PredictionLabel
 from src.core.exceptions import ModelInferenceError
 from src.logger import logger
-from src.services.base_engine import BaseMLEngine
+from src.ml.base import BaseMLEngine
 
 # Must match inference.py exactly — same normalization, same model sees same numbers
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)

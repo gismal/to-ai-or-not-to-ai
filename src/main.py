@@ -22,14 +22,14 @@ from src.core.exceptions import (
     InvalidImageFormatError,
     ModelInferenceError,
 )
-from src.familiarity import FamiliarityCheck
-from src.inference import ONNXPredictor
 from src.infra.limiter import limiter
 from src.infra.model_info import read_model_info
 from src.infra.redis_client import create_cache_client
 from src.logger import logger, request_id_ctx
+from src.ml.explainer import ExplainabilityService
+from src.ml.familiarity import FamiliarityCheck
+from src.ml.predictor import ONNXPredictor
 from src.services.cache_service import CacheService
-from src.services.explainability_service import ExplainabilityService
 from src.services.inference_service import InferenceService
 from src.worker.tasks import WorkerSettings
 
