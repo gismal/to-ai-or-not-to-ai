@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.admin_routes import list_uncertain, submit_label
 from src.core.enums import FeedbackLabel, PredictionLabel
-from src.infra.prediction_log import PredictionLog
+from src.infra.models.prediction_log import PredictionLog
 from src.schemas.label import LabelRequest
 
 

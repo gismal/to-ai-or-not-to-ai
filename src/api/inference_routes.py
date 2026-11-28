@@ -38,7 +38,7 @@ from src.infra.limiter import limiter
 from src.infra.model_info import current_model_info
 from src.logger import logger
 from src.ml.explainer import ExplainabilityService
-from src.repositories.prediction_log_repository import PredictionLogRepository
+from src.repositories.prediction_log_repo import PredictionLogRepository
 from src.schemas.batch import BatchPredictionResponse
 from src.schemas.explain import ExplainResponse
 from src.schemas.predict import PredictionResponse

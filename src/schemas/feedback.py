@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.infra.feedback_item import FeedbackLabel
+from src.core.enums import FeedbackLabel
 from src.schemas.predict import PredictionLabel
 
 

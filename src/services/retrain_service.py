@@ -28,8 +28,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
 from src.core.enums import ErrorType
-from src.infra.feedback_item import FeedbackItem
 from src.infra.model_info import METADATA_PATH
+from src.infra.models.feedback_item import FeedbackItem
 from src.logger import logger
 
 HARD_ERRORS = (ErrorType.FALSE_POSITIVE, ErrorType.FALSE_NEGATIVE)

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.enums import PredictionLabel
 from src.core.exceptions import DatabaseError
-from src.infra.prediction_log import PredictionLog
+from src.infra.models.prediction_log import PredictionLog
 from src.logger import logger
 
 
