@@ -14,7 +14,7 @@ from slowapi.errors import RateLimitExceeded
 
 from src.api.admin_routes import admin_router
 from src.api.feedback_routes import feedback_router
-from src.api.inference_routes import health_router
+from src.api.health_routes import health_router
 from src.api.inference_routes import router as inference_router
 from src.config import settings
 from src.core.exceptions import (

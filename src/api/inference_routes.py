@@ -1,6 +1,6 @@
 """
 src/api/inference_routes.py
-Inference domain: predict, predict-batch, explain, health.
+Inference domain: predict, predict-batch, explain
 """
 
 import asyncio
@@ -20,12 +20,8 @@ from fastapi import (
     status,
 )
 from PIL import Image as PILImage
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import (
-    get_db_session,
     get_explainability_service,
     get_inference_service,
     verify_public_key,
@@ -50,8 +46,6 @@ router = APIRouter(
     dependencies=[Depends(verify_public_key), Depends(demo_limit("inference"))],
 )
 
-health_router = APIRouter(tags=["System"])
-
 
 def _with_model_version(result: Any, request: Request) -> Any:
     """Adds the serving model's version to a prediction (a dict or a response model)."""
@@ -59,51 +53,6 @@ def _with_model_version(result: Any, request: Request) -> Any:
     if isinstance(result, dict):
         return {**result, "model_version": version}
     return result.model_copy(update={"model_version": version})
-
-
-# ── Health ────────────────────────────────────────────────────────────────────
-@health_router.get(
-    "/health",
-    dependencies=[],
-    status_code=status.HTTP_200_OK,
-    summary="System Health Check",
-)
-async def health_check(
-    request: Request,
-    session: AsyncSession = Depends(get_db_session),
-):
-    inference_service = request.app.state.inference_service
-    is_model_loaded = (
-        inference_service is not None and inference_service.predictor is not None
-    )
-
-    db_ok = False
-    try:
-        await session.execute(text("SELECT 1"))
-        db_ok = True
-    except SQLAlchemyError as db_exc:
-        logger.error(f"Database health check failed: {db_exc}", exc_info=True)
-    except Exception as e:
-        logger.error(f"Database failed: {e}", exc_info=True)
-
-    redis_ok = (
-        hasattr(request.app.state, "arq_pool")
-        and request.app.state.arq_pool is not None
-    )
-
-    checks = {"model": is_model_loaded, "database": db_ok, "redis": redis_ok}
-
-    if not all(checks.values()):
-        raise HTTPException(
-            status_code=503,
-            detail={"status": "degraded", "checks": checks},
-        )
-
-    return {
-        "status": "healthy",
-        "checks": checks,
-        "model": current_model_info(request).as_dict(),
-    }
 
 
 # ── Predict ───────────────────────────────────────────────────────────────────
