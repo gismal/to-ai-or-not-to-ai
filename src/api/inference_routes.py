@@ -159,25 +159,12 @@ async def predict_image(
     content_bytes, safe_filename = await _read_and_validate(request, file)
     result = await service.predict(content_bytes, safe_filename)
 
-    res_obj: Any = result
-    confidence = (
-        res_obj["confidence"] if isinstance(result, dict) else res_obj.confidence
-    )
-    prediction = (
-        res_obj["prediction"] if isinstance(result, dict) else res_obj.prediction
-    )
-    processing_time = (
-        res_obj["processing_time_ms"]
-        if isinstance(result, dict)
-        else res_obj.processing_time_ms
-    )
-
     background_tasks.add_task(
         _log_prediction,
         filename=safe_filename,
-        confidence=confidence,
-        predicted_label=prediction,
-        processing_time_ms=processing_time,
+        confidence=result.confidence,
+        predicted_label=result.prediction,
+        processing_time_ms=result.processing_time_ms,
     )
     return _with_model_version(result, request)
 
@@ -264,6 +251,7 @@ async def predict_batch(
 )
 async def explain_image(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     service: InferenceService = Depends(get_inference_service),
     explainer: ExplainabilityService = Depends(get_explainability_service),
@@ -280,6 +268,14 @@ async def explain_image(
         "prediction": verdict.prediction,
         "confidence": verdict.confidence,
     }
+
+    background_tasks.add_task(
+        _log_prediction,
+        filename=safe_filename,
+        confidence=verdict.confidence,
+        predicted_label=verdict.prediction,
+        processing_time_ms=result["processing_time_ms"],
+    )
     return _with_model_version(result, request)
 
 

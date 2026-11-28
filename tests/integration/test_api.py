@@ -28,6 +28,20 @@ from src.schemas.predict import PredictionResponse
 VALID_API_KEY = settings.API_KEY.get_secret_value()
 
 
+class FakeExplainer:
+    """Returns a fixed heatmap; the verdict comes from the mocked inference service."""
+
+    async def explain(self, *args, **kwargs):
+        return {
+            "filename": "test.png",
+            "prediction": "REAL",
+            "confidence": 0.99,
+            "status": "SUCCESS",
+            "processing_time_ms": 150.0,
+            "heatmap_base64": "dummy_base64_string",
+        }
+
+
 @pytest.fixture
 def client():
     """
@@ -240,18 +254,7 @@ def test_explain_endpoint(client, auth_headers):
     Tests the /explain endpoint structure
     """
 
-    class MockExplainer:
-        async def explain(self, *args, **kwargs):
-            return {
-                "filename": "test.png",
-                "prediction": "REAL",
-                "confidence": 0.99,
-                "status": "SUCCESS",
-                "processing_time_ms": 150.0,
-                "heatmap_base64": "dummy_base64_string",
-            }
-
-    client.app.state.explainability_service = MockExplainer()
+    client.app.state.explainability_service = FakeExplainer()
 
     img_byte_arr = io.BytesIO()
     Image.new("RGB", (224, 224), color="blue").save(img_byte_arr, format="PNG")
@@ -293,3 +296,25 @@ def test_demo_key_cannot_reach_admin(client, method, path):
 def test_demo_key_passes_public_auth(client):
     r = client.get("/v1/inference/health", headers={"X-API-Key": settings.DEMO_API_KEY})
     assert r.status_code != 401  # 200 or 503 depending on the test environment
+
+
+def test_explain_logs_the_prediction(client, auth_headers, monkeypatch):
+    """Heatmap requests are logged too, so votes on them reach the drift check."""
+    logged = []
+
+    async def record_log(**fields):
+        logged.append(fields)
+
+    monkeypatch.setattr("src.api.inference_routes._log_prediction", record_log)
+    client.app.state.explainability_service = FakeExplainer()
+
+    img_byte_arr = io.BytesIO()
+    Image.new("RGB", (224, 224), color="purple").save(img_byte_arr, format="PNG")
+    files = {"file": ("test.png", img_byte_arr.getvalue(), "image/png")}
+
+    response = client.post("/v1/inference/explain", files=files, headers=auth_headers)
+
+    assert response.status_code == 200
+    assert len(logged) == 1
+    assert logged[0]["predicted_label"] == "REAL"
+    assert logged[0]["confidence"] == 0.99
